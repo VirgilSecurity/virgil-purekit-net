@@ -1,1 +1,1 @@
-# sdk-net
+# Passw0rd for .Net Core
