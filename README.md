@@ -1,1 +1,1 @@
-# Passw0rd for .Net/C#
+# Passw0rd for .Net Core
