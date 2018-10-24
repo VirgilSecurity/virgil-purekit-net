@@ -1,6 +1,5 @@
 namespace Passw0rd.Tests
 {
-    using System;
     using Org.BouncyCastle.Asn1.Nist;
     using Org.BouncyCastle.Crypto.Digests;
     using Org.BouncyCastle.Math.EC;
