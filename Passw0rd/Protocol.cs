@@ -117,10 +117,17 @@ namespace Passw0rd
             var serverResult = await this.client.VerifyAsync(parameters).ConfigureAwait(false);
             if (serverResult.IsSuccess)
             {
-                var proof = serverResult.ProofOfSuccess ?? throw new ProofNotProvidedException();
+                var proofModel = serverResult.ProofOfSuccess ?? throw new ProofNotProvidedException();
+
+                var proof = new ProofOfSuccess
+                {
+                    Term1 = proofModel.Term1,
+                    Term2 = proofModel.Term2,
+                    Term3 = proofModel.Term3,
+                    BlindX = proofModel.BlindX,
+                };
            
-                var isValid = this.phe.ValidateProofOfSuccess(this.pkS, pwdRecord.ServerNonce, 
-                    c0, serverResult.C1, proof.Term1, proof.Term2, proof.Term3, proof.BlindX);
+                var isValid = this.phe.ValidateProofOfSuccess(proof, this.pkS, pwdRecord.ServerNonce, c0, serverResult.C1);
 
                 if (!isValid)
                 {
@@ -131,9 +138,24 @@ namespace Passw0rd
             }
             else
             {
-                var proof = serverResult.ProofOfFail ?? throw new ProofNotProvidedException();
+                var proofModel = serverResult.ProofOfFail ?? throw new ProofNotProvidedException();
 
-                // TODO: verify the proof of fail
+                var proof = new ProofOfFail
+                {
+                    Term1 = proofModel.Term1,
+                    Term2 = proofModel.Term2,
+                    Term3 = proofModel.Term3,
+                    Term4 = proofModel.Term4,
+                    BlindA = proofModel.BlindA,
+                    BlindB = proofModel.BlindB,
+                };
+
+                var isValid = this.phe.ValidateProofOfFail(proof, this.pkS, pwdRecord.ServerNonce, c0, serverResult.C1);
+
+                if (!isValid)
+                {
+                    throw new ProofOfFailNotValidException();
+                }
             }
 
             var result = new VerificationResult

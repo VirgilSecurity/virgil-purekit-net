@@ -69,6 +69,7 @@ namespace Passw0rd.Phe
         private byte[] dhs0 = Encoding.UTF8.GetBytes("hs0");
         private byte[] dhs1 = Encoding.UTF8.GetBytes("hs1");
         private byte[] proofOK = Bytes.FromString("ProofOk");
+        private byte[] proofErr = Bytes.FromString("ProofError");
 
         public PheCrypto()
         {
@@ -218,7 +219,7 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Proves the success.
         /// </summary>
-        public Tuple<byte[], byte[], byte[], byte[]> ProveSuccess(SecretKey skS, byte[] nS, byte[] c0, byte[] c1)
+        public ProofOfSuccess ProveSuccess(SecretKey skS, byte[] nS, byte[] c0, byte[] c1)
         {
             var blindX    = this.RandomZ();
             var hs0Point  = this.HashToPoint(dhs0, nS);
@@ -229,17 +230,27 @@ namespace Passw0rd.Phe
             var pubKey    = skS.PublicKey.Encode();
             var curveG    = this.multiplier.Multiply(this.curveParams.G, BigInteger.ValueOf(1));
             var challenge = this.HashZ(proofOK, pubKey, curveG.GetEncoded(), c0, c1, term1, term2, term3);
+
             var result    = blindX.Add(skS.Value.Multiply(challenge)).ToByteArray();
 
-            return new Tuple<byte[], byte[], byte[], byte[]>(term1, term2, term3, result);
+            return new ProofOfSuccess 
+            {
+                Term1 = term1, 
+                Term2 = term2, 
+                Term3 = term3,
+                BlindX = result
+            };
         }
 
-        public bool ValidateProofOfSuccess(PublicKey pkS, byte[] nS, byte[] c0, byte[] c1, byte[] term1, byte[] term2, byte[] term3, byte[] blindX)
+        /// <summary>
+        /// Validates the proof of success.
+        /// </summary>
+        public bool ValidateProofOfSuccess(ProofOfSuccess proof, PublicKey pkS, byte[] nS, byte[] c0, byte[] c1)
         {
-            var trm1Point = this.curve.DecodePoint(term1);
-            var trm2Point = this.curve.DecodePoint(term2);
-            var trm3Point = this.curve.DecodePoint(term3);
-            var blindXInt = new BigInteger(1, blindX);
+            var trm1Point = this.curve.DecodePoint(proof.Term1);
+            var trm2Point = this.curve.DecodePoint(proof.Term2);
+            var trm3Point = this.curve.DecodePoint(proof.Term3);
+            var blindXInt = new BigInteger(1, proof.BlindX);
 
             var c0Point   = this.curve.DecodePoint(c0);
             var c1Point   = this.curve.DecodePoint(c1);
@@ -248,7 +259,7 @@ namespace Passw0rd.Phe
             var hs1Point  = this.HashToPoint(dhs1, nS);
 
             var curveG    = this.multiplier.Multiply(this.curveParams.G, BigInteger.ValueOf(1));
-            var challenge = this.HashZ(proofOK, pkS.Encode(), curveG.GetEncoded(), c0, c1, term1, term2, term3);
+            var challenge = this.HashZ(proofOK, pkS.Encode(), curveG.GetEncoded(), c0, c1, proof.Term1, proof.Term2, proof.Term3);
 
             var t1Point   = trm1Point.Add(this.multiplier.Multiply(c0Point, challenge));
             var t2Point   = this.multiplier.Multiply(hs0Point, blindXInt);
@@ -268,6 +279,49 @@ namespace Passw0rd.Phe
 
             t1Point = trm3Point.Add(this.multiplier.Multiply(pkS.Point, challenge));
             t2Point = this.multiplier.Multiply(this.curveParams.G, blindXInt);
+
+            if (!t1Point.Equals(t2Point))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Validates the proof of fail.
+        /// </summary>
+        public bool ValidateProofOfFail(ProofOfFail proof, PublicKey pkS,  byte[] nS, byte[] c0, byte[] c1)
+        {
+            var curveG = this.multiplier.Multiply(this.curveParams.G, BigInteger.ValueOf(1));
+
+            var challenge = this.HashZ(this.proofErr, pkS.Encode(), curveG.GetEncoded(), c0, c1,
+                proof.Term1, proof.Term2, proof.Term3, proof.Term4);
+
+            var hs0Point = this.HashToPoint(dhs0, nS);
+
+            var term1Point = this.curve.DecodePoint(proof.Term1);
+            var term2Point = this.curve.DecodePoint(proof.Term2);
+            var term3Point = this.curve.DecodePoint(proof.Term3);
+            var term4Point = this.curve.DecodePoint(proof.Term4);
+
+            var blindAInt = new BigInteger(1, proof.BlindA);
+            var blindBInt = new BigInteger(1, proof.BlindB);
+
+            var c0Point = this.curve.DecodePoint(c0);
+            var c1Point = this.curve.DecodePoint(c1);
+
+            var t1Point = term1Point.Add(term2Point).Add(this.multiplier.Multiply(c1Point, challenge));
+            var t2Point = this.multiplier.Multiply(c0Point, blindAInt).Add(this.multiplier.Multiply(hs0Point, blindBInt));
+
+            if (!t1Point.Equals(t2Point)) 
+            {
+                return false;
+            }
+
+            t1Point = term3Point.Add(term4Point);
+            t2Point = this.multiplier.Multiply(pkS.Point, blindAInt)
+                          .Add(this.multiplier.Multiply(this.curveParams.G, blindBInt));
 
             if (!t1Point.Equals(t2Point))
             {
