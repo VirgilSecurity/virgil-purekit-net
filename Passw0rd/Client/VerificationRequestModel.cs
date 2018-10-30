@@ -36,15 +36,15 @@
 
 namespace Passw0rd.Client
 {
-    /// <summary>
-    /// Result of evaluating an entered password along with the zero 
-    /// knowledge proof
-    /// </summary>
-    public class VerificationResultModel
+    using System.Runtime.Serialization;
+
+    [DataContract]
+    public class VerificationModel
     {
-        public bool IsSuccess { get; set; }
-        public byte[] C1 { get; set; }
-        public ProofOfSuccessModel ProofOfSuccess { get; set; }
-        public ProofOfFailModel ProofOfFail { get; set; }
+        [DataMember(Name = "ns")]
+        public byte[] Ns { get; set; }
+
+        [DataMember(Name = "c_0")]
+        public byte[] C0 { get; set; }
     }
 }

@@ -34,16 +34,21 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
-namespace Passw0rd.Client
+namespace Passw0rd
 {
-    public class EnrollmentModel
+    public partial class Protocol
     {
-        public byte[] Nonce { get; set; }
+        public class ProtocolConfig
+        {
+            public ProtocolConfig()
+            {
+                this.ServiceBaseURL = "https://passw0rd.io/api";
+            }
 
-        public byte[] C0 { get; set; }
-
-        public byte[] C1 { get; set; }
-
-        public byte[] Proof { get; set; }
+            public string ServiceBaseURL { get; set; }
+            public string AccessToken { get; set; }
+            public string ClientPrivateKey { get; set; }
+            public string ServerPublicKey { get; set; }
+        }
     }
 }

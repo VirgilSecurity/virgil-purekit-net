@@ -36,9 +36,18 @@
 
 namespace Passw0rd.Client
 {
-    public class VerificationModel
+    using System.Threading.Tasks;
+
+    public class PheServiceClient : IClient
     {
-        public byte[] Ns { get; set; }
-        public byte[] C0 { get; set; }
+        public Task<EnrollmentModel> EnrollAsync()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task<VerificationResultModel> VerifyAsync(VerificationModel pwdModel)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

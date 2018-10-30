@@ -34,9 +34,27 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
+using System.Runtime.Serialization;
+
 namespace Passw0rd.Client
 {
-    public class ValidationModel
+    /// <summary>
+    /// Result of evaluating an entered password along with the zero 
+    /// knowledge proof
+    /// </summary>
+    [DataContract]
+    public class VerificationResultModel
     {
+        [DataMember(Name = "res")]
+        public bool IsSuccess { get; set; }
+
+        [DataMember(Name = "c_1")]
+        public byte[] C1 { get; set; }
+
+        [DataMember(Name = "proof_of_success")]
+        public ProofOfSuccessModel ProofOfSuccess { get; set; }
+
+        [DataMember(Name = "proof_of_fail")]
+        public ProofOfFailModel ProofOfFail { get; set; }
     }
 }
