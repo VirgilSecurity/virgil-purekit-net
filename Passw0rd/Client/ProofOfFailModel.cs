@@ -36,16 +36,30 @@
 
 namespace Passw0rd.Client
 {
+    using System.Runtime.Serialization;
+
     /// <summary>
     /// Proof of fail data for client to validate
     /// </summary>
+    [DataContract]
     public class ProofOfFailModel
     {
+        [DataMember(Name ="term_1")]
         public byte[] Term1 { get; set; }
+
+        [DataMember(Name ="term_2")]
         public byte[] Term2 { get; set; }
+
+        [DataMember(Name = "term_3")]
         public byte[] Term3 { get; set; }
+
+        [DataMember(Name = "term_4")]
         public byte[] Term4 { get; set; }
+
+        [DataMember(Name = "blind_a")]
         public byte[] BlindA { get; set; }
+
+        [DataMember(Name = "blind_b")]
         public byte[] BlindB { get; set; }
     }
 }

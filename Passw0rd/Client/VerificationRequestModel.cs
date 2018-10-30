@@ -39,8 +39,11 @@ namespace Passw0rd.Client
     using System.Runtime.Serialization;
 
     [DataContract]
-    public class VerificationModel
+    public class VerificationRequestModel
     {
+        [IgnoreDataMember]
+        public string AppId { get; set; }
+
         [DataMember(Name = "ns")]
         public byte[] Ns { get; set; }
 

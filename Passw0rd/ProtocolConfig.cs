@@ -42,10 +42,11 @@ namespace Passw0rd
         {
             public ProtocolConfig()
             {
-                this.ServiceBaseURL = "https://passw0rd.io/api";
+                this.ServiceURL = "https://api.passw0rd.io/";
             }
 
-            public string ServiceBaseURL { get; set; }
+            public string AppId { get; set; }
+            public string ServiceURL { get; set; }
             public string AccessToken { get; set; }
             public string ClientPrivateKey { get; set; }
             public string ServerPublicKey { get; set; }

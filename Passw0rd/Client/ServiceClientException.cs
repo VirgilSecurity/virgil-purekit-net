@@ -1,5 +1,4 @@
-﻿#region Copyright (C) Virgil Security Inc.
-// Copyright (C) 2015-2018 Virgil Security Inc.
+﻿// Copyright (C) 2015-2018 Virgil Security Inc.
 // 
 // Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 // 
@@ -32,16 +31,17 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 // IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-#endregion
 
 namespace Passw0rd.Client
 {
-    public class ClientException : Passw0rdProtocolException
+    using System;
+
+    public class ServiceClientException : Exception
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientException"/> class.
+        /// Initializes a new instance of the <see cref="ServiceClientException"/> class.
         /// </summary>
-        public ClientException(int serviceErrorCode, string message) : base(message)
+        public ServiceClientException(int serviceErrorCode, string message) : base(message)
         {
             this.ServiceErrorCode = serviceErrorCode;
         }

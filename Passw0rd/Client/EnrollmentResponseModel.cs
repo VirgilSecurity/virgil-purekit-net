@@ -37,7 +37,7 @@ namespace Passw0rd.Client
     using System.Runtime.Serialization;
 
     [DataContract]
-    public class EnrollmentModel
+    public class EnrollmentResponseModel
     {
         [DataMember(Name = "ns")]
         public byte[] Nonce { get; set; }

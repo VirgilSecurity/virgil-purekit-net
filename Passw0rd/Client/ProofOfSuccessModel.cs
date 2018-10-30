@@ -34,16 +34,26 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
+using System.Runtime.Serialization;
+
 namespace Passw0rd.Client
 {
     /// <summary>
     /// Proof of success data for client to validate
     /// </summary>
+    [DataContract]
     public class ProofOfSuccessModel
     {
+        [DataMember(Name = "term_1")]
         public byte[] Term1 { get; set; }
+
+        [DataMember(Name = "term_2")]
         public byte[] Term2 { get; set; }
+
+        [DataMember(Name = "term_3")]
         public byte[] Term3 { get; set; }
+
+        [DataMember(Name = "blind_x")]
         public byte[] BlindX { get; set; }
     }
 }

@@ -1,10 +1,8 @@
-﻿using System;
-namespace Passw0rd.Tests
+﻿namespace Passw0rd.Tests
 {
+    using Xunit;
+
     public class ProtocolTests
     {
-        public ProtocolTests()
-        {
-        }
     }
 }

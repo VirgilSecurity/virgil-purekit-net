@@ -42,6 +42,7 @@ namespace Passw0rd
     using Passw0rd.Phe;
     using Passw0rd.Client;
     using Passw0rd.Utils;
+    using Passw0rd.Client.Connection;
 
     /// <summary>
     /// The <see cref="Protocol"/> provides an implementation of PHE (Password 
@@ -56,22 +57,46 @@ namespace Passw0rd
     /// and the service provider can rotate their secret keys, a proactive security 
     /// mechanism mandated by the Payment Card Industry Data Security Standard (PCI DSS).
     /// </remarks>
-    public class Protocol
+    public partial class Protocol
     {
         private readonly PheCrypto phe;
-        private readonly IClient client;
+        private readonly IPheClient client;
         private readonly SecretKey skC;
         private readonly PublicKey pkS;
+        private readonly string appId;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Protocol"/> class.
         /// </summary>
-        public Protocol(IClient client, PheCrypto phe, SecretKey clientSecretKey, PublicKey serverPublicKey)
+        public Protocol(IPheClient client, PheCrypto phe, SecretKey clientSecretKey, PublicKey serverPublicKey, string appId)
         {
             this.phe = phe;
             this.client = client;
             this.skC = clientSecretKey;
             this.pkS = serverPublicKey;
+            this.appId = appId;
+        }
+
+        public static Protocol Setup(ProtocolConfig config)
+        {
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+
+            var phe = new PheCrypto();
+            var serializer = new HttpBodySerializer();
+            var client = new PheClient(serializer)
+            {
+                AccessToken = config.AccessToken,
+                BaseUri = new Uri(config.ServiceURL)
+            };
+
+            var skC = phe.DecodeSecretKey(Bytes.FromString(config.ClientPrivateKey, StringEncoding.BASE64));
+            var pkS = phe.DecodePublicKey(Bytes.FromString(config.ServerPublicKey, StringEncoding.BASE64));
+
+            var protocol = new Protocol(client, phe, skC, pkS, config.AppId);
+            return protocol;
         }
 
         /// <summary>
@@ -79,7 +104,9 @@ namespace Passw0rd
         /// </summary>
         public async Task<PasswordRecord> EnrollAsync(string password)
         {
-            var enrollment  = await this.client.EnrollAsync().ConfigureAwait(false);
+            var enrollment  = await this.client.EnrollAsync(
+                new EnrollmentRequestModel{ ApplicationId = this.appId })
+                .ConfigureAwait(false);
 
             var nS = enrollment.Nonce;
             var nC = this.phe.GenerateNonce();
@@ -106,8 +133,9 @@ namespace Passw0rd
             var pwdBytes = Bytes.FromString(password);
             var c0 = this.phe.ComputeC0(this.skC, pwdBytes, pwdRecord.ClientNonce, pwdRecord.RecordT0);
 
-            var parameters = new VerificationModel 
+            var parameters = new VerificationRequestModel 
             { 
+                AppId = appId,
                 C0 = c0, 
                 Ns = pwdRecord.ServerNonce 
             };

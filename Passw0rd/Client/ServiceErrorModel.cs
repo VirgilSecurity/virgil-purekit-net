@@ -37,7 +37,7 @@ namespace Passw0rd.Client
     using System.Runtime.Serialization;
     
     [DataContract]
-    public class ServiceError
+    public class ServiceErrorModel
     {
         [DataMember(Name = "code")]
         public int ErrorCode { get; set; }

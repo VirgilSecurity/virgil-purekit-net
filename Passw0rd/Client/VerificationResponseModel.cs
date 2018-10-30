@@ -43,7 +43,7 @@ namespace Passw0rd.Client
     /// knowledge proof
     /// </summary>
     [DataContract]
-    public class VerificationResultModel
+    public class VerificationResponseModel
     {
         [DataMember(Name = "res")]
         public bool IsSuccess { get; set; }

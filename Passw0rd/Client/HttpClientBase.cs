@@ -91,6 +91,26 @@ namespace Passw0rd.Client.Connection
             return model;
         }
 
+        protected async Task<TResponseModel> SendAsync<TResponseModel>(HttpMethod method, string endpoint)
+        {
+            Uri endpointUri = this.BaseUri != null
+                                  ? new Uri(this.BaseUri, endpoint)
+                                  : new Uri(endpoint);
+
+            var request = new HttpRequestMessage(method, endpointUri);
+
+            if (!string.IsNullOrWhiteSpace(this.AccessToken))
+            {
+                request.Headers.TryAddWithoutValidation("Authorization", $"{this.AccessToken}");
+            }
+
+            var response = await this.client.SendAsync(request).ConfigureAwait(false);
+            var content = await response.Content.ReadAsStringAsync();
+            var model = this.serializer.Deserialize<TResponseModel>(content);
+
+            return model;
+        }
+
         private void HandleError(HttpStatusCode statusCode, string body)
         {
             string errorMessage;
@@ -119,7 +139,7 @@ namespace Passw0rd.Client.Connection
 
             if (!string.IsNullOrWhiteSpace(body))
             {
-                var error = serializer.Deserialize<ServiceError>(body);
+                var error = serializer.Deserialize<ServiceErrorModel>(body);
 
                 errorCode = error?.ErrorCode ?? 0;
                 if (error != null && error.Message != null)
