@@ -48,7 +48,6 @@ namespace Passw0rd.Phe
     using Org.BouncyCastle.Crypto.Parameters;
     using Org.BouncyCastle.Math;
     using Org.BouncyCastle.Math.EC;
-    using Org.BouncyCastle.Math.EC.Multiplier;
     using Org.BouncyCastle.Security;
 
     /// <summary>
@@ -61,14 +60,13 @@ namespace Passw0rd.Phe
         private SecureRandom rng;
         private TupleHash tupleHash;
         private Swu swu;
-        private MixedNafR2LMultiplier multiplier;
 
-        private byte[] dhc0 = Encoding.UTF8.GetBytes("hc0");
-        private byte[] dhc1 = Encoding.UTF8.GetBytes("hc1");
-        private byte[] dm   = Encoding.UTF8.GetBytes("dm");
-        private byte[] dhs0 = Encoding.UTF8.GetBytes("hs0");
-        private byte[] dhs1 = Encoding.UTF8.GetBytes("hs1");
-        private byte[] proofOK = Bytes.FromString("ProofOk");
+        private byte[] dhc0     = Encoding.UTF8.GetBytes("hc0");
+        private byte[] dhc1     = Encoding.UTF8.GetBytes("hc1");
+        private byte[] dm       = Encoding.UTF8.GetBytes("dm");
+        private byte[] dhs0     = Encoding.UTF8.GetBytes("hs0");
+        private byte[] dhs1     = Encoding.UTF8.GetBytes("hs1");
+        private byte[] proofOK  = Bytes.FromString("ProofOk");
         private byte[] proofErr = Bytes.FromString("ProofError");
 
         public PheCrypto()
@@ -77,8 +75,7 @@ namespace Passw0rd.Phe
             this.curve = (FpCurve)curveParams.Curve;
             this.rng = new SecureRandom();
             this.tupleHash = new TupleHash();
-            this.swu = new Swu(curve.Q, curve.B.ToBigInteger()); ;
-            this.multiplier = new MixedNafR2LMultiplier();
+            this.swu = new Swu(curve.Q, curve.B.ToBigInteger());
         }
 
         /// <summary>
@@ -98,7 +95,7 @@ namespace Passw0rd.Phe
         public SecretKey GenerateSecretKey()
         {
             var randomZ = this.RandomZ();
-            var point   = this.multiplier.Multiply(this.curveParams.G, randomZ);
+            var point   = this.curveParams.G.Multiply(randomZ);
 
             return new SecretKey(randomZ, (FpPoint)point);
         }
@@ -109,9 +106,7 @@ namespace Passw0rd.Phe
         public SecretKey DecodeSecretKey(byte[] encodedSecretKey)
         {
             var secretKeyInt = new BigInteger(1, encodedSecretKey);
-
-            Console.WriteLine(secretKeyInt);
-            var point = this.multiplier.Multiply(this.curveParams.G, secretKeyInt);
+            var point = this.curveParams.G.Multiply(secretKeyInt);
 
             return new SecretKey(secretKeyInt, (FpPoint)point);
         }
@@ -140,9 +135,8 @@ namespace Passw0rd.Phe
             var mPoint   = this.HashToPoint(dm, mbuf);
             var hc0Point = this.HashToPoint(dhc0, nC, pwd);
             var hc1Point = this.HashToPoint(dhc1, nC, pwd);
-            var t0Point  = c0Point.Add(this.multiplier.Multiply(hc0Point, skC.Value));
-            var t1Point  = c1Point.Add(this.multiplier.Multiply(hc1Point, skC.Value)
-                .Add(this.multiplier.Multiply(mPoint, skC.Value)));
+            var t0Point  = c0Point.Add(hc0Point.Multiply(skC.Value));
+            var t1Point  = c1Point.Add(hc1Point.Multiply(skC.Value).Add(mPoint.Multiply(skC.Value)));
 
             return new Tuple<byte[], byte[]>(t0Point.GetEncoded(), t1Point.GetEncoded());
         }
@@ -155,8 +149,8 @@ namespace Passw0rd.Phe
             var hs0 = this.HashToPoint(dhs0, nS);
             var hs1 = this.HashToPoint(dhs1, nS);
 
-            var c0 = this.multiplier.Multiply(hs0, skS.Value);
-            var c1 = this.multiplier.Multiply(hs1, skS.Value);
+            var c0 = hs0.Multiply(skS.Value);
+            var c1 = hs1.Multiply(skS.Value);
 
             return new Tuple<byte[], byte[]>(c0.GetEncoded(), c1.GetEncoded());
         }
@@ -171,8 +165,8 @@ namespace Passw0rd.Phe
             var hc1Point = this.HashToPoint(dhc1, nC, pwd);
             var minusY   = this.curveParams.N.Neg(skC.Value);
 
-            var mPoint = this.multiplier.Multiply(t1Point.Add(c1Point.Negate())
-                .Add(this.multiplier.Multiply(hc1Point, minusY)), skC.Value.ModInverse(this.curveParams.N));
+            var mPoint = t1Point.Add(c1Point.Negate()).Add(hc1Point.Multiply(minusY)).Multiply(skC.Value.ModInverse(this.curveParams.N));
+
 
             var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
             hkdf.Init(new HkdfParameters(mPoint.GetEncoded(), null, Encoding.UTF8.GetBytes("Secret")));
@@ -191,7 +185,7 @@ namespace Passw0rd.Phe
             var minusY = skC.Value.Negate();
 
             var t0Point = this.curve.DecodePoint(t0);
-            var c0Point = t0Point.Add(this.multiplier.Multiply(hc0Point, minusY));
+            var c0Point = t0Point.Add(hc0Point.Multiply(minusY));
 
             return c0Point.GetEncoded();
         }
@@ -210,8 +204,8 @@ namespace Passw0rd.Phe
             var aInt = new BigInteger(1, a);
             var bInt = new BigInteger(1, b);
 
-            var t00Point = this.multiplier.Multiply(t0Point, aInt).Add(this.multiplier.Multiply(hs0Point, bInt));
-            var t11Point = this.multiplier.Multiply(t1Point, aInt).Add(this.multiplier.Multiply(hs1Point, bInt));
+            var t00Point = t0Point.Multiply(aInt).Add(hs0Point.Multiply(bInt));
+            var t11Point = t1Point.Multiply(aInt).Add(hs1Point.Multiply(bInt));
 
             return new Tuple<byte[], byte[]>(t00Point.GetEncoded(), t11Point.GetEncoded());
         }
@@ -224,11 +218,11 @@ namespace Passw0rd.Phe
             var blindX    = this.RandomZ();
             var hs0Point  = this.HashToPoint(dhs0, nS);
             var hs1Point  = this.HashToPoint(dhs1, nS);
-            var term1     = this.multiplier.Multiply(hs0Point, blindX).GetEncoded();
-            var term2     = this.multiplier.Multiply(hs1Point, blindX).GetEncoded();
-            var term3     = this.multiplier.Multiply(this.curveParams.G, blindX).GetEncoded();
+            var term1     = hs0Point.Multiply(blindX).GetEncoded();
+            var term2     = hs1Point.Multiply(blindX).GetEncoded();
+            var term3     = this.curveParams.G.Multiply(blindX).GetEncoded();
             var pubKey    = skS.PublicKey.Encode();
-            var curveG    = this.multiplier.Multiply(this.curveParams.G, BigInteger.ValueOf(1));
+            var curveG    = this.curveParams.G.Multiply(BigInteger.ValueOf(1));
             var challenge = this.HashZ(proofOK, pubKey, curveG.GetEncoded(), c0, c1, term1, term2, term3);
 
             var result    = blindX.Add(skS.Value.Multiply(challenge)).ToByteArray();
@@ -258,27 +252,27 @@ namespace Passw0rd.Phe
             var hs0Point  = this.HashToPoint(dhs0, nS);
             var hs1Point  = this.HashToPoint(dhs1, nS);
 
-            var curveG    = this.multiplier.Multiply(this.curveParams.G, BigInteger.ValueOf(1));
+            var curveG    = this.curveParams.G.Multiply(BigInteger.ValueOf(1));
             var challenge = this.HashZ(proofOK, pkS.Encode(), curveG.GetEncoded(), c0, c1, proof.Term1, proof.Term2, proof.Term3);
 
-            var t1Point   = trm1Point.Add(this.multiplier.Multiply(c0Point, challenge));
-            var t2Point   = this.multiplier.Multiply(hs0Point, blindXInt);
+            var t1Point   = trm1Point.Add(c0Point.Multiply(challenge));
+            var t2Point   = hs0Point.Multiply(blindXInt);
 
             if (!t1Point.Equals(t2Point)) 
             {
                 return false;
             }
 
-            t1Point = trm2Point.Add(this.multiplier.Multiply(c1Point, challenge));
-            t2Point = this.multiplier.Multiply(hs1Point, blindXInt);
+            t1Point = trm2Point.Add(c1Point.Multiply(challenge));
+            t2Point = hs1Point.Multiply(blindXInt);
 
             if (!t1Point.Equals(t2Point))
             {
                 return false;
             }
 
-            t1Point = trm3Point.Add(this.multiplier.Multiply(pkS.Point, challenge));
-            t2Point = this.multiplier.Multiply(this.curveParams.G, blindXInt);
+            t1Point = trm3Point.Add(pkS.Point.Multiply(challenge));
+            t2Point = this.curveParams.G.Multiply(blindXInt);
 
             if (!t1Point.Equals(t2Point))
             {
@@ -293,7 +287,7 @@ namespace Passw0rd.Phe
         /// </summary>
         public bool ValidateProofOfFail(ProofOfFail proof, PublicKey pkS,  byte[] nS, byte[] c0, byte[] c1)
         {
-            var curveG = this.multiplier.Multiply(this.curveParams.G, BigInteger.ValueOf(1));
+            var curveG = this.curveParams.G.Multiply(BigInteger.ValueOf(1));
 
             var challenge = this.HashZ(this.proofErr, pkS.Encode(), curveG.GetEncoded(), c0, c1,
                 proof.Term1, proof.Term2, proof.Term3, proof.Term4);
@@ -311,8 +305,8 @@ namespace Passw0rd.Phe
             var c0Point = this.curve.DecodePoint(c0);
             var c1Point = this.curve.DecodePoint(c1);
 
-            var t1Point = term1Point.Add(term2Point).Add(this.multiplier.Multiply(c1Point, challenge));
-            var t2Point = this.multiplier.Multiply(c0Point, blindAInt).Add(this.multiplier.Multiply(hs0Point, blindBInt));
+            var t1Point = term1Point.Add(term2Point).Add(c1Point.Multiply(challenge));
+            var t2Point = c0Point.Multiply(blindAInt).Add(hs0Point.Multiply(blindBInt));
 
             if (!t1Point.Equals(t2Point)) 
             {
@@ -320,8 +314,7 @@ namespace Passw0rd.Phe
             }
 
             t1Point = term3Point.Add(term4Point);
-            t2Point = this.multiplier.Multiply(pkS.Point, blindAInt)
-                          .Add(this.multiplier.Multiply(this.curveParams.G, blindBInt));
+            t2Point = pkS.Point.Multiply(blindAInt).Add(this.curveParams.G.Multiply(blindBInt));
 
             if (!t1Point.Equals(t2Point))
             {
@@ -356,8 +349,6 @@ namespace Passw0rd.Phe
         private BigInteger HashZ(byte[] domain, params byte[][] datas)
         {
             var hash = this.tupleHash.Sum(domain, datas);
-
-            Console.WriteLine("Th  : " + Bytes.ToString(hash, StringEncoding.BASE64));
 
             var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
             hkdf.Init(new HkdfParameters(hash, domain, Encoding.UTF8.GetBytes("TupleKDF")));
