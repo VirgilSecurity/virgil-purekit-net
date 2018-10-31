@@ -51,7 +51,7 @@ namespace Passw0rd.Client
         public async Task<EnrollmentResponseModel> EnrollAsync(EnrollmentRequestModel request)
         {
             var response = await this.SendAsync<EnrollmentResponseModel>(
-                HttpMethod.Get, $"{request.ApplicationId}/enroll").ConfigureAwait(false);
+                HttpMethod.Get, $"{request.AppId}/enroll").ConfigureAwait(false);
 
             return response;
         }

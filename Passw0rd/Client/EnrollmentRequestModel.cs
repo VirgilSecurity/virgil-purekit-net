@@ -36,6 +36,6 @@ namespace Passw0rd.Client
 {
     public class EnrollmentRequestModel
     {
-        public string ApplicationId { get; set; }
+        public string AppId { get; set; }
     }
 }

@@ -105,7 +105,7 @@ namespace Passw0rd
         public async Task<PasswordRecord> EnrollAsync(string password)
         {
             var enrollment  = await this.client.EnrollAsync(
-                new EnrollmentRequestModel{ ApplicationId = this.appId })
+                new EnrollmentRequestModel{ AppId = this.appId })
                 .ConfigureAwait(false);
 
             var nS = enrollment.Nonce;
@@ -198,11 +198,11 @@ namespace Passw0rd
         /// <summary>
         /// Updates a <see cref="PasswordRecord"/> with an specified <see cref="UpdateToken"/>.
         /// </summary>
-        public PasswordRecord Update(PasswordRecord pwdRecord, UpdateToken updateToken)
+        public PasswordRecord Update(PasswordRecord record, UpdateToken updateToken)
         {
-            if (pwdRecord == null)
+            if (record == null)
             {
-                throw new ArgumentNullException(nameof(pwdRecord));
+                throw new ArgumentNullException(nameof(record));
             }
 
             if (updateToken == null)
@@ -210,13 +210,13 @@ namespace Passw0rd
                 throw new ArgumentNullException(nameof(updateToken));
             }
 
-            var (t0, t1) = this.phe.UpdateT(pwdRecord.ServerNonce, pwdRecord.RecordT0, 
-                pwdRecord.RecordT1, updateToken.A, updateToken.B);
+            var (t0, t1) = this.phe.UpdateT(record.ServerNonce, record.RecordT0, 
+                record.RecordT1, updateToken.A, updateToken.B);
 
             var newRecord = new PasswordRecord
             {
-                ClientNonce = pwdRecord.ClientNonce,
-                ServerNonce = pwdRecord.ServerNonce,
+                ClientNonce = record.ClientNonce,
+                ServerNonce = record.ServerNonce,
                 RecordT0 = t0,
                 RecordT1 = t1
             };

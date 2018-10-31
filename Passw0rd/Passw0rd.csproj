@@ -2,6 +2,18 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <PackOnBuild>true</PackOnBuild>
+    <PackageVersion>0.1</PackageVersion>
+    <Authors>Denis Kurilenko</Authors>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <Owners>Denis Kurilenko</Owners>
+    <PackageId>Passw0rd</PackageId>
+    <Title>Passw0rd</Title>
+    <Description>Passw0rd SDK provides developers with the easiest way to communicate with API of the Password-Hardened Encryption (PHE) Service to protect users passwords from offline attacks and make stolen passwords useless even if your database is breached.</Description>
+    <PackageReleaseNotes>- Zero knowledge of user's password
+- Protection from online attacks 
+- Protection from offline attacks
+- Instant invalidation of stolen database </PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +24,7 @@
   <ItemGroup>
     <PackageReference Include="BouncyCastle" Version="1.8.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Class1.cs" />
