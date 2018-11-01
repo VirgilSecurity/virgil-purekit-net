@@ -36,39 +36,41 @@
 
 namespace Passw0rd
 {
-    public partial class Protocol
+    public class ProtocolConfig
     {
-        public class ProtocolConfig
+        public ProtocolConfig()
         {
-            public ProtocolConfig()
-            {
-                this.ServiceURL = "https://api.passw0rd.io/";
-            }
-
-            /// <summary>
-            /// Gets or sets the app identifier.
-            /// </summary>
-            public string AppId { get; set; }
-
-            /// <summary>
-            /// Gets or sets the service URL.
-            /// </summary> 
-            public string ServiceURL { get; set; }
-
-            /// <summary>
-            /// Gets or sets the access token.
-            /// </summary>
-            public string AccessToken { get; set; }
-
-            /// <summary>
-            /// Gets or sets the client private key.
-            /// </summary>
-            public string ClientPrivateKey { get; set; }
-
-            /// <summary>
-            /// Gets or sets the server public key.
-            /// </summary>
-            public string ServerPublicKey { get; set; }
+            this.ServiceURL = "https://api.passw0rd.io/";
         }
+
+        /// <summary>
+        /// Gets or sets the app identifier.
+        /// </summary>
+        public string AppId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the service URL.
+        /// </summary> 
+        public string ServiceURL { get; set; }
+
+        /// <summary>
+        /// Gets or sets the access token.
+        /// </summary>
+        public string AccessToken { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client private key.
+        /// </summary>
+        public string ClientPrivateKey { get; set; }
+
+        /// <summary>
+        /// Gets or sets the server public key.
+        /// </summary>
+        public string ServerPublicKey { get; set; }
+
+        /// <summary>
+        /// Gets or sets the update tokens.
+        /// </summary>
+        public string[] UpdateTokens { get; set; }
     }
 }
