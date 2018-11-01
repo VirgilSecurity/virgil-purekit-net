@@ -36,12 +36,53 @@
 
 namespace Passw0rd
 {
+    using System;
+    using System.Linq;
+
+    using Passw0rd.Utils;
+
     /// <summary>
     /// Update token.
     /// </summary>
     public class UpdateToken
     {
-        internal byte[] A { get; set; }
-        internal byte[] B { get; set; }
+        /// <summary>
+        /// Gets the a value.
+        /// </summary>
+        public byte[] A { get; internal set; }
+
+        /// <summary>
+        /// Gets the b value.
+        /// </summary>
+        public byte[] B { get; internal set; }
+
+        /// <summary>
+        /// Gets the version.
+        /// </summary>
+        public int Version { get; internal set; }
+
+        /// <summary>
+        /// Decodes an <see cref="UpdateToken"/> form specified string.
+        /// </summary>
+        public static UpdateToken Decode(string updateToken)
+        {
+            var tokenParts = updateToken.Split(".");
+            if (tokenParts.Length != 3 ||
+                !Int32.TryParse(tokenParts[1], out int version) || 
+                !tokenParts[0].ToUpper().Equals("UT"))
+            {
+                throw new ArgumentException("has incorrect format", nameof(updateToken));
+            }
+
+            var asn1Bytes = Bytes.FromString(updateToken);
+            var decodedAsn1Sequense = Asn1Helper.Decode(asn1Bytes);
+
+            return new UpdateToken 
+            {
+                A = decodedAsn1Sequense.ElementAt(0), 
+                B = decodedAsn1Sequense.ElementAt(1),
+                Version = version
+            };
+        }
     }
 }

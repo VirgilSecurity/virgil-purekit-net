@@ -77,6 +77,9 @@ namespace Passw0rd
             this.appId = appId;
         }
 
+        /// <summary>
+        /// Sets up an <see cref="Protocol"/> instance by specified <see cref="ProtocolConfig"/>
+        /// </summary>
         public static Protocol Setup(ProtocolConfig config)
         {
             if (config == null)

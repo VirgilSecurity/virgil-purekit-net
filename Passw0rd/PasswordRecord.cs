@@ -36,12 +36,33 @@
 
 namespace Passw0rd
 {
+    using System.Linq;
+    using Passw0rd.Utils;
+
     /// <summary>
     /// The <see cref="PasswordRecord"/> represents an encryption record and 
     /// server/client nonces for specified user/password. 
     /// </summary>
     public class PasswordRecord
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PasswordRecord"/> class.
+        /// </summary>
+        internal PasswordRecord()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PasswordRecord"/> class.
+        /// </summary>
+        public PasswordRecord(byte[] nS, byte[] nC, byte[] t0, byte[] t1)
+        {
+            this.ServerNonce = nS;
+            this.ClientNonce = nC;
+            this.RecordT0 = t0;
+            this.RecordT1 = t1;
+        }
+
         /// <summary>
         /// Gets a nonce that generated on the PHE Server for the user.
         /// </summary>
@@ -61,5 +82,34 @@ namespace Passw0rd
         /// Gets an encryption record T1.
         /// </summary>
         public byte[] RecordT1 { get; internal set; }
+
+        public byte[] Encode()
+        {
+            return Asn1Helper.Encode(this.ServerNonce, this.ClientNonce, this.RecordT0, this.RecordT1);
+        }
+
+        public string EncodeToBase64()
+        {
+            var asn1Bytes = this.Encode();
+            var asn1Base64 = Bytes.ToString(asn1Bytes, StringEncoding.BASE64);
+
+            return asn1Base64;
+        }
+
+        public static PasswordRecord Decode(byte[] encodedRecord)
+        {
+            var arrays = Asn1Helper.Decode(encodedRecord);
+
+            return new PasswordRecord(arrays.ElementAt(0), arrays.ElementAt(1), 
+                arrays.ElementAt(2), arrays.ElementAt(3));
+        }
+
+        public static PasswordRecord DecodeFromBase64(string encodedRecordBase64)
+        {
+            var asn1Bytes = Bytes.FromString(encodedRecordBase64);
+            var record = PasswordRecord.Decode(asn1Bytes);
+
+            return record;
+        }
     }
 }
