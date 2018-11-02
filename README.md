@@ -3,7 +3,7 @@
 [![Nuget package](https://img.shields.io/nuget/v/passw0rd.svg)](https://www.nuget.org/packages/Passw0rd/) [![GitHub license](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](https://github.com/VirgilSecurity/virgil/blob/master/LICENSE)
 
 
-[Introduction](#introduction) | [SDK Features](#sdk-features) | [Install and configure SDK](#install-and-configure-sdk) | [Usage Examples](#usage-examples) | [Docs](#docs) | [Support](#support)
+[Introduction](#introduction) | [Passw0rd Features](#passw0rd-features) | [Register your Account](#register-your-account) | [Install and configure SDK](#install-and-configure-sdk) | [Setup your Database](#setup-your-database) | [Usage Examples](#usage-examples) | [Docs](#docs) | [Support](#support)
 
 ## Introduction
 <a href="https://developer.virgilsecurity.com/docs"><img width="260px" src="https://cdn.virgilsecurity.com/assets/images/github/logos/passw0rd.png" align="left" hspace="0" vspace="0"></a>[Virgil Security](https://virgilsecurity.com) introduces to developers an implementation of the [Password-Hardened Encryption (PHE) protocol](https://www.chaac.tf.fau.de/files/2018/06/main.pdf) that provides developers with a technology to protect users passwords from offline attacks and make stolen passwords useless even if your database is breached.
