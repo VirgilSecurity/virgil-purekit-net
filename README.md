@@ -29,7 +29,7 @@ If you don't have an account or a passw0rd's project with its credentials, pleas
 
 
 ## Install and configure SDK
-The Virgil .NET Pythia SDK is provided as a package named `Passw0rd`. The package is distributed via [NuGet package](https://docs.microsoft.com/en-us/nuget/quickstart/use-a-package) management system.
+The Passw0rd .NET SDK is provided as a package named `Passw0rd`. The package is distributed via [NuGet package](https://docs.microsoft.com/en-us/nuget/quickstart/use-a-package) management system.
 
 The package is available for .NET Framework 4.5 and newer.
 
