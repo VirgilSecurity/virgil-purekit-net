@@ -176,8 +176,6 @@ var newRecord = Protocol.Update(record);
 
 
 ## Docs
-Virgil Security has a powerful set of APIs, and the documentation below can get you started today.
-
 * [Passw0rd][_passw0rd] home page
 * [The PHE WhitePaper](https://eprint.iacr.org/2015/644.pdf) - foundation principles of the protocol
 
