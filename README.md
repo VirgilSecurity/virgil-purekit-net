@@ -50,16 +50,15 @@ Run PM> Install-Package Passw0rd -Version 0.1.0
 ### Configure SDK
 Here is an example of how to specify your credentials SDK class instance:
 ```cs
-// here set your Virgil Account and Passw0rd credentials
-var config = new ProtocolConfig
-{
-    AppId           = "0da44c1f958647768e9028c734a8c462",
-    AccessToken     = "AT.BDec4WfEX1DLqQTr7XqjVeFAkGx9XB",
-    ServerPublicKey = "PK.1.BDec4WfEX1DLqQTr7XqjVeFAkGx9XBvTjsEhLZZjSXiIUSdVckSq6TvQJAGlAKcyySxdV/GZfqgfYiDHAzi7rEo=",
-    ClientSecretKey = "SK.1.KYaRPJmQQpvpkFuQLts0/5CctJdO42z0qVbaAC1J2Fc="
-};
+// specify your account and app's credentials
+var context = ProtocolContext.Create(
+    appId:           "58533793ee4f41bf9fcbf178dbac9b3a",
+    accessToken:     "-KM2dB9-butQv1Op6l0L5TEFy2fL-zty",
+    serverPublicKey: "PK.1.BFFiWkunWRuVMvJVybtCOZEReUui5V3NmwY21doyxoFlurSYEo1fwSW22mQ8ZPq9pUWVm1rvYhF294wstqu//a4=",
+    clientSecretKey: "SK.1.YEwMBsXkJ5E5Mb9VKD+pu+gRXOySZXWaRXvkFebRYOc="
+);
 
-var protocol = Protocol.Setup(config);
+var protocol = new Protocol(context);
 ```
 
 ## Setup your Database
@@ -111,10 +110,10 @@ var record = await protocol.EnrollAsync(password);
 
 // save encrypted password record into your users DB
 
-var recordBytes = record.Encode();         // encode encrypted password record into bytearray
+var recordBytes = record.Encode();          // encode encrypted password record into bytearray
 var recordBase64 = record.EncodeToBase64(); // encode encrypted password record base64 string
 
-// save password parameters into your users DB
+// save record into your users DB
 ```
 
 If you create a `passw0rd_record` for all users in your DB, you can delete the unnecessary column where user passwords were previously stored.
@@ -126,11 +125,10 @@ Use this flow when a user already has his or her own `record` in your database. 
 
 ```cs
 // get user's encrypted password record from your users DB
-
-var condidatePassword = "passw0rd";
+var passwordCandidate = "passw0rd";
 
 // check candidate password with encrypted password record from your DB
-var isValid = await protocol.VerifyAsync(condidatePassword, record);
+var isValid = await protocol.VerifyAsync(passwordCandidate, record);
 
 if (!isValid)
 {
@@ -155,23 +153,21 @@ How it works:
 Here is an example of using the `Update` records function:
 ```cs
 // set up an UpdateToken that you got from passw0rd CLI in config
-
-var config = new ProtocolConfig
-{
-    AppId           = "0da44c1f958647768e9028c734a8c462",
-    AccessToken     = "AT.BDec4WfEX1DLqQTr7XqjVeFAkGx9XB",
-    ServerPublicKey = "PK.1.BDec4WfEX1DLqQTr7XqjVeFAkGx9XBvTjsEhLZZjSXiIUSdVckSq6TvQJAGlAKcyySxdV/GZfqgfYiDHAzi7rEo=",
-    ClientSecretKey = "SK.1.KYaRPJmQQpvpkFuQLts0/5CctJdO42z0qVbaAC1J2Fc=",
-    UpdateTokens    = new[] {
+var context = ProtocolContext.Create(
+    appId:           "58533793ee4f41bf9fcbf178dbac9b3a",
+    accessToken:     "-KM2dB9-butQv1Op6l0L5TEFy2fL-zty",
+    serverPublicKey: "PK.1.BFFiWkunWRuVMvJVybtCOZEReUui5V3NmwY21doyxoFlurSYEo1fwSW22mQ8ZPq9pUWVm1rvYhF294wstqu//a4=",
+    clientSecretKey: "SK.1.YEwMBsXkJ5E5Mb9VKD+pu+gRXOySZXWaRXvkFebRYOc=",
+    updateTokens:    new {
         "UT.2.MEQEIF9FaIoBlwvyV1HuIYw1cEL0GF6TyjJqYpO/b/uzsg88BCB0Cx2dnG8QKFyHr/nTOjQr7qeWgrM7T9CAg0D8p+EvVQ=="
     }
-};
+);
 
-var protocol = Protocol.Setup(config);
+var protocol = new Protocol(context);
 
 // get previous user's encrypted password record from a compromised DB
 // update previous user's encrypted password record, and save new one into your DB
-var newRecord = Protocol.Update(record);
+var newRecord = protocol.Update(record);
 ```
 
 
