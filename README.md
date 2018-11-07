@@ -31,7 +31,7 @@ If you don't have an account or a passw0rd project with its credentials, please 
 ## Install and configure SDK
 The Passw0rd .NET SDK is provided as a package named `Passw0rd`. The package is distributed via [NuGet package](https://docs.microsoft.com/en-us/nuget/quickstart/use-a-package) management system.
 
-The package is available for .NET Framework 4.5 and newer.
+The package is available for .NET Core 2.1
 
 **Supported platforms**:
 - MacOS,
