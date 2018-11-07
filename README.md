@@ -43,7 +43,7 @@ The package is available for .NET Framework 4.5 and newer.
 Installing the package using Package Manager Console:
 
 ```bash
-Run PM> Install-Package Passw0rd -Version 0.1.0
+PM> Install-Package Passw0rd -Version 0.2.0
 ```
 
 
