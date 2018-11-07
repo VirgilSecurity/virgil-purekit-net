@@ -113,8 +113,12 @@ namespace Passw0rd
             var parameters = new VerificationRequestModel 
             { 
                 AppId = this.ctx.AppId,
-                C0 = c0, 
-                Ns = pwdRecord.ServerNonce 
+                Version = pwdRecord.Version,
+                Verification = new VerificationModel 
+                {
+                    C0 = c0,
+                    Ns = pwdRecord.ServerNonce
+                }
             };
 
             byte[] m = null;

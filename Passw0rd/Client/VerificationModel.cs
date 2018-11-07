@@ -34,54 +34,17 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
-namespace Passw0rd
+namespace Passw0rd.Client
 {
-    using System;
-    using Passw0rd.Utils;
-    using Passw0rd.Utils.Asn1;
+    using System.Runtime.Serialization;
 
-    /// <summary>
-    /// Update token.
-    /// </summary>
-    public class UpdateToken
+    [DataContract]
+    public class VerificationModel
     {
-        /// <summary>
-        /// Gets the a value.
-        /// </summary>
-        public byte[] A { get; internal set; }
+        [DataMember(Name = "ns")]
+        public byte[] Ns { get; set; }
 
-        /// <summary>
-        /// Gets the b value.
-        /// </summary>
-        public byte[] B { get; internal set; }
-
-        /// <summary>
-        /// Gets the version.
-        /// </summary>
-        public int Version { get; internal set; }
-
-        /// <summary>
-        /// Decodes an <see cref="UpdateToken"/> form specified string.
-        /// </summary>
-        public static UpdateToken Decode(string updateToken)
-        {
-            var tokenParts = updateToken.Split(".");
-            if (tokenParts.Length != 3 ||
-                !Int32.TryParse(tokenParts[1], out int version) || 
-                !tokenParts[0].ToUpper().Equals("UT"))
-            {
-                throw new ArgumentException("has incorrect format", nameof(updateToken));
-            }
-
-            var asn1Bytes = Bytes.FromString(tokenParts[2], StringEncoding.BASE64);
-            var asn1Sequence = ASN1Sequence.Decode(asn1Bytes);
-
-            return new UpdateToken 
-            {
-                A = asn1Sequence.GetOctetStringFromElementAt(0), 
-                B = asn1Sequence.GetOctetStringFromElementAt(1),
-                Version = version
-            };
-        }
+        [DataMember(Name = "c_0")]
+        public byte[] C0 { get; set; }
     }
 }

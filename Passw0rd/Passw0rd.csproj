@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>0.1</PackageVersion>
+    <PackageVersion>0.1.1</PackageVersion>
     <Authors>Denis Kurilenko</Authors>
     <DevelopmentDependency>true</DevelopmentDependency>
     <Owners>Denis Kurilenko</Owners>
@@ -30,5 +30,6 @@
   <ItemGroup>
     <Compile Remove="Class1.cs" />
     <Compile Remove="Client\ValidationModel.cs" />
+    <Compile Remove="ClientSecretKey.cs" />
   </ItemGroup>
 </Project>

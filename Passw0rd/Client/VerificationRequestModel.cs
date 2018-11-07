@@ -44,10 +44,10 @@ namespace Passw0rd.Client
         [IgnoreDataMember]
         public string AppId { get; set; }
 
-        [DataMember(Name = "ns")]
-        public byte[] Ns { get; set; }
+        [DataMember(Name = "version")]
+        public int Version { get; set; }
 
-        [DataMember(Name = "c_0")]
-        public byte[] C0 { get; set; }
+        [DataMember(Name = "verify_request")]
+        public VerificationModel Verification { get; set; }
     }
 }

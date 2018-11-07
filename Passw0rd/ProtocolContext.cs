@@ -106,10 +106,10 @@ namespace Passw0rd
             string serverPublicKey, string clientSecretKey, string[] updateTokens = null)
         {
             var phe = new PheCrypto();
-            var pkS = EnsureServerPublicKey(serverPublicKey, phe);
-            var skC = EnsureClientPrivateKey(clientSecretKey, phe);
+            var (pkSVer, pkS) = EnsureServerPublicKey(serverPublicKey, phe);
+            var (skCVer, skC) = EnsureClientSecretKey(clientSecretKey, phe);
 
-            if (pkS.Version != skC.Version) 
+            if (pkSVer != skCVer) 
             {
                 throw new ArgumentException("Incorrect versions for Server/Client keys.");
             }
@@ -128,20 +128,13 @@ namespace Passw0rd
                 Crypto = phe
             };
 
-            var serverPksDictionary = new Dictionary<int, PublicKey>
-            {
-                [pkS.Version] = pkS.PublicKey
-            };
-
-            var clientSksDictionary = new Dictionary<int, SecretKey>
-            {
-                [skC.Version] = skC.SecretKey
-            };
+            var serverPksDictionary = new Dictionary<int, PublicKey> { [pkSVer] = pkS };
+            var clientSksDictionary = new Dictionary<int, SecretKey> { [skCVer] = skC };
 
             if (updateTokens != null && updateTokens.Length > 0)
             {
                 var updateTokenList = updateTokens.Select(UpdateToken.Decode)
-                    .Where(it => it.Version > skC.Version)
+                    .Where(it => it.Version > skCVer)
                     .OrderBy(it => it.Version)
                     .ToList();
 
@@ -149,11 +142,11 @@ namespace Passw0rd
 
                 foreach (var token in updateTokenList)
                 {
-                    var rotatedPk = phe.RotatePublicKey(pkS.PublicKey, token.A, token.B);
-                    var rotatedSk = phe.RotateSecretKey(skC.SecretKey, token.A, token.B);
+                    pkS = phe.RotatePublicKey(pkS, token.A, token.B);
+                    skC = phe.RotateSecretKey(skC, token.A, token.B);
 
-                    clientSksDictionary.Add(token.Version, rotatedSk);
-                    serverPksDictionary.Add(token.Version, rotatedPk);
+                    serverPksDictionary.Add(token.Version, pkS);
+                    clientSksDictionary.Add(token.Version, skC);
                 }
             }
 
@@ -163,7 +156,7 @@ namespace Passw0rd
             return ctx;
         }
 
-        private static ServerPublicKey EnsureServerPublicKey(string serverPublicKey, PheCrypto phe)
+        private static (int, PublicKey) EnsureServerPublicKey(string serverPublicKey, PheCrypto phe)
         {
             var keyParts = serverPublicKey.Split(".");
             if (keyParts.Length != 3 ||
@@ -173,34 +166,34 @@ namespace Passw0rd
                 throw new ArgumentException("has incorrect format", nameof(serverPublicKey));
             }
 
-            var keyBytes = Bytes.FromString(keyParts[2]);
+            var keyBytes = Bytes.FromString(keyParts[2], StringEncoding.BASE64);
             if (keyBytes.Length != 65)
             {
                 throw new ArgumentException("has incorrect length", nameof(serverPublicKey));
             }
 
             var publicKey = phe.DecodePublicKey(keyBytes);
-            return new ServerPublicKey(publicKey, version);
+            return (version, publicKey); 
         }
 
-        private static ClientSecretKey EnsureClientPrivateKey(string clientPrivateKey, PheCrypto phe)
+        private static (int, SecretKey) EnsureClientSecretKey(string clientSecretKey, PheCrypto phe)
         {
-            var keyParts = clientPrivateKey.Split(".");
+            var keyParts = clientSecretKey.Split(".");
             if (keyParts.Length != 3 ||
                 !Int32.TryParse(keyParts[1], out int version) ||
                 !keyParts[0].ToUpper().Equals("SK"))
             {
-                throw new ArgumentException("has incorrect format", nameof(clientPrivateKey));
+                throw new ArgumentException("has incorrect format", nameof(clientSecretKey));
             }
 
-            var keyBytes = Bytes.FromString(keyParts[2]);
+            var keyBytes = Bytes.FromString(keyParts[2], StringEncoding.BASE64);
             if (keyBytes.Length != 32)
             {
-                throw new ArgumentException("has incorrect length", nameof(clientPrivateKey));
+                throw new ArgumentException("has incorrect length", nameof(clientSecretKey));
             }
 
             var secretKey = phe.DecodeSecretKey(keyBytes);
-            return new ClientSecretKey(secretKey, version); 
+            return (version, secretKey); 
         }
     }
 }

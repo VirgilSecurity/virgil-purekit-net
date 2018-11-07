@@ -51,10 +51,17 @@ namespace Passw0rd.Client
         [DataMember(Name = "c_1")]
         public byte[] C1 { get; set; }
 
-        [DataMember(Name = "proof_of_success")]
+        [DataMember(Name = "proof_success")]
         public ProofOfSuccessModel ProofOfSuccess { get; set; }
 
-        [DataMember(Name = "proof_of_fail")]
+        [DataMember(Name = "proof_fail")]
         public ProofOfFailModel ProofOfFail { get; set; }
+    }
+
+    [DataContract]
+    public class VerificationResponseWrapperModel
+    {
+        [DataMember(Name = "response")]
+        public VerificationResponseModel Response { get; set; }
     }
 }

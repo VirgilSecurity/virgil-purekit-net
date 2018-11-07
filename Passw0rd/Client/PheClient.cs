@@ -58,10 +58,10 @@ namespace Passw0rd.Client
 
         public async Task<VerificationResponseModel> VerifyAsync(VerificationRequestModel request)
         {
-            var response = await this.SendAsync<VerificationRequestModel, VerificationResponseModel>(
-                HttpMethod.Get, $"phe/v1/{request.AppId}/verify-password", request).ConfigureAwait(false);
+            var response = await this.SendAsync<VerificationRequestModel, VerificationResponseWrapperModel>(
+                HttpMethod.Post, $"phe/v1/{request.AppId}/verify-password", request).ConfigureAwait(false);
 
-            return response;
+            return response.Response;
         }
     }
 }
