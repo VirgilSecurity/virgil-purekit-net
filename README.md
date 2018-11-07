@@ -128,9 +128,9 @@ Use this flow when a user already has his or her own `record` in your database. 
 var passwordCandidate = "passw0rd";
 
 // check candidate password with encrypted password record from your DB
-var isValid = await protocol.VerifyAsync(passwordCandidate, record);
+var verifyResult = await protocol.VerifyAsync(record, passwordCandidate);
 
-if (!isValid)
+if (!verifyResult.IsSuccess)
 {
     throw new Exception("Authentication failed");
 }
