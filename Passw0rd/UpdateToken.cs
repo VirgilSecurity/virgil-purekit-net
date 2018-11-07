@@ -37,9 +37,8 @@
 namespace Passw0rd
 {
     using System;
-    using System.Linq;
-
     using Passw0rd.Utils;
+    using Passw0rd.Utils.Asn1;
 
     /// <summary>
     /// Update token.
@@ -75,12 +74,12 @@ namespace Passw0rd
             }
 
             var asn1Bytes = Bytes.FromString(updateToken);
-            var decodedAsn1Sequense = Asn1Helper.Decode(asn1Bytes);
+            var asn1Sequence = ASN1Sequence.Decode(asn1Bytes);
 
             return new UpdateToken 
             {
-                A = decodedAsn1Sequense.ElementAt(0), 
-                B = decodedAsn1Sequense.ElementAt(1),
+                A = asn1Sequence.GetOctetStringFromElementAt(0), 
+                B = asn1Sequence.GetOctetStringFromElementAt(1),
                 Version = version
             };
         }

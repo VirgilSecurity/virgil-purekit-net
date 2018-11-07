@@ -36,8 +36,10 @@
 
 namespace Passw0rd
 {
+    using System.Collections.Generic;
     using System.Linq;
     using Passw0rd.Utils;
+    using Passw0rd.Utils.Asn1;
 
     /// <summary>
     /// The <see cref="PasswordRecord"/> represents an encryption record and 
@@ -55,12 +57,13 @@ namespace Passw0rd
         /// <summary>
         /// Initializes a new instance of the <see cref="PasswordRecord"/> class.
         /// </summary>
-        public PasswordRecord(byte[] nS, byte[] nC, byte[] t0, byte[] t1)
+        public PasswordRecord(byte[] nS, byte[] nC, byte[] t0, byte[] t1, int version)
         {
             this.ServerNonce = nS;
             this.ClientNonce = nC;
             this.RecordT0 = t0;
             this.RecordT1 = t1;
+            this.Version = version;
         }
 
         /// <summary>
@@ -83,9 +86,26 @@ namespace Passw0rd
         /// </summary>
         public byte[] RecordT1 { get; internal set; }
 
+        /// <summary>
+        /// Gets the version.
+        /// </summary>
+        public int Version { get; internal set; }
+
         public byte[] Encode()
         {
-            return Asn1Helper.Encode(this.ServerNonce, this.ClientNonce, this.RecordT0, this.RecordT1);
+            var sequence = new ASN1Sequence
+            {
+                Elements = new List<IASN1Object>
+                {
+                    new ASN1Integer(this.Version),
+                    new ASN1OctetString(this.ServerNonce),
+                    new ASN1OctetString(this.ClientNonce),
+                    new ASN1OctetString(this.RecordT0),
+                    new ASN1OctetString(this.RecordT1)
+                }
+            };
+
+            return sequence.Encode();
         }
 
         public string EncodeToBase64()
@@ -98,16 +118,21 @@ namespace Passw0rd
 
         public static PasswordRecord Decode(byte[] encodedRecord)
         {
-            var arrays = Asn1Helper.Decode(encodedRecord);
+            var sequence = ASN1Sequence.Decode(encodedRecord);
 
-            return new PasswordRecord(arrays.ElementAt(0), arrays.ElementAt(1), 
-                arrays.ElementAt(2), arrays.ElementAt(3));
+            var version = sequence.GetIntegerFromElementAt(0);
+            var nS  = sequence.GetOctetStringFromElementAt(1);
+            var nC  = sequence.GetOctetStringFromElementAt(2);
+            var t0  = sequence.GetOctetStringFromElementAt(3);
+            var t1  = sequence.GetOctetStringFromElementAt(4);
+
+            return new PasswordRecord(nS, nC, t0, t1, version);
         }
 
         public static PasswordRecord DecodeFromBase64(string encodedRecordBase64)
         {
-            var asn1Bytes = Bytes.FromString(encodedRecordBase64);
-            var record = PasswordRecord.Decode(asn1Bytes);
+            var asn1Bytes = Bytes.FromString(encodedRecordBase64, StringEncoding.BASE64);
+            var record = Decode(asn1Bytes);
 
             return record;
         }

@@ -37,12 +37,18 @@ namespace Passw0rd.Client
     using System.Runtime.Serialization;
 
     [DataContract]
-    public class EnrollmentRequestModel
+    public class EnrollmentModel
     {
-        [IgnoreDataMember]
-        public string AppId { get; set; }
+        [DataMember(Name = "ns")]
+        public byte[] Nonce { get; set; }
 
-        [DataMember(Name = "version")]
-        public int Version { get; set; }
+        [DataMember(Name = "c_0")]
+        public byte[] C0 { get; set; }
+
+        [DataMember(Name = "c_1")]
+        public byte[] C1 { get; set; }
+
+        [DataMember(Name = "proof")]
+        public ProofOfSuccessModel Proof { get; set; }
     }
 }

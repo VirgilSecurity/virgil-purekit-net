@@ -86,6 +86,9 @@ namespace Passw0rd.Client.Connection
 
             var response = await this.client.SendAsync(request).ConfigureAwait(false);
             var content = await response.Content.ReadAsStringAsync();
+
+            this.HandleError(response.StatusCode, content);
+
             var model = this.serializer.Deserialize<TResponseModel>(content);
 
             return model;
@@ -106,6 +109,9 @@ namespace Passw0rd.Client.Connection
 
             var response = await this.client.SendAsync(request).ConfigureAwait(false);
             var content = await response.Content.ReadAsStringAsync();
+
+            this.HandleError(response.StatusCode, content);
+
             var model = this.serializer.Deserialize<TResponseModel>(content);
 
             return model;

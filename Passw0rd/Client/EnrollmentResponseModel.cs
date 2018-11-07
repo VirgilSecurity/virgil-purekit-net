@@ -39,16 +39,10 @@ namespace Passw0rd.Client
     [DataContract]
     public class EnrollmentResponseModel
     {
-        [DataMember(Name = "ns")]
-        public byte[] Nonce { get; set; }
+        [DataMember(Name = "enrollment")]
+        public EnrollmentModel Enrollment { get; set; }
 
-        [DataMember(Name = "c_0")]
-        public byte[] C0 { get; set; }
-
-        [DataMember(Name = "c_1")]
-        public byte[] C1 { get; set; }
-
-        [DataMember(Name = "proof")]
-        public byte[] Proof { get; set; }
+        [DataMember(Name = "version")]
+        public int Version { get; set; }
     }
 }

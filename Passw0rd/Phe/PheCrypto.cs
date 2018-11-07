@@ -95,9 +95,9 @@ namespace Passw0rd.Phe
         public SecretKey GenerateSecretKey()
         {
             var randomZ = this.RandomZ();
-            var point   = this.curveParams.G.Multiply(randomZ);
+            // var point   = this.curveParams.G.Multiply(randomZ);
 
-            return new SecretKey(randomZ, (FpPoint)point);
+            return new SecretKey(randomZ);
         }
 
         /// <summary>
@@ -108,7 +108,13 @@ namespace Passw0rd.Phe
             var secretKeyInt = new BigInteger(1, encodedSecretKey);
             var point = this.curveParams.G.Multiply(secretKeyInt);
 
-            return new SecretKey(secretKeyInt, (FpPoint)point);
+            return new SecretKey(secretKeyInt);
+        }
+
+        public PublicKey ExtractPublicKey(SecretKey secretKey)
+        {
+            var point = (FpPoint)this.curveParams.G.Multiply(secretKey.Value);
+            return new PublicKey(point);
         }
 
         /// <summary>
@@ -215,13 +221,15 @@ namespace Passw0rd.Phe
         /// </summary>
         public ProofOfSuccess ProveSuccess(SecretKey skS, byte[] nS, byte[] c0, byte[] c1)
         {
+            var pkSPoint = this.curveParams.G.Multiply(skS.Value);
+
             var blindX    = this.RandomZ();
             var hs0Point  = this.HashToPoint(dhs0, nS);
             var hs1Point  = this.HashToPoint(dhs1, nS);
             var term1     = hs0Point.Multiply(blindX).GetEncoded();
             var term2     = hs1Point.Multiply(blindX).GetEncoded();
             var term3     = this.curveParams.G.Multiply(blindX).GetEncoded();
-            var pubKey    = skS.PublicKey.Encode();
+            var pubKey    = pkSPoint.GetEncoded();
             var curveG    = this.curveParams.G.Multiply(BigInteger.ValueOf(1));
             var challenge = this.HashZ(proofOK, pubKey, curveG.GetEncoded(), c0, c1, term1, term2, term3);
 
@@ -322,6 +330,32 @@ namespace Passw0rd.Phe
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Rotates the secret key.
+        /// </summary>
+        public SecretKey RotateSecretKey(SecretKey secretKey, byte[] a, byte[] b)
+        {
+            var aInt = new BigInteger(1, a);
+            var bInt = new BigInteger(1, b);
+
+            var newSecretKey = new SecretKey(curveParams.N.Mul(secretKey.Value, aInt));
+            return newSecretKey;
+        }
+
+        /// <summary>
+        /// Rotates the public key.
+        /// </summary>
+        public PublicKey RotatePublicKey(PublicKey publicKey, byte[] a, byte[] b)
+        {
+            var aInt = new BigInteger(1, a);
+            var bInt = new BigInteger(1, b);
+
+            var newPoint = (FpPoint)publicKey.Point.Multiply(aInt).Add(this.curveParams.G.Multiply(bInt));
+
+            var newPublicKey = new PublicKey(newPoint);
+            return newPublicKey;
         }
 
         /// <summary>

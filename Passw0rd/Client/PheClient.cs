@@ -50,8 +50,8 @@ namespace Passw0rd.Client
 
         public async Task<EnrollmentResponseModel> EnrollAsync(EnrollmentRequestModel request)
         {
-            var response = await this.SendAsync<EnrollmentResponseModel>(
-                HttpMethod.Get, $"{request.AppId}/enroll").ConfigureAwait(false);
+            var response = await this.SendAsync<EnrollmentRequestModel, EnrollmentResponseModel>(
+                HttpMethod.Post, $"phe/v1/{request.AppId}/enroll", request).ConfigureAwait(false);
 
             return response;
         }
@@ -59,7 +59,7 @@ namespace Passw0rd.Client
         public async Task<VerificationResponseModel> VerifyAsync(VerificationRequestModel request)
         {
             var response = await this.SendAsync<VerificationRequestModel, VerificationResponseModel>(
-                HttpMethod.Get, $"{request.AppId}/verify-password", request).ConfigureAwait(false);
+                HttpMethod.Get, $"phe/v1/{request.AppId}/verify-password", request).ConfigureAwait(false);
 
             return response;
         }

@@ -42,7 +42,7 @@ namespace Passw0rd
     using Passw0rd.Phe;
     using Passw0rd.Client;
     using Passw0rd.Utils;
-    using Passw0rd.Client.Connection;
+    using System.Linq;
 
     /// <summary>
     /// The <see cref="Protocol"/> provides an implementation of PHE (Password 
@@ -57,49 +57,16 @@ namespace Passw0rd
     /// and the service provider can rotate their secret keys, a proactive security 
     /// mechanism mandated by the Payment Card Industry Data Security Standard (PCI DSS).
     /// </remarks>
-    public partial class Protocol
+    public class Protocol
     {
-        private readonly PheCrypto phe;
-        private readonly IPheClient client;
-        private readonly SecretKey skC;
-        private readonly PublicKey pkS;
-        private readonly string appId;
+        private readonly ProtocolContext ctx;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Protocol"/> class.
         /// </summary>
-        public Protocol(IPheClient client, PheCrypto phe, SecretKey clientSecretKey, PublicKey serverPublicKey, string appId)
+        public Protocol(ProtocolContext context)
         {
-            this.phe = phe;
-            this.client = client;
-            this.skC = clientSecretKey;
-            this.pkS = serverPublicKey;
-            this.appId = appId;
-        }
-
-        /// <summary>
-        /// Sets up an <see cref="Protocol"/> instance by specified <see cref="ProtocolConfig"/>
-        /// </summary>
-        public static Protocol Setup(ProtocolConfig config)
-        {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
-            var phe = new PheCrypto();
-            var serializer = new HttpBodySerializer();
-            var client = new PheClient(serializer)
-            {
-                AccessToken = config.AccessToken,
-                BaseUri = new Uri(config.ServiceURL)
-            };
-
-            var skC = phe.DecodeSecretKey(Bytes.FromString(config.ClientPrivateKey, StringEncoding.BASE64));
-            var pkS = phe.DecodePublicKey(Bytes.FromString(config.ServerPublicKey, StringEncoding.BASE64));
-
-            var protocol = new Protocol(client, phe, skC, pkS, config.AppId);
-            return protocol;
+            this.ctx = context;
         }
 
         /// <summary>
@@ -107,22 +74,27 @@ namespace Passw0rd
         /// </summary>
         public async Task<PasswordRecord> EnrollAsync(string password)
         {
-            var enrollment  = await this.client.EnrollAsync(
-                new EnrollmentRequestModel{ AppId = this.appId })
+            var version = this.ctx.ActualVersion;
+            var skC = this.ctx.GetActualClientSecretKey();
+
+            var model = await this.ctx.Client.EnrollAsync(
+                new EnrollmentRequestModel{ AppId = this.ctx.AppId, Version = version })
                 .ConfigureAwait(false);
 
+            var enrollment = model.Enrollment;
             var nS = enrollment.Nonce;
-            var nC = this.phe.GenerateNonce();
+            var nC = this.ctx.Crypto.GenerateNonce();
             var pwdBytes = Bytes.FromString(password);
 
-            var (t0, t1) = this.phe.ComputeT(skC, pwdBytes, nC, enrollment.C0, enrollment.C1);
+            var (t0, t1) = this.ctx.Crypto.ComputeT(skC, pwdBytes, nC, enrollment.C0, enrollment.C1);
 
             var recordT = new PasswordRecord
             {
                 ClientNonce = nC,
                 ServerNonce = nS,
                 RecordT0 = t0,
-                RecordT1 = t1
+                RecordT1 = t1,
+                Version = version
             };
 
             return recordT;
@@ -134,38 +106,39 @@ namespace Passw0rd
         public async Task<VerificationResult> VerifyAsync(PasswordRecord pwdRecord, string password)
         {
             var pwdBytes = Bytes.FromString(password);
-            var c0 = this.phe.ComputeC0(this.skC, pwdBytes, pwdRecord.ClientNonce, pwdRecord.RecordT0);
+            var skC = this.ctx.GetClientSecretKeyForVersion(pwdRecord.Version);
+            var pkS = this.ctx.GetServerPublicKeyForVersion(pwdRecord.Version);
+            var c0 = this.ctx.Crypto.ComputeC0(skC, pwdBytes, pwdRecord.ClientNonce, pwdRecord.RecordT0);
 
             var parameters = new VerificationRequestModel 
             { 
-                AppId = appId,
+                AppId = this.ctx.AppId,
                 C0 = c0, 
                 Ns = pwdRecord.ServerNonce 
             };
 
             byte[] m = null;
 
-            var serverResult = await this.client.VerifyAsync(parameters).ConfigureAwait(false);
+            var serverResult = await this.ctx.Client.VerifyAsync(parameters).ConfigureAwait(false);
             if (serverResult.IsSuccess)
             {
                 var proofModel = serverResult.ProofOfSuccess ?? throw new ProofNotProvidedException();
 
                 var proof = new ProofOfSuccess
                 {
-                    Term1 = proofModel.Term1,
-                    Term2 = proofModel.Term2,
-                    Term3 = proofModel.Term3,
+                    Term1  = proofModel.Term1,
+                    Term2  = proofModel.Term2,
+                    Term3  = proofModel.Term3,
                     BlindX = proofModel.BlindX,
                 };
            
-                var isValid = this.phe.ValidateProofOfSuccess(proof, this.pkS, pwdRecord.ServerNonce, c0, serverResult.C1);
-
+                var isValid = this.ctx.Crypto.ValidateProofOfSuccess(proof, pkS, pwdRecord.ServerNonce, c0, serverResult.C1);
                 if (!isValid)
                 {
                     throw new ProofOfSuccessNotValidException();
                 }
 
-                m = this.phe.DecryptM(this.skC, pwdBytes, pwdRecord.ClientNonce, pwdRecord.RecordT1, serverResult.C1);
+                m = this.ctx.Crypto.DecryptM(skC, pwdBytes, pwdRecord.ClientNonce, pwdRecord.RecordT1, serverResult.C1);
             }
             else
             {
@@ -173,15 +146,15 @@ namespace Passw0rd
 
                 var proof = new ProofOfFail
                 {
-                    Term1 = proofModel.Term1,
-                    Term2 = proofModel.Term2,
-                    Term3 = proofModel.Term3,
-                    Term4 = proofModel.Term4,
+                    Term1  = proofModel.Term1,
+                    Term2  = proofModel.Term2,
+                    Term3  = proofModel.Term3,
+                    Term4  = proofModel.Term4,
                     BlindA = proofModel.BlindA,
                     BlindB = proofModel.BlindB,
                 };
 
-                var isValid = this.phe.ValidateProofOfFail(proof, this.pkS, pwdRecord.ServerNonce, c0, serverResult.C1);
+                var isValid = this.ctx.Crypto.ValidateProofOfFail(proof, pkS, pwdRecord.ServerNonce, c0, serverResult.C1);
 
                 if (!isValid)
                 {
@@ -201,27 +174,45 @@ namespace Passw0rd
         /// <summary>
         /// Updates a <see cref="PasswordRecord"/> with an specified <see cref="UpdateToken"/>.
         /// </summary>
-        public PasswordRecord Update(PasswordRecord record, UpdateToken updateToken)
+        public PasswordRecord Update(PasswordRecord record)
         {
             if (record == null)
             {
                 throw new ArgumentNullException(nameof(record));
             }
 
-            if (updateToken == null)
+            if (this.ctx.UpdateTokens == null || !this.ctx.UpdateTokens.Any())
             {
-                throw new ArgumentNullException(nameof(updateToken));
+                throw new Passw0rdProtocolException("UpdateToken is not provided in context");
             }
 
-            var (t0, t1) = this.phe.UpdateT(record.ServerNonce, record.RecordT0, 
-                record.RecordT1, updateToken.A, updateToken.B);
+            var tokensForRotate = this.ctx.UpdateTokens
+                                      .Where(it => it.Version > record.Version)
+                                      .OrderBy(it => it.Version)
+                                      .ToList();
+
+            if (!tokensForRotate.Any())
+            {
+                throw new Passw0rdProtocolException("It's up to date record.");
+            }
+
+            var t0 = record.RecordT0;
+            var t1 = record.RecordT1;
+            var version = record.Version;
+
+            foreach (var token in tokensForRotate)
+            {
+                (t0, t1) = this.ctx.Crypto.UpdateT(record.ServerNonce, t0, t1, token.A, token.B);
+                version = token.Version;
+            }
 
             var newRecord = new PasswordRecord
             {
                 ClientNonce = record.ClientNonce,
                 ServerNonce = record.ServerNonce,
                 RecordT0 = t0,
-                RecordT1 = t1
+                RecordT1 = t1,
+                Version = version
             };
 
             return newRecord;

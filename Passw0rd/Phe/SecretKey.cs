@@ -37,22 +37,15 @@
 namespace Passw0rd.Phe
 {
     using Org.BouncyCastle.Math;
-    using Org.BouncyCastle.Math.EC;
 
     public class SecretKey
     {
-        internal SecretKey(BigInteger bigInt, FpPoint point)
+        internal SecretKey(BigInteger bigInt)
         {
             this.Value = bigInt;
-            this.PublicKey = new PublicKey(point);
         }
 
         internal BigInteger Value { get; private set; }
-
-        /// <summary>
-        /// Gets the public key.
-        /// </summary>
-        public PublicKey PublicKey { get; private set; }
 
         public byte[] Encode()
         {

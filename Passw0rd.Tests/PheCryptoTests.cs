@@ -69,8 +69,9 @@
             var skC = phe.DecodeSecretKey(Bytes.FromString("gPdKsQRz9Vmc/DnbfxCHUioU6omEa0Sg7pncSHOhA7I=", StringEncoding.BASE64));
 
             var nS  = Bytes.FromString("POKVRG0nmZc9062v41TNFngibsgMKzt/BY6lZ/5pcZg=", StringEncoding.BASE64);
+            var pkS = phe.ExtractPublicKey(skS);
 
-            var isValid = phe.ValidateProofOfSuccess(proof, skS.PublicKey, nS, c0, c1);
+            var isValid = phe.ValidateProofOfSuccess(proof, pkS, nS, c0, c1);
 
             Assert.True(isValid);
         }
@@ -115,6 +116,39 @@
             var mm  = phe.DecryptM(skC, pwd, nC, t1, c1);
 
             Assert.Equal(m, mm);
+        }
+
+        [Fact]
+        public void Should_RotateTheSameSecretKey_When_OldSecretKeyAndUpdateTokenAreGiven()
+        {
+            var a = Bytes.FromString("T20buheJjFOg+rsxP5ADIS7G3htdY/MUt9VozMOgEfA=", StringEncoding.BASE64);
+            var b = Bytes.FromString("UbXPXPtmKuudthZXXjJTE9AxBEgZB7mTFD+TGViCgHU=", StringEncoding.BASE64);
+            var skC = Bytes.FromString("YOCs/LOx6hll3nUBC29xpNJuLXofpKaBUNHPDBMA7JI=", StringEncoding.BASE64);
+            var skC1 = Bytes.FromString("Zd+YJUvpXKQIjMaeZiad4vFOoU+mH2Qldx/yqwmGg2I=", StringEncoding.BASE64);
+            // var pkS = Bytes.FromString("BBqqpApF8EsvQtLQlcR1sBon9RbKDcrsNypYDGatbx5JxvdQfGaszDwen01xQVWxL0UvrLfmzTBJHpL+q5+kyWw=", StringEncoding.BASE64);
+
+            var phe = new PheCrypto();
+            var pheSkC = phe.DecodeSecretKey(skC);
+
+            var pheSkC1 = phe.RotateSecretKey(pheSkC, a, b);
+
+            Assert.Equal(skC1, pheSkC1.Encode());
+        }
+
+        [Fact]
+        public void Should_RotateTheSamePublicKey_When_OldPublicKeyAndUpdateTokenAreGiven()
+        {
+            var a = Bytes.FromString("T20buheJjFOg+rsxP5ADIS7G3htdY/MUt9VozMOgEfA=", StringEncoding.BASE64);
+            var b = Bytes.FromString("UbXPXPtmKuudthZXXjJTE9AxBEgZB7mTFD+TGViCgHU=", StringEncoding.BASE64);
+            var pkS = Bytes.FromString("BBqqpApF8EsvQtLQlcR1sBon9RbKDcrsNypYDGatbx5JxvdQfGaszDwen01xQVWxL0UvrLfmzTBJHpL+q5+kyWw=", StringEncoding.BASE64);
+            var pkS1 = Bytes.FromString("BMiu/KcLEom9PwAeEeN9gYJZ45kdlYdo1bYPsd8YjWvRVgqJY2MzJlu2OR1d7ynxZvsdXbVY68pxG/oK3k+3xX0=", StringEncoding.BASE64);
+
+            var phe = new PheCrypto();
+            var phePkC = phe.DecodePublicKey(pkS);
+
+            var phePkC1 = phe.RotatePublicKey(phePkC, a, b);
+
+            Assert.Equal(pkS1, phePkC1.Encode());
         }
     }
 }
