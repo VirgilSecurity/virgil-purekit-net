@@ -3,12 +3,14 @@
 [![Nuget package](https://img.shields.io/nuget/v/passw0rd.svg)](https://www.nuget.org/packages/Passw0rd/) [![GitHub license](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](https://github.com/VirgilSecurity/virgil/blob/master/LICENSE)
 
 
-[Introduction](#introduction) | [Passw0rd Features](#passw0rd-features) | [Register your Account](#register-your-account) | [Install and configure SDK](#install-and-configure-sdk) | [Setup your Database](#setup-your-database) | [Usage Examples](#usage-examples) | [Docs](#docs) | [Support](#support)
+[Introduction](#introduction) | [Passw0rd Features](#passw0rd-features) | [Register your Account](#register-your-account) | [Install and configure SDK](#install-and-configure-sdk) | [Setup your Database](#prepare-your-database) | [Usage Examples](#usage-examples) | [Docs](#docs) | [Support](#support)
 
 ## Introduction
-<a href="https://passw0rd.io/"><img width="260px" src="https://cdn.virgilsecurity.com/assets/images/github/logos/passw0rd.png" align="left" hspace="0" vspace="0"></a>[Virgil Security](https://virgilsecurity.com) introduces to developers an implementation of the [Password-Hardened Encryption (PHE) protocol](https://www.chaac.tf.fau.de/files/2018/06/main.pdf) that provides developers with a technology to protect users passwords from offline/online attacks and make stolen passwords useless even if your database has been compromised.
+<a href="https://passw0rd.io/"><img width="260px" src="https://cdn.virgilsecurity.com/assets/images/github/logos/passw0rd.png" align="left" hspace="0" vspace="0"></a>[Virgil Security](https://virgilsecurity.com) introduces an implementation of the [Password-Hardened Encryption (PHE) protocol](https://virgilsecurity.com/wp-content/uploads/2018/11/PHE-Whitepaper-2018.pdf) that provides developers with a technology to protect users passwords from offline/online attacks and make stolen passwords useless even if your database has been compromised.
 
 PHE is a new, more secure mechanism that protects user passwords and lessens the security risks associated with weak passwords. Neither Virgil nor attackers know anything about user's password.
+
+**Authors of the PHE protocol**: Russell W. F. Lai, Christoph Egger, Manuel Reinert, Sherman S. M. Chow, Matteo Maffei and Dominique Schroder.
 
 
 ## Passw0rd Features
@@ -21,7 +23,7 @@ PHE is a new, more secure mechanism that protects user passwords and lessens the
 
 ## Register your Account
 Before starting practicing with the SDK and usage examples be sure that:
-- you have a registered Account at Virgil Cloud
+- you have a registered Passw0rd Account
 - you have a registered Passw0rd Application
 - and you got your Passw0rd Application's credentials, such as: Application ID, Access Token, Service Public Key, Client Secret Key.
 
@@ -61,8 +63,8 @@ var context = ProtocolContext.Create(
 var protocol = new Protocol(context);
 ```
 
-## Setup your Database
-Passw0rd SDK allows you to easily perform all the necessary operations to create, verify and update user's password without requiring any additional actions.
+## Prepare your Database
+Passw0rd SDK allows you to easily perform all the necessary operations to create, verify and rotate user's password without requiring any additional actions.
 
 In order to create and work with user's protected passw0rd you have to set up your database with an additional column.
 
@@ -138,9 +140,9 @@ if (!verifyResult.IsSuccess)
 ```
 
 
-### Update user's passw0rd
+### Rotate user's passw0rd
 
-This function allows you to use a special `UpdateTokens` to update users' `record` in your database.
+This function allows you to use a special `UpdateTokens` to rotate users' `record` in your database.
 
 > Use this flow only if your database has been COMPROMISED!
 When a user just needs to change his or her own password, use the `enroll` function to replace old user's `passw0rd_record` value in your DB with a new user's `passw0rd_record`.
@@ -174,7 +176,7 @@ var newRecord = protocol.Update(record);
 
 ## Docs
 * [Passw0rd][_passw0rd] home page
-* [The PHE WhitePaper](https://www.chaac.tf.fau.de/files/2018/06/main.pdf) - foundation principles of the protocol
+* [The PHE WhitePaper](https://virgilsecurity.com/wp-content/uploads/2018/11/PHE-Whitepaper-2018.pdf) - foundation principles of the protocol
 
 ## License
 
