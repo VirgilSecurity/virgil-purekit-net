@@ -3,40 +3,42 @@
 [![Nuget package](https://img.shields.io/nuget/v/passw0rd.svg)](https://www.nuget.org/packages/Passw0rd/) [![GitHub license](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](https://github.com/VirgilSecurity/virgil/blob/master/LICENSE)
 
 
-[Introduction](#introduction) | [Passw0rd Features](#passw0rd-features) | [Register your Account](#register-your-account) | [Install and configure SDK](#install-and-configure-sdk) | [Setup your Database](#setup-your-database) | [Usage Examples](#usage-examples) | [Docs](#docs) | [Support](#support)
+[Introduction](#introduction) | [Features](#features) | [Register Your Account](#register-your-account) | [Install and Configure SDK](#install-and-configure-sdk) | [Prepare Your Database](#prepare-your-database) | [Usage Examples](#usage-examples) | [Docs](#docs) | [Support](#support)
 
 ## Introduction
-<a href="https://passw0rd.io/"><img width="260px" src="https://cdn.virgilsecurity.com/assets/images/github/logos/passw0rd.png" align="left" hspace="0" vspace="0"></a>[Virgil Security](https://virgilsecurity.com) introduces to developers an implementation of the [Password-Hardened Encryption (PHE) protocol](https://www.chaac.tf.fau.de/files/2018/06/main.pdf) that provides developers with a technology to protect users passwords from offline/online attacks and make stolen passwords useless even if your database has been compromised.
+<a href="https://passw0rd.io/"><img width="260px" src="https://cdn.virgilsecurity.com/assets/images/github/logos/passw0rd.png" align="left" hspace="0" vspace="0"></a>[Virgil Security](https://virgilsecurity.com) introduces an implementation of the [Password-Hardened Encryption (PHE) protocol](https://virgilsecurity.com/wp-content/uploads/2018/11/PHE-Whitepaper-2018.pdf) that provides developers with a technology to protect users passwords from offline/online attacks and make stolen passwords useless even if your database has been compromised.
 
-PHE is a new, more secure mechanism that protects user passwords and lessens the security risks associated with weak passwords. Neither Virgil nor attackers know anything about user's password.
+PHE is a new, more secure mechanism that protects user passwords and lessens the security risks associated with weak passwords. Neither Virgil nor attackers know anything about user password.
 
-
-## Passw0rd Features
-- zero knowledge of user's password
-- protection from online attacks
-- protection from offline attacks
-- instant invalidation of stolen database
-- user data encryption with a personal key
+**Authors of the PHE protocol**: Russell W. F. Lai, Christoph Egger, Manuel Reinert, Sherman S. M. Chow, Matteo Maffei and Dominique Schroder.
 
 
-## Register your Account
+## Features
+- Zero knowledge of user password
+- Protection from online attacks
+- Protection from offline attacks
+- Instant invalidation of stolen database
+- User data encryption with a personal key
+
+
+## Register Your Account
 Before starting practicing with the SDK and usage examples be sure that:
-- you have a registered Account at Virgil Cloud
-- you have a registered Passw0rd Application
-- and you got your Passw0rd Application's credentials, such as: Application ID, Access Token, Service Public Key, Client Secret Key.
+- you have a registered passw0rd account
+- you have a registered passw0rd application
+- and you got your passw0rd application's credentials, such as: Application ID, Access Token, Service Public Key, Client Secret Key
 
-If you don't have an account or a passw0rd project with its credentials, please use the [Passw0rd CLI](https://github.com/passw0rd/cli) to get it.
+If you don't have an account or a passw0rd project with its credentials, please use the [passw0rd CLI](https://github.com/passw0rd/cli) to get it.
 
 
-## Install and configure SDK
+## Install and Configure SDK
 The Passw0rd .NET SDK is provided as a package named `Passw0rd`. The package is distributed via [NuGet package](https://docs.microsoft.com/en-us/nuget/quickstart/use-a-package) management system.
 
 The package is available for .NET Core 2.1
 
 **Supported platforms**:
-- MacOS,
-- Linux,
-- Windows.
+- MacOS
+- Linux
+- Windows
 
 ### Install SDK Package
 
@@ -61,8 +63,8 @@ var context = ProtocolContext.Create(
 var protocol = new Protocol(context);
 ```
 
-## Setup your Database
-Passw0rd SDK allows you to easily perform all the necessary operations to create, verify and update user's password without requiring any additional actions.
+## Prepare Your Database
+Passw0rd SDK allows you to easily perform all the necessary operations to create, verify and rotate user's password without requiring any additional actions.
 
 In order to create and work with user's protected passw0rd you have to set up your database with an additional column.
 
@@ -91,24 +93,24 @@ The column must have the following parameters:
 
 ## Usage Examples
 
-### Enroll user's passw0rd
+### Enroll User passw0rd
 
 Use this flow to create a new passw0rd record for a user in your DB.
 
-> Remember, if you already have a database with user passwords, you don't have to wait until a user logs in to your system to implement Passw0rd. You can go through your database and enroll user's passw0rd at any time.
+> Remember, if you already have a database with user passwords, you don't have to wait until a user logs in to your system to implement **passw0rd**. You can go through your database and enroll user's passw0rd at any time.
 
 So, in order to create passw0rd for a new database or an available one, go through the following operations:
-- Take user's **password** (or its hash or whatever you use) and pass it into the `EnrollAsync` function in SDK on your Server side.
-- Passw0rd SDK will send a request to Passw0rd Service to get enrollment.
-- Then, Passw0rd SDK will create user's Passw0rd **record**. You need to store this unique user's `record` (recordBytes or recordBase64 format) in your database in an associated column.
+- Take user **password** (or its hash or whatever you use) and pass it into the `EnrollAsync` function in SDK on your Server side.
+- Passw0rd SDK will send a request to passw0rd service to get enrollment.
+- Then, passw0rd SDK will create user passw0rd **record**. You need to store this unique user's `record` (recordBytes or recordBase64 format) in your database in an associated column.
 
 ```cs
 var password = "passw0rd";
 
-// create a new encrypted password record using user's password or its hash
+// create a new encrypted passw0rd record using user password or its hash
 var record = await protocol.EnrollAsync(password);
 
-// save encrypted password record into your users DB
+// save encrypted passw0rd record into your users DB
 
 var recordBytes = record.Encode();          // encode encrypted password record into bytearray
 var recordBase64 = record.EncodeToBase64(); // encode encrypted password record base64 string
@@ -119,7 +121,7 @@ var recordBase64 = record.EncodeToBase64(); // encode encrypted password record 
 When you've created a `passw0rd_record` for all users in your DB, you can delete the unnecessary column where user passwords were previously stored.
 
 
-### Verify user's passw0rd
+### Verify User passw0rd
 
 Use this flow at the "sign in" step when a user already has his or her own unique `record` in your database. This function allows you to verify that the password that the user has passed is correct. 
 You have to pass his or her `record` from your DB into the `VerifyPassword` function:
@@ -138,16 +140,16 @@ if (!verifyResult.IsSuccess)
 ```
 
 
-### Update user's passw0rd
+### Rotate User passw0rd
 
-This function allows you to use a special `UpdateTokens` to update users' `record` in your database.
+This function allows you to use a special `UpdateTokens` to rotate users' `record` in your database.
 
 > Use this flow only if your database has been COMPROMISED!
 When a user just needs to change his or her own password, use the `enroll` function to replace old user's `passw0rd_record` value in your DB with a new user's `passw0rd_record`.
 
 How it works:
-- Get your `UpdateToken` using [Passw0rd CLI](https://github.com/passw0rd/cli).
-- Specify the `UpdateToken` in the Passw0rd SDK on your Server side.
+- Get your `UpdateToken` using [passw0rd CLI](https://github.com/passw0rd/cli).
+- Specify the `UpdateToken` in the passw0rd SDK on your Server side.
 - Then use the `Update` records function to create new user's `record` for your users (you don't need to ask your users to create a new password).
 - Finally, save the new user's `record` into your database.
 
@@ -166,15 +168,15 @@ var context = ProtocolContext.Create(
 
 var protocol = new Protocol(context);
 
-// get previous user's encrypted password record from the compromised DB
-// update previous user's encrypted password record and save new one into your DB
+// get previous user's encrypted passw0rd record from the compromised DB
+// update previous user's encrypted passw0rd record and save new one into your DB
 var newRecord = protocol.Update(record);
 ```
 
 
 ## Docs
 * [Passw0rd][_passw0rd] home page
-* [The PHE WhitePaper](https://www.chaac.tf.fau.de/files/2018/06/main.pdf) - foundation principles of the protocol
+* [The PHE WhitePaper](https://virgilsecurity.com/wp-content/uploads/2018/11/PHE-Whitepaper-2018.pdf) - foundation principles of the protocol
 
 ## License
 
