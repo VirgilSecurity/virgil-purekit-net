@@ -18,8 +18,8 @@ namespace Passw0rd.Tests
 
             var domain = Bytes.FromString("My Tuple App");
 
-            var tupleHash = new TupleHash();
-            var hash = tupleHash.Sum(domain, arr1, arr2, arr3);
+            var tupleHash = new SHA512();
+            var hash = tupleHash.ComputeHash(domain, arr1, arr2, arr3);
 
             Assert.Equal(rightHash, Bytes.ToString(hash, StringEncoding.HEX).ToUpper());
         }

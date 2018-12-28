@@ -49,6 +49,7 @@ namespace Passw0rd.Phe
     using Org.BouncyCastle.Math;
     using Org.BouncyCastle.Math.EC;
     using Org.BouncyCastle.Security;
+    using System.Security.Cryptography;
 
     /// <summary>
     /// Phe crypto.
@@ -58,23 +59,30 @@ namespace Passw0rd.Phe
         private X9ECParameters curveParams;
         private FpCurve curve;
         private SecureRandom rng;
-        private TupleHash tupleHash;
+        private SHA512 sha512;
         private Swu swu;
 
-        private byte[] dhc0     = Encoding.UTF8.GetBytes("hc0");
-        private byte[] dhc1     = Encoding.UTF8.GetBytes("hc1");
-        private byte[] dm       = Encoding.UTF8.GetBytes("dm");
-        private byte[] dhs0     = Encoding.UTF8.GetBytes("hs0");
-        private byte[] dhs1     = Encoding.UTF8.GetBytes("hs1");
+        private byte[] dhc0     = Bytes.FromString("hc0");
+        private byte[] dhc1     = Bytes.FromString("hc1");
+        private byte[] dm       = Bytes.FromString("dm");
+        private byte[] dhs0     = Bytes.FromString("hs0");
+        private byte[] dhs1     = Bytes.FromString("hs1");
         private byte[] proofOK  = Bytes.FromString("ProofOk");
         private byte[] proofErr = Bytes.FromString("ProofError");
+        private byte[] kdfInfoZ = Bytes.FromString("VIRGIL_PHE_KDF_INFO_Z");
+        private byte[] encrypt = Bytes.FromString("PheEncrypt");
+
+
+
+       
+        //kdfInfoClientKey = [] byte ("VIRGIL_PHE_KDF_INFO_AK")
 
         public PheCrypto()
         {
             this.curveParams = NistNamedCurves.GetByName("P-256");
             this.curve = (FpCurve)curveParams.Curve;
             this.rng = new SecureRandom();
-            this.tupleHash = new TupleHash();
+            this.sha512 = new SHA512();
             this.swu = new Swu(curve.Q, curve.B.ToBigInteger());
         }
 
@@ -175,7 +183,7 @@ namespace Passw0rd.Phe
 
 
             var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
-            hkdf.Init(new HkdfParameters(mPoint.GetEncoded(), null, Encoding.UTF8.GetBytes("Secret")));
+            hkdf.Init(new HkdfParameters(mPoint.GetEncoded(), null, encrypt));
             var key = new byte[32];
             hkdf.GenerateBytes(key, 0, key.Length);
 
@@ -382,10 +390,10 @@ namespace Passw0rd.Phe
         /// </summary>
         private BigInteger HashZ(byte[] domain, params byte[][] datas)
         {
-            var hash = this.tupleHash.Sum(domain, datas);
+            var hash = this.sha512.ComputeHash(domain, datas);
 
             var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
-            hkdf.Init(new HkdfParameters(hash, domain, Encoding.UTF8.GetBytes("TupleKDF")));
+            hkdf.Init(new HkdfParameters(hash, domain, kdfInfoZ));
             var result = new byte[32];
 
             BigInteger z;
@@ -405,7 +413,7 @@ namespace Passw0rd.Phe
         /// </summary>
         private FpPoint HashToPoint(byte[] domain, params byte[][] datas)
         {
-            var hash   = this.tupleHash.Sum(domain, datas);
+            var hash   = this.sha512.ComputeHash(domain, datas);
             var (x, y) = this.swu.HashToPoint(hash);
 
             var xField = this.curve.FromBigInteger(x);
