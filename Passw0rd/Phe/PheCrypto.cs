@@ -49,7 +49,6 @@ namespace Passw0rd.Phe
     using Org.BouncyCastle.Math;
     using Org.BouncyCastle.Math.EC;
     using Org.BouncyCastle.Security;
-    using System.Security.Cryptography;
 
     /// <summary>
     /// Phe crypto.
@@ -413,7 +412,7 @@ namespace Passw0rd.Phe
         /// </summary>
         private FpPoint HashToPoint(byte[] domain, params byte[][] datas)
         {
-            var hash   = this.sha512.ComputeHash(domain, datas);
+            var hash = this.sha512.ComputeHash(domain, datas);
             var (x, y) = this.swu.HashToPoint(hash);
 
             var xField = this.curve.FromBigInteger(x);

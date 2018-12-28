@@ -33,4 +33,7 @@
     <Compile Remove="Client\ValidationModel.cs" />
     <Compile Remove="ClientSecretKey.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Phe\phe.proto" />
+  </ItemGroup>
 </Project>
