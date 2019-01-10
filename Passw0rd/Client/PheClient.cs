@@ -48,17 +48,18 @@ namespace Passw0rd.Client
         {
         }
 
-        public async Task<EnrollmentResponseModel> EnrollAsync(EnrollmentRequestModel request)
+        public async Task<byte[]> EnrollAsync(EnrollmentRequestModel request)
         {
+            
             var response = await this.SendAsync<EnrollmentRequestModel, EnrollmentResponseModel>(
                 HttpMethod.Post, $"phe/v1/{request.AppId}/enroll", request).ConfigureAwait(false);
 
             return response;
         }
 
-        public async Task<VerificationResponseModel> VerifyAsync(VerificationRequestModel request)
+        public async Task<VerificationResponseModelOld> VerifyAsync(VerificationRequestModelOld request)
         {
-            var response = await this.SendAsync<VerificationRequestModel, VerificationResponseWrapperModel>(
+            var response = await this.SendAsync<VerificationRequestModelOld, VerificationResponseWrapperModel>(
                 HttpMethod.Post, $"phe/v1/{request.AppId}/verify-password", request).ConfigureAwait(false);
 
             return response.Response;

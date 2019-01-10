@@ -43,7 +43,7 @@ namespace Passw0rd
     /// <summary>
     /// Update token.
     /// </summary>
-    public class UpdateToken
+    public class UpdateTokenOld
     {
         /// <summary>
         /// Gets the a value.
@@ -61,9 +61,9 @@ namespace Passw0rd
         public int Version { get; internal set; }
 
         /// <summary>
-        /// Decodes an <see cref="UpdateToken"/> form specified string.
+        /// Decodes an <see cref="UpdateTokenOld"/> form specified string.
         /// </summary>
-        public static UpdateToken Decode(string updateToken)
+        public static UpdateTokenOld Decode(string updateToken)
         {
             var tokenParts = updateToken.Split(".");
             if (tokenParts.Length != 3 ||
@@ -76,7 +76,7 @@ namespace Passw0rd
             var asn1Bytes = Bytes.FromString(tokenParts[2], StringEncoding.BASE64);
             var asn1Sequence = ASN1Sequence.Decode(asn1Bytes);
 
-            return new UpdateToken 
+            return new UpdateTokenOld 
             {
                 A = asn1Sequence.GetOctetStringFromElementAt(0), 
                 B = asn1Sequence.GetOctetStringFromElementAt(1),

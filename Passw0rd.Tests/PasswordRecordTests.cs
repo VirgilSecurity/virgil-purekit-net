@@ -14,11 +14,11 @@
             var t0 = Bytes.FromString("BFVFSh2DlZkRQRjl9kLZWRqAA6dSFXU1TVymEqcM06fIorhK0SeDVSbA1390FDp9btM0RgztQAeYvZuH3/2SEvw=", StringEncoding.BASE64);
             var t1 = Bytes.FromString("BEUyxTjawlSTQnms5yuJwvIgNJDlpC7X71S+x8aOIHmruHxNIk+8bW85Wk9Dh/5XidFgL5AB266k9tjs5dApm6w=", StringEncoding.BASE64);
 
-            var record = new PasswordRecord(nS, nC, t0, t1, v);
+            var record = new PasswordRecordOld(nS, nC, t0, t1, v);
 
             var str = record.EncodeToBase64();
 
-            var decodedRecord = PasswordRecord.DecodeFromBase64(str);
+            var decodedRecord = PasswordRecordOld.DecodeFromBase64(str);
 
             Assert.Equal(decodedRecord.Version, v);
             Assert.Equal(decodedRecord.ServerNonce, nS);
@@ -36,7 +36,7 @@
                 "KIFUBYviMktBEEETpeGtp1awNv9OaE73fqi73Iy4EcG9RVK7xI1XOAMJZpait" +
                 "qRO/FEYbx05lrEtRN3E5HtOGt1cyD1mJX1q/8Prw==";
 
-            var decodedRecord = PasswordRecord.DecodeFromBase64(str);
+            var decodedRecord = PasswordRecordOld.DecodeFromBase64(str);
 
             var nS = Bytes.FromString("5f972cd90da0cdd30c367d3acb3be4c74528007371be96aeddb457bf18d41a60", StringEncoding.HEX);
             var nC = Bytes.FromString("4231e287750c4777b1a37acbed6a99d1ba8a4fe2278733427286df650be94aad", StringEncoding.HEX);

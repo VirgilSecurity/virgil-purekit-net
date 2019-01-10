@@ -36,11 +36,13 @@
 
 namespace Passw0rd.Phe
 {
-    public class ProofOfSuccess
+    public class ProofOfFailOld
     {
         public byte[] Term1 { get; set; }
         public byte[] Term2 { get; set; }
         public byte[] Term3 { get; set; }
-        public byte[] BlindX { get; set; }
+        public byte[] Term4 { get; set; }
+        public byte[] BlindA { get; set; }
+        public byte[] BlindB { get; set; }
     }
 }

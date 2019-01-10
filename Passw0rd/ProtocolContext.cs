@@ -47,8 +47,8 @@ namespace Passw0rd
 
     public class ProtocolContext
     {
-        private IDictionary<int, SecretKey> clientSecretKeys;
-        private IDictionary<int, PublicKey> serverPublicKeys;
+        private IDictionary<uint, SecretKey> clientSecretKeys;
+        private IDictionary<uint, PublicKey> serverPublicKeys;
 
         private ProtocolContext()
         {
@@ -72,9 +72,9 @@ namespace Passw0rd
         /// <summary>
         /// Gets the update tokens.
         /// </summary>
-        public IEnumerable<UpdateToken> UpdateTokens { get; private set; } 
+        public IEnumerable<UpdateTokenOld> UpdateTokens { get; private set; } 
 
-        public int ActualVersion 
+        public uint ActualVersion 
         {
             get 
             {
@@ -133,7 +133,7 @@ namespace Passw0rd
 
             if (updateTokens != null && updateTokens.Length > 0)
             {
-                var updateTokenList = updateTokens.Select(UpdateToken.Decode)
+                var updateTokenList = updateTokens.Select(UpdateTokenOld.Decode)
                     .Where(it => it.Version > skCVer)
                     .OrderBy(it => it.Version)
                     .ToList();

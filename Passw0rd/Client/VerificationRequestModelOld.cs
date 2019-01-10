@@ -34,15 +34,20 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
-namespace Passw0rd.Phe
+namespace Passw0rd.Client
 {
-    public class ProofOfFail
+    using System.Runtime.Serialization;
+
+    [DataContract]
+    public class VerificationRequestModelOld
     {
-        public byte[] Term1 { get; set; }
-        public byte[] Term2 { get; set; }
-        public byte[] Term3 { get; set; }
-        public byte[] Term4 { get; set; }
-        public byte[] BlindA { get; set; }
-        public byte[] BlindB { get; set; }
+        [IgnoreDataMember]
+        public string AppId { get; set; }
+
+        [DataMember(Name = "version")]
+        public int Version { get; set; }
+
+        [DataMember(Name = "verify_request")]
+        public VerificationModel Verification { get; set; }
     }
 }

@@ -43,7 +43,7 @@ namespace Passw0rd.Client
     /// knowledge proof
     /// </summary>
     [DataContract]
-    public class VerificationResponseModel
+    public class VerificationResponseModelOld
     {
         [DataMember(Name = "res")]
         public bool IsSuccess { get; set; }
@@ -62,6 +62,6 @@ namespace Passw0rd.Client
     public class VerificationResponseWrapperModel
     {
         [DataMember(Name = "response")]
-        public VerificationResponseModel Response { get; set; }
+        public VerificationResponseModelOld Response { get; set; }
     }
 }

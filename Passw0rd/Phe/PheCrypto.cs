@@ -49,6 +49,8 @@ namespace Passw0rd.Phe
     using Org.BouncyCastle.Math;
     using Org.BouncyCastle.Math.EC;
     using Org.BouncyCastle.Security;
+    using global::Phe;
+    using Google.Protobuf;
 
     /// <summary>
     /// Phe crypto.
@@ -69,7 +71,7 @@ namespace Passw0rd.Phe
         private byte[] proofOK  = Bytes.FromString("ProofOk");
         private byte[] proofErr = Bytes.FromString("ProofError");
         private byte[] kdfInfoZ = Bytes.FromString("VIRGIL_PHE_KDF_INFO_Z");
-        private byte[] encrypt = Bytes.FromString("PheEncrypt");
+        private byte[] encrypt = Bytes.FromString("VIRGIL_PHE_KDF_CIPHER_INFO");
 
 
 
@@ -244,10 +246,10 @@ namespace Passw0rd.Phe
 
             return new ProofOfSuccess 
             {
-                Term1 = term1, 
-                Term2 = term2, 
-                Term3 = term3,
-                BlindX = result
+                Term1 = ByteString.CopyFrom(term1), 
+                Term2 = ByteString.CopyFrom(term2), 
+                Term3 = ByteString.CopyFrom(term3),
+                BlindX = ByteString.CopyFrom(result)
             };
         }
 
@@ -256,10 +258,13 @@ namespace Passw0rd.Phe
         /// </summary>
         public bool ValidateProofOfSuccess(ProofOfSuccess proof, PublicKey pkS, byte[] nS, byte[] c0, byte[] c1)
         {
-            var trm1Point = this.curve.DecodePoint(proof.Term1);
-            var trm2Point = this.curve.DecodePoint(proof.Term2);
-            var trm3Point = this.curve.DecodePoint(proof.Term3);
-            var blindXInt = new BigInteger(1, proof.BlindX);
+            var term1 = proof.Term1.ToByteArray();
+            var term2 = proof.Term2.ToByteArray();
+            var term3 = proof.Term3.ToByteArray();
+            var trm1Point = this.curve.DecodePoint(term1);
+            var trm2Point = this.curve.DecodePoint(term2);
+            var trm3Point = this.curve.DecodePoint(term3);
+            var blindXInt = new BigInteger(1, proof.BlindX.ToByteArray());
 
             var c0Point   = this.curve.DecodePoint(c0);
             var c1Point   = this.curve.DecodePoint(c1);
@@ -268,7 +273,14 @@ namespace Passw0rd.Phe
             var hs1Point  = this.HashToPoint(dhs1, nS);
 
             var curveG    = this.curveParams.G.Multiply(BigInteger.ValueOf(1));
-            var challenge = this.HashZ(proofOK, pkS.Encode(), curveG.GetEncoded(), c0, c1, proof.Term1, proof.Term2, proof.Term3);
+            var challenge = this.HashZ(proofOK, 
+                                       pkS.Encode(), 
+                                       curveG.GetEncoded(), 
+                                       c0, 
+                                       c1, 
+                                       term1,
+                                       term2, 
+                                       term3);
 
             var t1Point   = trm1Point.Add(c0Point.Multiply(challenge));
             var t2Point   = hs0Point.Multiply(blindXInt);
@@ -302,20 +314,28 @@ namespace Passw0rd.Phe
         /// </summary>
         public bool ValidateProofOfFail(ProofOfFail proof, PublicKey pkS,  byte[] nS, byte[] c0, byte[] c1)
         {
+            var term1 = proof.Term1.ToByteArray();
+            var term2 = proof.Term2.ToByteArray();
+            var term3 = proof.Term3.ToByteArray();
+            var term4 = proof.Term4.ToByteArray();
+
             var curveG = this.curveParams.G.Multiply(BigInteger.ValueOf(1));
 
-            var challenge = this.HashZ(this.proofErr, pkS.Encode(), curveG.GetEncoded(), c0, c1,
-                proof.Term1, proof.Term2, proof.Term3, proof.Term4);
+            var challenge = this.HashZ(this.proofErr, 
+                                       pkS.Encode(),
+                                       curveG.GetEncoded(), 
+                                       c0, c1,
+                                       term1, term2, term3, term4);
 
             var hs0Point = this.HashToPoint(dhs0, nS);
 
-            var term1Point = this.curve.DecodePoint(proof.Term1);
-            var term2Point = this.curve.DecodePoint(proof.Term2);
-            var term3Point = this.curve.DecodePoint(proof.Term3);
-            var term4Point = this.curve.DecodePoint(proof.Term4);
+            var term1Point = this.curve.DecodePoint(term1);
+            var term2Point = this.curve.DecodePoint(term2);
+            var term3Point = this.curve.DecodePoint(term3);
+            var term4Point = this.curve.DecodePoint(term4);
 
-            var blindAInt = new BigInteger(1, proof.BlindA);
-            var blindBInt = new BigInteger(1, proof.BlindB);
+            var blindAInt = new BigInteger(1, proof.BlindA.ToByteArray());
+            var blindBInt = new BigInteger(1, proof.BlindB.ToByteArray());
 
             var c0Point = this.curve.DecodePoint(c0);
             var c1Point = this.curve.DecodePoint(c1);
@@ -342,10 +362,12 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Rotates the secret key.
         /// </summary>
-        public SecretKey RotateSecretKey(SecretKey secretKey, byte[] a, byte[] b)
+        public SecretKey RotateSecretKey(SecretKey secretKey, byte[] tokenBytes)
         {
-            var aInt = new BigInteger(1, a);
-            var bInt = new BigInteger(1, b);
+            var token = UpdateToken.Parser.ParseFrom(tokenBytes);
+
+            var aInt = new BigInteger(1, token.A.ToByteArray());
+            var bInt = new BigInteger(1, token.B.ToByteArray());
 
             var newSecretKey = new SecretKey(curveParams.N.Mul(secretKey.Value, aInt));
             return newSecretKey;
@@ -354,16 +376,19 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Rotates the public key.
         /// </summary>
-        public PublicKey RotatePublicKey(PublicKey publicKey, byte[] a, byte[] b)
+        public PublicKey RotatePublicKey(PublicKey publicKey, byte[] tokenBytes)
         {
-            var aInt = new BigInteger(1, a);
-            var bInt = new BigInteger(1, b);
+            var token = UpdateToken.Parser.ParseFrom(tokenBytes);
+
+            var aInt = new BigInteger(1, token.A.ToByteArray());
+            var bInt = new BigInteger(1, token.B.ToByteArray());
 
             var newPoint = (FpPoint)publicKey.Point.Multiply(aInt).Add(this.curveParams.G.Multiply(bInt));
 
             var newPublicKey = new PublicKey(newPoint);
             return newPublicKey;
         }
+
 
         /// <summary>
         /// Generates big random 256 bit integer which must be less than 

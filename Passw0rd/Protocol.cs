@@ -43,6 +43,8 @@ namespace Passw0rd
     using Passw0rd.Client;
     using Passw0rd.Utils;
     using System.Linq;
+    using Passw0Rd;
+    using global::Phe;
 
     /// <summary>
     /// The <see cref="Protocol"/> provides an implementation of PHE (Password 
@@ -70,15 +72,14 @@ namespace Passw0rd
         }
 
         /// <summary>
-        /// Enrolls a new <see cref="PasswordRecord"/> for specified password.
+        /// Enrolls a new <see cref="PasswordRecordOld"/> for specified password.
         /// </summary>
-        public async Task<PasswordRecord> EnrollAsync(string password)
+        public async Task<PasswordRecordOld> EnrollAsync(string password)
         {
             var version = this.ctx.ActualVersion;
             var skC = this.ctx.GetActualClientSecretKey();
-
             var model = await this.ctx.Client.EnrollAsync(
-                new EnrollmentRequestModel{ AppId = this.ctx.AppId, Version = version })
+                new EnrollmentRequest() { Version = version })
                 .ConfigureAwait(false);
 
             var enrollment = model.Enrollment;
@@ -101,16 +102,16 @@ namespace Passw0rd
         }
 
         /// <summary>
-        /// Verifies a <see cref="PasswordRecord"/> by specified password.
+        /// Verifies a <see cref="PasswordRecordOld"/> by specified password.
         /// </summary>
-        public async Task<VerificationResult> VerifyAsync(PasswordRecord pwdRecord, string password)
+        public async Task<VerificationResult> VerifyAsync(PasswordRecordOld pwdRecord, string password)
         {
             var pwdBytes = Bytes.FromString(password);
             var skC = this.ctx.GetClientSecretKeyForVersion(pwdRecord.Version);
             var pkS = this.ctx.GetServerPublicKeyForVersion(pwdRecord.Version);
             var c0 = this.ctx.Crypto.ComputeC0(skC, pwdBytes, pwdRecord.ClientNonce, pwdRecord.RecordT0);
 
-            var parameters = new VerificationRequestModel 
+            var parameters = new VerificationRequestModelOld 
             { 
                 AppId = this.ctx.AppId,
                 Version = pwdRecord.Version,
@@ -148,7 +149,7 @@ namespace Passw0rd
             {
                 var proofModel = serverResult.ProofOfFail ?? throw new ProofNotProvidedException();
 
-                var proof = new ProofOfFail
+                var proof = new ProofOfFailOld
                 {
                     Term1  = proofModel.Term1,
                     Term2  = proofModel.Term2,
@@ -176,9 +177,9 @@ namespace Passw0rd
         }
 
         /// <summary>
-        /// Updates a <see cref="PasswordRecord"/> with an specified <see cref="UpdateToken"/>.
+        /// Updates a <see cref="PasswordRecordOld"/> with an specified <see cref="UpdateTokenOld"/>.
         /// </summary>
-        public PasswordRecord Update(PasswordRecord record)
+        public PasswordRecordOld Update(PasswordRecordOld record)
         {
             if (record == null)
             {
@@ -210,7 +211,7 @@ namespace Passw0rd
                 version = token.Version;
             }
 
-            var newRecord = new PasswordRecord
+            var newRecord = new PasswordRecordOld
             {
                 ClientNonce = record.ClientNonce,
                 ServerNonce = record.ServerNonce,

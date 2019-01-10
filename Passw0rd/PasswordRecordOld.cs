@@ -42,22 +42,22 @@ namespace Passw0rd
     using Passw0rd.Utils.Asn1;
 
     /// <summary>
-    /// The <see cref="PasswordRecord"/> represents an encryption record and 
+    /// The <see cref="PasswordRecordOld"/> represents an encryption record and 
     /// server/client nonces for specified user/password. 
     /// </summary>
-    public class PasswordRecord
+    public class PasswordRecordOld
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="PasswordRecord"/> class.
+        /// Initializes a new instance of the <see cref="PasswordRecordOld"/> class.
         /// </summary>
-        internal PasswordRecord()
+        internal PasswordRecordOld()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PasswordRecord"/> class.
+        /// Initializes a new instance of the <see cref="PasswordRecordOld"/> class.
         /// </summary>
-        public PasswordRecord(byte[] nS, byte[] nC, byte[] t0, byte[] t1, int version)
+        public PasswordRecordOld(byte[] nS, byte[] nC, byte[] t0, byte[] t1, int version)
         {
             this.ServerNonce = nS;
             this.ClientNonce = nC;
@@ -116,7 +116,7 @@ namespace Passw0rd
             return asn1Base64;
         }
 
-        public static PasswordRecord Decode(byte[] encodedRecord)
+        public static PasswordRecordOld Decode(byte[] encodedRecord)
         {
             var sequence = ASN1Sequence.Decode(encodedRecord);
 
@@ -126,10 +126,10 @@ namespace Passw0rd
             var t0  = sequence.GetOctetStringFromElementAt(3);
             var t1  = sequence.GetOctetStringFromElementAt(4);
 
-            return new PasswordRecord(nS, nC, t0, t1, version);
+            return new PasswordRecordOld(nS, nC, t0, t1, version);
         }
 
-        public static PasswordRecord DecodeFromBase64(string encodedRecordBase64)
+        public static PasswordRecordOld DecodeFromBase64(string encodedRecordBase64)
         {
             var asn1Bytes = Bytes.FromString(encodedRecordBase64, StringEncoding.BASE64);
             var record = Decode(asn1Bytes);

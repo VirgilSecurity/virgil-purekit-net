@@ -38,7 +38,7 @@ namespace Passw0rd.Client
 
     public interface IPheClient
     {
-        Task<EnrollmentResponseModel> EnrollAsync(EnrollmentRequestModel request);
-        Task<VerificationResponseModel> VerifyAsync(VerificationRequestModel pwdModel);
+        Task<byte[]> EnrollAsync(EnrollmentRequestModel request);
+        Task<VerificationResponseModelOld> VerifyAsync(VerificationRequestModelOld pwdModel);
     }
 }
