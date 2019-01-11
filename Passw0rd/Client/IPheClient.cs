@@ -35,10 +35,11 @@
 namespace Passw0rd.Client
 {
     using System.Threading.Tasks;
+    using Passw0Rd;
 
     public interface IPheClient
     {
-        Task<byte[]> EnrollAsync(EnrollmentRequestModel request);
-        Task<VerificationResponseModelOld> VerifyAsync(VerificationRequestModelOld pwdModel);
+        Task<VerifyPasswordResponse> VerifyAsync(VerifyPasswordRequest request);
+        Task<EnrollmentResponse> GetEnrollment(EnrollmentRequest request);
     }
 }

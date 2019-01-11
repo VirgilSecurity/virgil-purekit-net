@@ -41,11 +41,11 @@ namespace Passw0rd.Client
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceClientException"/> class.
         /// </summary>
-        public ServiceClientException(int serviceErrorCode, string message) : base(message)
+        public ServiceClientException(uint serviceErrorCode, string message) : base(message)
         {
             this.ServiceErrorCode = serviceErrorCode;
         }
 
-        public readonly int ServiceErrorCode;
+        public readonly uint ServiceErrorCode;
     }
 }

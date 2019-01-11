@@ -38,6 +38,7 @@ namespace Passw0rd.Client
     using System.Threading.Tasks;
 
     using Passw0rd.Client.Connection;
+    using Passw0Rd;
 
     public class PheClient : HttpClientBase, IPheClient
     {
@@ -48,21 +49,19 @@ namespace Passw0rd.Client
         {
         }
 
-        public async Task<byte[]> EnrollAsync(EnrollmentRequestModel request)
-        {
-            
-            var response = await this.SendAsync<EnrollmentRequestModel, EnrollmentResponseModel>(
-                HttpMethod.Post, $"phe/v1/{request.AppId}/enroll", request).ConfigureAwait(false);
+        public async Task<EnrollmentResponse> GetEnrollment(EnrollmentRequest request){
+            var response = await this.SendAsync<EnrollmentRequest, EnrollmentResponse>(
+               HttpMethod.Post, $"phe/v1/enroll", request).ConfigureAwait(false);
 
             return response;
         }
-
-        public async Task<VerificationResponseModelOld> VerifyAsync(VerificationRequestModelOld request)
+     
+        public async Task<VerifyPasswordResponse> VerifyAsync(VerifyPasswordRequest request)
         {
-            var response = await this.SendAsync<VerificationRequestModelOld, VerificationResponseWrapperModel>(
-                HttpMethod.Post, $"phe/v1/{request.AppId}/verify-password", request).ConfigureAwait(false);
+            var response = await this.SendAsync<VerifyPasswordRequest, VerifyPasswordResponse>(
+                HttpMethod.Post, $"phe/v1/verify-password", request).ConfigureAwait(false);
 
-            return response.Response;
+            return response;
         }
     }
 }
