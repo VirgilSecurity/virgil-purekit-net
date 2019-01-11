@@ -34,24 +34,25 @@
 
 namespace Passw0rd.Client.Connection
 {
-    using Newtonsoft.Json;
+    using Google.Protobuf;
 
     public class HttpBodySerializer : IHttpBodySerializer
     {
         /// <summary>
         /// Deserializes a json string to the specified object.
         /// </summary>
-        public TModel Deserialize<TModel>(string body)
+        public TModel Deserialize<TModel>(byte[] body) where TModel : IMessage<TModel>, new()
         {
-            return JsonConvert.DeserializeObject<TModel>(body);
+            var parser = new MessageParser<TModel>(() => new TModel());
+            return parser.ParseFrom(body);
         }
 
         /// <summary>
         /// Serializes the specified model to json string.
         /// </summary>
-        public string Serialize<TModel>(TModel body)
+        public byte[] Serialize(IMessage body)
         {
-            return JsonConvert.SerializeObject(body);
+            return body.ToByteArray();
         }
     }
 }

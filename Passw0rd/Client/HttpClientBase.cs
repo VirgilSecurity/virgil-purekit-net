@@ -37,8 +37,11 @@ namespace Passw0rd.Client.Connection
     using System;
     using System.Net;
     using System.Net.Http;
+    using System.Net.Http.Headers;
     using System.Text;
     using System.Threading.Tasks;
+    using Google.Protobuf;
+    using Passw0Rd;
 
     public class HttpClientBase
     {
@@ -53,6 +56,9 @@ namespace Passw0rd.Client.Connection
         {
             this.serializer = serializer;
             this.client = new HttpClient();
+            this.client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/x-protobuf")
+            );
         }
 
         /// <summary>
@@ -65,28 +71,21 @@ namespace Passw0rd.Client.Connection
         /// </summary>
         public Uri BaseUri { get; set; }
 
-        protected async Task<TResponseModel> SendAsync<TRequestModel, TResponseModel>(HttpMethod method, string endpoint, TRequestModel body)
+        protected async Task<TResponseModel> SendAsync<TRequestModel, TResponseModel>(
+            HttpMethod method, string endpoint, TRequestModel body)
+            where TRequestModel : IMessage<TRequestModel>
+            where TResponseModel : IMessage<TResponseModel>, new()
         {
-            Uri endpointUri = this.BaseUri != null
-                                  ? new Uri(this.BaseUri, endpoint)
-                                  : new Uri(endpoint);
-
-            var request = new HttpRequestMessage(method, endpointUri);
-
-            if (!string.IsNullOrWhiteSpace(this.AccessToken))
-            {
-                request.Headers.TryAddWithoutValidation("Authorization", $"{this.AccessToken}");
-            }
+            var request = NewRequest(method, endpoint);
 
             if (method != HttpMethod.Get)
             {
                 var serializedBody = this.serializer.Serialize(body);
-                request.Content = new StringContent(serializedBody, Encoding.UTF8, "application/json");
+                request.Content = new ByteArrayContent(serializedBody);
             }
 
             var response = await this.client.SendAsync(request).ConfigureAwait(false);
-            var content = await response.Content.ReadAsStringAsync();
-
+            var content = await response.Content.ReadAsByteArrayAsync();
             this.HandleError(response.StatusCode, content);
 
             var model = this.serializer.Deserialize<TResponseModel>(content);
@@ -94,7 +93,7 @@ namespace Passw0rd.Client.Connection
             return model;
         }
 
-        protected async Task<TResponseModel> SendAsync<TResponseModel>(HttpMethod method, string endpoint)
+        private HttpRequestMessage NewRequest(HttpMethod method, string endpoint)
         {
             Uri endpointUri = this.BaseUri != null
                                   ? new Uri(this.BaseUri, endpoint)
@@ -107,8 +106,16 @@ namespace Passw0rd.Client.Connection
                 request.Headers.TryAddWithoutValidation("Authorization", $"{this.AccessToken}");
             }
 
+            return request;
+        }
+
+        protected async Task<TResponseModel> SendAsync<TResponseModel>(HttpMethod method, string endpoint)
+            where TResponseModel : IMessage<TResponseModel>, new()
+        {
+            var request = NewRequest(method, endpoint);
+
             var response = await this.client.SendAsync(request).ConfigureAwait(false);
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsByteArrayAsync();
 
             this.HandleError(response.StatusCode, content);
 
@@ -117,7 +124,7 @@ namespace Passw0rd.Client.Connection
             return model;
         }
 
-        private void HandleError(HttpStatusCode statusCode, string body)
+        private void HandleError(HttpStatusCode statusCode, byte[] body)
         {
             string errorMessage;
 
@@ -141,13 +148,13 @@ namespace Passw0rd.Client.Connection
                     break;
             }
 
-            var errorCode = 0;
+            var errorCode = (uint)0;
 
-            if (!string.IsNullOrWhiteSpace(body))
+            if (body != null && body.Length > 0)
             {
-                var error = serializer.Deserialize<ServiceErrorModel>(body);
+                var error = serializer.Deserialize<HttpError>(body);
 
-                errorCode = error?.ErrorCode ?? 0;
+                errorCode = error?.Code ?? 0;
                 if (error != null && error.Message != null)
                 {
                     errorMessage += $": {error.Message}";

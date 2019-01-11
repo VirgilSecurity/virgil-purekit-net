@@ -32,11 +32,13 @@
 // IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+using Google.Protobuf;
+
 namespace Passw0rd.Client.Connection
 {
     public interface IHttpBodySerializer
     {
-        string Serialize<TModel>(TModel body);
-        TModel Deserialize<TModel>(string body);
+        byte[] Serialize(IMessage body);
+        TModel Deserialize<TModel>(byte[] body) where TModel : IMessage<TModel>, new();
     }
 }
