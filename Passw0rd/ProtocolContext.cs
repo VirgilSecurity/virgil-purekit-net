@@ -39,16 +39,18 @@ namespace Passw0rd
     using System;
     using System.Collections.Generic;
     using System.Linq;
-
+    using global::Phe;
+    using Google.Protobuf;
     using Passw0rd.Client;
     using Passw0rd.Client.Connection;
     using Passw0rd.Phe;
     using Passw0rd.Utils;
+    using Passw0Rd;
 
     public class ProtocolContext
     {
-        private IDictionary<uint, SecretKey> clientSecretKeys;
-        private IDictionary<uint, PublicKey> serverPublicKeys;
+        public SecretKey ClientSecretKey { get; private set; }
+        public PublicKey ServerPublicKey { get; private set; }
 
         private ProtocolContext()
         {
@@ -57,7 +59,7 @@ namespace Passw0rd
         /// <summary>
         /// Gets the app identifier.
         /// </summary>
-        public string AppId { get; private set; }
+        public string AppToken { get; private set; }
 
         /// <summary>
         /// Gets the client instance.
@@ -69,42 +71,22 @@ namespace Passw0rd
         /// </summary>
         public PheCrypto Crypto { get; private set; }
 
+
+        /// <summary>
+        /// Gets the PHE Crypto instanse.
+        /// </summary>
+        public uint Version { get; private set; }
+
         /// <summary>
         /// Gets the update tokens.
         /// </summary>
-        public IEnumerable<UpdateTokenOld> UpdateTokens { get; private set; } 
+        public VersionedUpdateToken UpdateToken { get; private set; } 
 
-        public uint ActualVersion 
+     
+        public static ProtocolContext Create(string appToken, string accessToken, 
+            string serverPublicKey, string clientSecretKey, string updateToken = null)
         {
-            get 
-            {
-                return this.clientSecretKeys.Max(it => it.Key);
-            }
-        }
-
-        public SecretKey GetActualClientSecretKey()
-        {
-            return this.clientSecretKeys[this.ActualVersion];
-        }
-
-        public PublicKey GetActualServerPublicKey()
-        {
-            return this.serverPublicKeys[this.ActualVersion];
-        }
-
-        public SecretKey GetClientSecretKeyForVersion(int version)
-        {
-            return this.clientSecretKeys[version];
-        }
-
-        public PublicKey GetServerPublicKeyForVersion(int version)
-        {
-            return this.serverPublicKeys[version];
-        }
-
-        public static ProtocolContext Create(string appId, string accessToken, 
-            string serverPublicKey, string clientSecretKey, string[] updateTokens = null)
-        {
+            // todo: validate params
             var phe = new PheCrypto();
             var (pkSVer, pkS) = EnsureServerPublicKey(serverPublicKey, phe);
             var (skCVer, skC) = EnsureClientSecretKey(clientSecretKey, phe);
@@ -123,44 +105,53 @@ namespace Passw0rd
 
             var ctx = new ProtocolContext
             {
-                AppId = appId,
+                AppToken = appToken,
                 Client = client,
-                Crypto = phe
+                Crypto = phe,
+                Version = pkSVer
             };
 
-            var serverPksDictionary = new Dictionary<int, PublicKey> { [pkSVer] = pkS };
-            var clientSksDictionary = new Dictionary<int, SecretKey> { [skCVer] = skC };
-
-            if (updateTokens != null && updateTokens.Length > 0)
+            if (!String.IsNullOrWhiteSpace(updateToken))
             {
-                var updateTokenList = updateTokens.Select(UpdateTokenOld.Decode)
-                    .Where(it => it.Version > skCVer)
-                    .OrderBy(it => it.Version)
-                    .ToList();
 
-                ctx.UpdateTokens = updateTokenList;
-
-                foreach (var token in updateTokenList)
-                {
-                    pkS = phe.RotatePublicKey(pkS, token.A, token.B);
-                    skC = phe.RotateSecretKey(skC, token.A, token.B);
-
-                    serverPksDictionary.Add(token.Version, pkS);
-                    clientSksDictionary.Add(token.Version, skC);
+                ctx.UpdateToken = ParseUpdateToken(updateToken);
+                if (ctx.UpdateToken.Version != pkSVer){
+                    //todo raise exception "incorrect token version"
                 }
+                    pkS = phe.RotatePublicKey(pkS, ctx.UpdateToken.UpdateToken.ToByteArray());
+                    skC = phe.RotateSecretKey(skC, ctx.UpdateToken.UpdateToken.ToByteArray());
             }
 
-            ctx.clientSecretKeys = clientSksDictionary;
-            ctx.serverPublicKeys = serverPksDictionary;
+            ctx.ClientSecretKey = skC;
+            ctx.ServerPublicKey = pkS;
 
             return ctx;
         }
 
-        private static (int, PublicKey) EnsureServerPublicKey(string serverPublicKey, PheCrypto phe)
+        private static VersionedUpdateToken ParseUpdateToken(string token)
+        {
+            var keyParts = token.Split(".");
+            if (keyParts.Length != 3 ||
+                !UInt32.TryParse(keyParts[1], out uint version) ||
+                !keyParts[0].ToUpper().Equals("UT"))
+            {
+                throw new ArgumentException("has incorrect format", nameof(token));
+            }
+            //todo: version validate
+            var tokenBytes = Bytes.FromString(keyParts[2], StringEncoding.BASE64);
+
+            return new VersionedUpdateToken{
+                Version = version,
+                UpdateToken = ByteString.CopyFrom(tokenBytes)
+            };
+        }
+
+        //todo: refactoring
+        private static (uint, PublicKey) EnsureServerPublicKey(string serverPublicKey, PheCrypto phe)
         {
             var keyParts = serverPublicKey.Split(".");
             if (keyParts.Length != 3 ||
-                !Int32.TryParse(keyParts[1], out int version) ||
+                !UInt32.TryParse(keyParts[1], out uint version) ||
                 !keyParts[0].ToUpper().Equals("PK"))
             {
                 throw new ArgumentException("has incorrect format", nameof(serverPublicKey));
@@ -176,11 +167,12 @@ namespace Passw0rd
             return (version, publicKey); 
         }
 
-        private static (int, SecretKey) EnsureClientSecretKey(string clientSecretKey, PheCrypto phe)
+        //todo: refactoring
+        private static (uint, SecretKey) EnsureClientSecretKey(string clientSecretKey, PheCrypto phe)
         {
             var keyParts = clientSecretKey.Split(".");
             if (keyParts.Length != 3 ||
-                !Int32.TryParse(keyParts[1], out int version) ||
+                !UInt32.TryParse(keyParts[1], out uint version) ||
                 !keyParts[0].ToUpper().Equals("SK"))
             {
                 throw new ArgumentException("has incorrect format", nameof(clientSecretKey));
