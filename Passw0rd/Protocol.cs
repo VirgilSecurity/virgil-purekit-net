@@ -45,6 +45,9 @@ namespace Passw0rd
     using System.Linq;
     using Passw0Rd;
     using global::Phe;
+    using Google.Protobuf;
+
+    // using global::Phe;
 
     /// <summary>
     /// The <see cref="Protocol"/> provides an implementation of PHE (Password 
@@ -74,28 +77,37 @@ namespace Passw0rd
         /// <summary>
         /// Enrolls a new <see cref="PasswordRecordOld"/> for specified password.
         /// </summary>
-        public async Task<PasswordRecordOld> EnrollAsync(string password)
+        public async Task<EnrollmentRecord> EnrollAsync(string password)
         {
-            var version = this.ctx.ActualVersion;
-            var skC = this.ctx.GetActualClientSecretKey();
-            var model = await this.ctx.Client.EnrollAsync(
+            var version = this.ctx.Version;
+            var skC = this.ctx.ClientSecretKey;
+            var enrollmentResp = await this.ctx.Client.GetEnrollment(
                 new EnrollmentRequest() { Version = version })
                 .ConfigureAwait(false);
+            var pheResp = global::Phe.EnrollmentResponse.Parser.ParseFrom(enrollmentResp.Response);
+            var isValid = this.ctx.Crypto.ValidateProofOfSuccess(
+                pheResp.Proof,
+                this.ctx.ServerPublicKey,
+                pheResp.Ns.ToByteArray(),
+                pheResp.C0.ToByteArray(),
+                pheResp.C1.ToByteArray());
+            if (!isValid)
+            {
+                throw new ProofOfSuccessNotValidException();
+            }
 
-            var enrollment = model.Enrollment;
-            var nS = enrollment.Nonce;
+            var nS = pheResp.Ns;
             var nC = this.ctx.Crypto.GenerateNonce();
             var pwdBytes = Bytes.FromString(password);
 
-            var (t0, t1) = this.ctx.Crypto.ComputeT(skC, pwdBytes, nC, enrollment.C0, enrollment.C1);
+            var (t0, t1) = this.ctx.Crypto.ComputeT(skC, pwdBytes, nC, pheResp.C0.ToByteArray(),pheResp.C1.ToByteArray());
 
-            var recordT = new PasswordRecord
+            var recordT = new EnrollmentRecord
             {
-                ClientNonce = nC,
-                ServerNonce = nS,
-                RecordT0 = t0,
-                RecordT1 = t1,
-                Version = version
+                Nc = ByteString.CopyFrom(nC),
+                Ns = nS,
+                T0 = ByteString.CopyFrom(t0),
+                T1 = ByteString.CopyFrom(t1)
             };
 
             return recordT;
@@ -113,7 +125,7 @@ namespace Passw0rd
 
             var parameters = new VerificationRequestModelOld 
             { 
-                AppId = this.ctx.AppId,
+                AppId = this.ctx.AppToken,
                 Version = pwdRecord.Version,
                 Verification = new VerificationModel 
                 {
@@ -123,7 +135,7 @@ namespace Passw0rd
             };
 
             byte[] m = null;
-
+            //todo VerifyAsync(VerifyPasswordRequest)
             var serverResult = await this.ctx.Client.VerifyAsync(parameters).ConfigureAwait(false);
             if (serverResult.IsSuccess)
             {

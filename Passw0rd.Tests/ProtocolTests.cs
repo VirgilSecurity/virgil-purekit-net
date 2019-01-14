@@ -9,7 +9,7 @@
         public async Task Should_EnrollNewRecord_When_PasswordSpecified()
         {
             var context = ProtocolContext.Create(
-                appId: "e60e6d91b0e3480b816f306337e96aaa",
+                appToken: "e60e6d91b0e3480b816f306337e96aaa",
                 accessToken: "-rTsFFkAOGf6am4bEF_aAdoHt2kOGy78",
                 serverPublicKey: "PK.1.BJ2+TUK/WVTfuYjgKj0KOVH4nKUqdBihqhH/EN1fyggwATu4gzGMC0P35jBDZnSTEFdm2zmC4qndyI5MKBvFjX8=",
                 clientSecretKey: "SK.1.W7FVp+LhG/ton7P+wKu0ndIPECY5+mTzX7iWaW9+sXA="
@@ -24,11 +24,11 @@
             var verifyResult = await protocol.VerifyAsync(record, "passw0rd");
 
             var context1 = ProtocolContext.Create(
-                appId: "e60e6d91b0e3480b816f306337e96aaa",
+                appToken: "e60e6d91b0e3480b816f306337e96aaa",
                 accessToken: "-rTsFFkAOGf6am4bEF_aAdoHt2kOGy78",
                 serverPublicKey: "PK.1.BJ2+TUK/WVTfuYjgKj0KOVH4nKUqdBihqhH/EN1fyggwATu4gzGMC0P35jBDZnSTEFdm2zmC4qndyI5MKBvFjX8=",
                 clientSecretKey: "SK.1.W7FVp+LhG/ton7P+wKu0ndIPECY5+mTzX7iWaW9+sXA=",
-                updateTokens: new[] {
+                updateToken: new[] {
                     "UT.2.MEQEIGw7O3Hm/9rSUBrShEFKiQQk8yi39TnGS7dpUP9/8aQiBCBhp5NxCylYeCpJq/hjK2SuTiA9Pl8zD8BZUDau6B72Ag=="
                 }
             );
