@@ -75,9 +75,9 @@ namespace Passw0rd
         }
 
         /// <summary>
-        /// Enrolls a new <see cref="PasswordRecordOld"/> for specified password.
+        /// Enrolls a new <see cref="DatabaseRecord"/> for specified password.
         /// </summary>
-        public async Task<EnrollmentRecord> EnrollAsync(string password)
+        public async Task<byte[]> EnrollAsync(string password)
         {
             var version = this.ctx.Version;
             var skC = this.ctx.ClientSecretKey;
@@ -100,9 +100,9 @@ namespace Passw0rd
             var nC = this.ctx.Crypto.GenerateNonce();
             var pwdBytes = Bytes.FromString(password);
 
-            var (t0, t1) = this.ctx.Crypto.ComputeT(skC, pwdBytes, nC, pheResp.C0.ToByteArray(),pheResp.C1.ToByteArray());
+            var (t0, t1) = ctx.Crypto.ComputeT(skC, pwdBytes, nC, pheResp.C0.ToByteArray(),pheResp.C1.ToByteArray());
 
-            var recordT = new EnrollmentRecord
+            var enrollmentRecord = new EnrollmentRecord
             {
                 Nc = ByteString.CopyFrom(nC),
                 Ns = nS,
@@ -110,129 +110,146 @@ namespace Passw0rd
                 T1 = ByteString.CopyFrom(t1)
             };
 
-            return recordT;
+            var record = new DatabaseRecord
+            {
+                Version = version,
+                Record = ByteString.CopyFrom(enrollmentRecord.ToByteArray())
+                                   
+            };
+            return enrollmentRecord.ToByteArray();
         }
 
         /// <summary>
-        /// Verifies a <see cref="PasswordRecordOld"/> by specified password.
+        /// Verifies a <see cref="DatabaseRecord"/> by specified password.
         /// </summary>
-        public async Task<VerificationResult> VerifyAsync(PasswordRecordOld pwdRecord, string password)
+        public async Task<byte[]> VerifyAsync(byte[] pwdRecord, string password)
         {
             var pwdBytes = Bytes.FromString(password);
-            var skC = this.ctx.GetClientSecretKeyForVersion(pwdRecord.Version);
-            var pkS = this.ctx.GetServerPublicKeyForVersion(pwdRecord.Version);
-            var c0 = this.ctx.Crypto.ComputeC0(skC, pwdBytes, pwdRecord.ClientNonce, pwdRecord.RecordT0);
-
-            var parameters = new VerificationRequestModelOld 
-            { 
-                AppId = this.ctx.AppToken,
-                Version = pwdRecord.Version,
-                Verification = new VerificationModel 
-                {
-                    C0 = c0,
-                    Ns = pwdRecord.ServerNonce
-                }
+            var databaseRecord = DatabaseRecord.Parser.ParseFrom(pwdRecord);
+            if (databaseRecord.Version != ctx.Version){
+                //todo more specific exception???
+                throw new Exception("unable to find keys corresponding to this record's version");
+            }
+            var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(databaseRecord.Record);
+            // todo validate len(enrollmentRecord.Nc) len(enrollmentRecord.Ns) = 32 pheNonceLen
+            var c0 = this.ctx.Crypto.ComputeC0(
+                this.ctx.ClientSecretKey, pwdBytes, enrollmentRecord.Nc.ToByteArray(), enrollmentRecord.T0.ToByteArray());
+            
+            var pheVerifyPasswordRequest = new global::Phe.VerifyPasswordRequest()
+            {
+                Ns = enrollmentRecord.Ns,
+                C0 = ByteString.CopyFrom(c0)
             };
 
-            byte[] m = null;
-            //todo VerifyAsync(VerifyPasswordRequest)
-            var serverResult = await this.ctx.Client.VerifyAsync(parameters).ConfigureAwait(false);
-            if (serverResult.IsSuccess)
+            var versionedPasswordRequest = new Passw0Rd.VerifyPasswordRequest()
             {
-                var proofModel = serverResult.ProofOfSuccess ?? throw new ProofNotProvidedException();
+                Version = ctx.Version,
+                Request = ByteString.CopyFrom(pheVerifyPasswordRequest.ToByteArray())
+            };
 
-                var proof = new ProofOfSuccess
+            //todo VerifyAsync(VerifyPasswordRequest)
+            var serverResponse = await this.ctx.Client.VerifyAsync(versionedPasswordRequest).ConfigureAwait(false);
+            // todo if response == null exception 
+          
+
+            byte[] m = null;
+            var pheServerResponse = global::Phe.VerifyPasswordResponse.Parser.ParseFrom(serverResponse.Response);
+
+            if (pheServerResponse.Res)
+            {
+                if (pheServerResponse.Success == null)
                 {
-                    Term1  = proofModel.Term1,
-                    Term2  = proofModel.Term2,
-                    Term3  = proofModel.Term3,
-                    BlindX = proofModel.BlindX,
-                };
+                    throw new ProofNotProvidedException();
+                }
+
            
-                var isValid = this.ctx.Crypto.ValidateProofOfSuccess(proof, pkS, pwdRecord.ServerNonce, c0, serverResult.C1);
+                var isValid = this.ctx.Crypto.ValidateProofOfSuccess(pheServerResponse.Success, 
+                                                                     ctx.ServerPublicKey,
+                                                                     enrollmentRecord.Ns.ToByteArray(),
+                                                                     c0, pheServerResponse.C1.ToByteArray());
                 if (!isValid)
                 {
                     throw new ProofOfSuccessNotValidException();
                 }
 
-                m = this.ctx.Crypto.DecryptM(skC, pwdBytes, pwdRecord.ClientNonce, pwdRecord.RecordT1, serverResult.C1);
+                m = this.ctx.Crypto.DecryptM(ctx.ClientSecretKey, 
+                                             pwdBytes,
+                                             enrollmentRecord.Nc.ToByteArray(), 
+                                             enrollmentRecord.T1.ToByteArray(), 
+                                             pheServerResponse.C1.ToByteArray());
             }
             else
             {
-                var proofModel = serverResult.ProofOfFail ?? throw new ProofNotProvidedException();
-
-                var proof = new ProofOfFailOld
+                if (pheServerResponse.Fail == null)
                 {
-                    Term1  = proofModel.Term1,
-                    Term2  = proofModel.Term2,
-                    Term3  = proofModel.Term3,
-                    Term4  = proofModel.Term4,
-                    BlindA = proofModel.BlindA,
-                    BlindB = proofModel.BlindB,
-                };
+                    throw new ProofNotProvidedException();
+                }
 
-                var isValid = this.ctx.Crypto.ValidateProofOfFail(proof, pkS, pwdRecord.ServerNonce, c0, serverResult.C1);
+                var isValid = this.ctx.Crypto.ValidateProofOfFail(pheServerResponse.Fail,
+                                                                  ctx.ServerPublicKey,
+                                                                  enrollmentRecord.Ns.ToByteArray(),
+                                                                  c0, pheServerResponse.C1.ToByteArray());
 
                 if (!isValid)
                 {
                     throw new ProofOfFailNotValidException();
                 }
             }
-
-            var result = new VerificationResult
-            {
-                IsSuccess = serverResult.IsSuccess,
-                Key = m
-            };
-
-            return result;
+            return m;
         }
 
         /// <summary>
-        /// Updates a <see cref="PasswordRecordOld"/> with an specified <see cref="UpdateTokenOld"/>.
+        /// Updates a <see cref="DatabaseRecord"/> with an specified <see cref="VersionedUpdateToken"/>.
         /// </summary>
-        public PasswordRecordOld Update(PasswordRecordOld record)
+        public byte[] Update(byte[] pwdRecord)
         {
-            if (record == null)
+            if (pwdRecord == null)
             {
-                throw new ArgumentNullException(nameof(record));
+                throw new ArgumentNullException(nameof(pwdRecord));
             }
 
-            if (this.ctx.UpdateTokens == null || !this.ctx.UpdateTokens.Any())
+            if (this.ctx.UpdateToken == null)
             {
                 throw new Passw0rdProtocolException("UpdateToken is not provided in context");
             }
+            var databaseRecord = DatabaseRecord.Parser.ParseFrom(pwdRecord);
 
-            var tokensForRotate = this.ctx.UpdateTokens
-                                      .Where(it => it.Version > record.Version)
-                                      .OrderBy(it => it.Version)
-                                      .ToList();
-
-            if (!tokensForRotate.Any())
-            {
-                throw new Passw0rdProtocolException("It's up to date record.");
+            if (databaseRecord.Version == ctx.UpdateToken.Version){
+                return pwdRecord;
             }
 
-            var t0 = record.RecordT0;
-            var t1 = record.RecordT1;
-            var version = record.Version;
+            if (databaseRecord.Version + 1 == ctx.UpdateToken.Version){
+                var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(databaseRecord.Record);
 
-            foreach (var token in tokensForRotate)
-            {
-                (t0, t1) = this.ctx.Crypto.UpdateT(record.ServerNonce, t0, t1, token.A, token.B);
-                version = token.Version;
+                var t0 = enrollmentRecord.T0.ToByteArray();
+                var t1 = enrollmentRecord.T1.ToByteArray();
+                (t0, t1) = ctx.Crypto.UpdateT(enrollmentRecord.Ns.ToByteArray(),
+                                              enrollmentRecord.T0.ToByteArray(),
+                                              enrollmentRecord.T1.ToByteArray(),
+                                              ctx.UpdateToken.ToByteArray());
+
+
+                var updatedEnrollmentRecord = new EnrollmentRecord
+                {
+                    Nc = enrollmentRecord.Nc,
+                    Ns = enrollmentRecord.Ns,
+                    T0 = ByteString.CopyFrom(t0),
+                    T1 = ByteString.CopyFrom(t1)
+                };
+
+                var updatedDatabaseRecord = new DatabaseRecord
+                {
+                    Version = ctx.UpdateToken.Version,
+                    Record = ByteString.CopyFrom(enrollmentRecord.ToByteArray())
+
+                };
+                return updatedDatabaseRecord.ToByteArray();
             }
 
-            var newRecord = new PasswordRecordOld
-            {
-                ClientNonce = record.ClientNonce,
-                ServerNonce = record.ServerNonce,
-                RecordT0 = t0,
-                RecordT1 = t1,
-                Version = version
-            };
-
-            return newRecord;
+            throw new Passw0rdProtocolException(
+                String.Format("Record and update token versions mismatch: {0} and {1}",
+                              databaseRecord.Version, ctx.UpdateToken.Version)
+            );
         }
     }
 }

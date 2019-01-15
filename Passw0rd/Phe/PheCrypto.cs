@@ -208,16 +208,18 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Updates an encryption record T with the specified update token parameters.
         /// </summary>
-        public Tuple<byte[], byte[]> UpdateT(byte[] nS, byte[] t0, byte[] t1, byte[] a, byte[] b)
+        public Tuple<byte[], byte[]> UpdateT(byte[] nS, byte[] t0, byte[] t1, byte[] tokenBytes)
         {
+            var token = UpdateToken.Parser.ParseFrom(tokenBytes);
+
             var hs0Point = this.HashToPoint(dhs0, nS);
             var hs1Point = this.HashToPoint(dhs1, nS);
 
             var t0Point = this.curve.DecodePoint(t0);
             var t1Point = this.curve.DecodePoint(t1);
 
-            var aInt = new BigInteger(1, a);
-            var bInt = new BigInteger(1, b);
+            var aInt = new BigInteger(1, token.A.ToByteArray());
+            var bInt = new BigInteger(1, token.B.ToByteArray());
 
             var t00Point = t0Point.Multiply(aInt).Add(hs0Point.Multiply(bInt));
             var t11Point = t1Point.Multiply(aInt).Add(hs1Point.Multiply(bInt));
