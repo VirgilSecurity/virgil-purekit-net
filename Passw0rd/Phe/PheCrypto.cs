@@ -51,6 +51,8 @@ namespace Passw0rd.Phe
     using Org.BouncyCastle.Security;
     using global::Phe;
     using Google.Protobuf;
+    using Org.BouncyCastle.Crypto.Modes;
+    using Org.BouncyCastle.Crypto.Engines;
 
     /// <summary>
     /// Phe crypto.
@@ -72,6 +74,12 @@ namespace Passw0rd.Phe
         private byte[] kdfInfoZ ;
         private byte[] encrypt; //todo encrypt-decrypt
         private byte[] kdfInfoClientKey;
+
+
+        private const int symKeyLen = 32;
+        private const int symSaltLen = 32;
+        private const int symNonceLen = 12;
+        private const int symTagLen = 16;
 
         public PheCrypto()
         {
@@ -201,6 +209,73 @@ namespace Passw0rd.Phe
             hkdf.GenerateBytes(key, 0, key.Length);
 
             return key;
+        }
+
+        // Encrypt generates 32 byte salt, uses master key & salt to generate per-data key & nonce with the help of HKDF
+        // Salt is concatenated to the ciphertext
+        public byte[] Encrypt(byte[] data, byte[] key)
+        {
+            if (key.Length != symKeyLen)
+            {
+                throw new Exception("key must be exactly 32 bytes"); //todo
+            }
+            var salt = new byte[symSaltLen];
+            this.rng.NextBytes(salt);
+
+            var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
+            hkdf.Init(new HkdfParameters(key, salt, encrypt));
+
+            var keyNonce = new byte[symKeyLen + symNonceLen];
+            hkdf.GenerateBytes(keyNonce, 0, keyNonce.Length);
+
+            var cipher = new GcmBlockCipher(new AesEngine());
+            var keyNonceSlice1 = ((Span<byte>)keyNonce).Slice(0, symKeyLen);
+            var keyNonceSlice2 = ((Span<byte>)keyNonce).Slice(symKeyLen);
+
+            var parameters = new AeadParameters(new KeyParameter(keyNonceSlice1.ToArray()), symTagLen * 8, keyNonceSlice2.ToArray());
+            cipher.Init(true, parameters);
+
+            var cipherText = new byte[]{};
+            var len = cipher.ProcessBytes(data, 0, data.Length, cipherText, 0);
+            cipher.DoFinal(cipherText, len);
+
+            return Bytes.Combine(salt, cipherText);
+        }
+
+        // Decrypt extracts 32 byte salt, derives key & nonce and decrypts ciphertext
+        public byte[] Decrypt(byte[] cipherText, byte[] key)
+        {
+            if (key.Length != symKeyLen)
+            {
+                throw new Exception("key must be exactly 32 bytes"); //todo
+            }
+
+            if (cipherText.Length < (symSaltLen + symTagLen))
+            {
+                throw new Exception("key must be exactly 32 bytes"); //todo
+            }
+
+            var salt = ((Span<byte>)cipherText).Slice(0, symSaltLen).ToArray();
+
+            var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
+            hkdf.Init(new HkdfParameters(key, salt, encrypt));
+
+            var keyNonce = new byte[symKeyLen + symNonceLen];
+            hkdf.GenerateBytes(keyNonce, 0, keyNonce.Length);
+
+            var cipher = new GcmBlockCipher(new AesEngine());
+            var keyNonceSlice1 = ((Span<byte>)keyNonce).Slice(0, symKeyLen);
+            var keyNonceSlice2 = ((Span<byte>)keyNonce).Slice(symKeyLen);
+
+            var parameters = new AeadParameters(new KeyParameter(keyNonceSlice1.ToArray()), symTagLen * 8, keyNonceSlice2.ToArray());
+            cipher.Init(false, parameters);
+
+            var data = new byte[] { };
+            var cipherTextExceptSalt = ((Span<byte>)cipherText).Slice(symSaltLen).ToArray();
+            var len = cipher.ProcessBytes(cipherTextExceptSalt, 0, cipherTextExceptSalt.Length, data, 0);
+            cipher.DoFinal(cipherText, len);
+
+            return Bytes.Combine(salt, cipherText);
         }
 
         /// <summary>
