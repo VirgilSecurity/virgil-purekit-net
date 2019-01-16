@@ -62,24 +62,29 @@ namespace Passw0rd.Phe
         private SecureRandom rng;
         private SHA512 sha512;
         private Swu swu;
-
-        private byte[] dhc0     = Bytes.FromString("hc0");
-        private byte[] dhc1     = Bytes.FromString("hc1");
-        private byte[] dm       = Bytes.FromString("dm");
-        private byte[] dhs0     = Bytes.FromString("hs0");
-        private byte[] dhs1     = Bytes.FromString("hs1");
-        private byte[] proofOK  = Bytes.FromString("ProofOk");
-        private byte[] proofErr = Bytes.FromString("ProofError");
-        private byte[] kdfInfoZ = Bytes.FromString("VIRGIL_PHE_KDF_INFO_Z");
-        private byte[] encrypt = Bytes.FromString("VIRGIL_PHE_KDF_CIPHER_INFO");
-
-
-
-       
-        //kdfInfoClientKey = [] byte ("VIRGIL_PHE_KDF_INFO_AK")
+        private byte[] commonPrefix = new byte[]{0x56, 0x52, 0x47, 0x4c, 0x50, 0x48, 0x45}; //VRGLPHE
+        private byte[] dhc0;
+        private byte[] dhc1;
+        private byte[] dhs0;
+        private byte[] dhs1;
+        private byte[] proofOK;
+        private byte[] proofErr;
+        private byte[] kdfInfoZ ;
+        private byte[] encrypt; //todo encrypt-decrypt
+        private byte[] kdfInfoClientKey;
 
         public PheCrypto()
         {
+            this.dhc0 = Bytes.Combine(commonPrefix, new byte[] { 0x31 });
+            this.dhc1 = Bytes.Combine(commonPrefix, new byte[] { 0x32 });
+            this.dhs0 = Bytes.Combine(commonPrefix, new byte[] { 0x33 });
+            this.dhs1 = Bytes.Combine(commonPrefix, new byte[] { 0x34 });
+            this.proofOK = Bytes.Combine(commonPrefix, new byte[] { 0x35 });
+            this.proofErr = Bytes.Combine(commonPrefix, new byte[] { 0x36 });
+            this.encrypt = Bytes.Combine(commonPrefix, new byte[] { 0x37 });
+            this.kdfInfoZ = Bytes.Combine(commonPrefix, new byte[] { 0x38 });
+            this.kdfInfoClientKey = Bytes.Combine(commonPrefix, new byte[] { 0x39 });
+
             this.curveParams = NistNamedCurves.GetByName("P-256");
             this.curve = (FpCurve)curveParams.Curve;
             this.rng = new SecureRandom();
@@ -138,22 +143,29 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Computes the record T for specified password.
         /// </summary>
-        public Tuple<byte[], byte[]> ComputeT(SecretKey skC, byte[] pwd, byte[] nC, byte[] c0, byte[] c1)
+        public (byte[], byte[], byte[]) ComputeT(SecretKey skC, byte[] pwd, byte[] nC, byte[] c0, byte[] c1)
         {
-            // TODO: validation
+            // TODO: validation, doc
             var c0Point  = this.curve.DecodePoint(c0);
             var c1Point  = this.curve.DecodePoint(c1);
 
             var mbuf = new byte[32];
             this.rng.NextBytes(mbuf);
 
-            var mPoint   = this.HashToPoint(dm, mbuf);
+            var mPoint   = this.HashToPoint(mbuf);
             var hc0Point = this.HashToPoint(dhc0, nC, pwd);
             var hc1Point = this.HashToPoint(dhc1, nC, pwd);
+
+            var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
+            hkdf.Init(new HkdfParameters(mPoint.GetEncoded(), null, kdfInfoClientKey));
+            var key = new byte[32];
+            hkdf.GenerateBytes(key, 0, key.Length);
+
+
             var t0Point  = c0Point.Add(hc0Point.Multiply(skC.Value));
             var t1Point  = c1Point.Add(hc1Point.Multiply(skC.Value).Add(mPoint.Multiply(skC.Value)));
 
-            return new Tuple<byte[], byte[]>(t0Point.GetEncoded(), t1Point.GetEncoded());
+            return (t0Point.GetEncoded(), t1Point.GetEncoded(), key);
         }
 
         /// <summary>
@@ -184,7 +196,7 @@ namespace Passw0rd.Phe
 
 
             var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
-            hkdf.Init(new HkdfParameters(mPoint.GetEncoded(), null, encrypt));
+            hkdf.Init(new HkdfParameters(mPoint.GetEncoded(), null, kdfInfoClientKey));
             var key = new byte[32];
             hkdf.GenerateBytes(key, 0, key.Length);
 
@@ -447,5 +459,8 @@ namespace Passw0rd.Phe
 
             return (FpPoint)this.curve.CreatePoint(x, y);
         }
+
+
+      
     }
 }

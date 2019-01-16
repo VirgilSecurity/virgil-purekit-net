@@ -77,7 +77,7 @@ namespace Passw0rd
         /// <summary>
         /// Enrolls a new <see cref="DatabaseRecord"/> for specified password.
         /// </summary>
-        public async Task<byte[]> EnrollAsync(string password)
+        public async Task<(byte[], byte[])> EnrollAsync(string password)
         {
             var version = this.ctx.Version;
             var skC = this.ctx.ClientSecretKey;
@@ -100,7 +100,7 @@ namespace Passw0rd
             var nC = this.ctx.Crypto.GenerateNonce();
             var pwdBytes = Bytes.FromString(password);
 
-            var (t0, t1) = ctx.Crypto.ComputeT(skC, pwdBytes, nC, pheResp.C0.ToByteArray(),pheResp.C1.ToByteArray());
+            var (t0, t1, key) = ctx.Crypto.ComputeT(skC, pwdBytes, nC, pheResp.C0.ToByteArray(),pheResp.C1.ToByteArray());
 
             var enrollmentRecord = new EnrollmentRecord
             {
@@ -116,7 +116,7 @@ namespace Passw0rd
                 Record = ByteString.CopyFrom(enrollmentRecord.ToByteArray())
                                    
             };
-            return enrollmentRecord.ToByteArray();
+            return (enrollmentRecord.ToByteArray(), key);
         }
 
         /// <summary>
