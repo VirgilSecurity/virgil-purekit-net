@@ -50,17 +50,17 @@ namespace Passw0rd.Phe
         {
             using (var stream = new MemoryStream())
             {
+                stream.Write(domain, 0, domain.Length);
+
                 foreach (var data in datas)
                 {
                     stream.Write(data, 0, data.Length);
                 }
 
-                stream.Write(domain, 0, domain.Length);
-
                 var result = stream.ToArray();
 
                 byte[] hash;
-                var sha = new Sha512tDigest(256);
+                var sha = new Sha512Digest();
 
                 try
                 {
