@@ -33,6 +33,7 @@
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
+[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Passw0rd.Tests")]
 
 namespace Passw0rd.Phe
 {
@@ -72,7 +73,7 @@ namespace Passw0rd.Phe
         private byte[] proofOK;
         private byte[] proofErr;
         private byte[] kdfInfoZ ;
-        private byte[] encrypt; //todo encrypt-decrypt
+        private byte[] encrypt;
         private byte[] kdfInfoClientKey;
 
 
@@ -80,7 +81,8 @@ namespace Passw0rd.Phe
         private const int symSaltLen = 32;
         private const int symNonceLen = 12;
         private const int symTagLen = 16;
-
+        private const int pheClientKeyLen = 32;
+        private const int pheNonceLen = 32;
         public PheCrypto()
         {
             this.dhc0 = Bytes.Combine(commonPrefix, new byte[] { 0x31 });
@@ -105,7 +107,7 @@ namespace Passw0rd.Phe
         /// </summary>
         public byte[] GenerateNonce()
         {
-            var nonce = new byte[32];
+            var nonce = new byte[pheNonceLen];
             this.rng.NextBytes(nonce);
 
             return nonce;
@@ -157,6 +159,7 @@ namespace Passw0rd.Phe
             var c0Point  = this.curve.DecodePoint(c0);
             var c1Point  = this.curve.DecodePoint(c1);
 
+            //todo ==swu.PointHashLen
             var mbuf = new byte[32];
             this.rng.NextBytes(mbuf);
 
@@ -164,9 +167,8 @@ namespace Passw0rd.Phe
             var hc0Point = this.HashToPoint(dhc0, nC, pwd);
             var hc1Point = this.HashToPoint(dhc1, nC, pwd);
 
-            var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
-            hkdf.Init(new HkdfParameters(mPoint.GetEncoded(), null, kdfInfoClientKey));
-            var key = new byte[32];
+            var hkdf = InitHkdf(mPoint.GetEncoded(), null, kdfInfoClientKey);
+            var key = new byte[pheClientKeyLen];
             hkdf.GenerateBytes(key, 0, key.Length);
 
 
@@ -202,10 +204,8 @@ namespace Passw0rd.Phe
 
             var mPoint = t1Point.Add(c1Point.Negate()).Add(hc1Point.Multiply(minusY)).Multiply(skC.Value.ModInverse(this.curveParams.N));
 
-
-            var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
-            hkdf.Init(new HkdfParameters(mPoint.GetEncoded(), null, kdfInfoClientKey));
-            var key = new byte[32];
+            var hkdf = InitHkdf(mPoint.GetEncoded(), null, kdfInfoClientKey);
+            var key = new byte[pheClientKeyLen];
             hkdf.GenerateBytes(key, 0, key.Length);
 
             return key;
@@ -217,13 +217,12 @@ namespace Passw0rd.Phe
         {
             if (key.Length != symKeyLen)
             {
-                throw new Exception("key must be exactly 32 bytes"); //todo
+                throw new Exception(String.Format("key must be exactly {0} bytes", symKeyLen)); //todo
             }
             var salt = new byte[symSaltLen];
             this.rng.NextBytes(salt);
 
-            var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
-            hkdf.Init(new HkdfParameters(key, salt, encrypt));
+            var hkdf = InitHkdf(key, salt, encrypt);
 
             var keyNonce = new byte[symKeyLen + symNonceLen];
             hkdf.GenerateBytes(keyNonce, 0, keyNonce.Length);
@@ -235,11 +234,18 @@ namespace Passw0rd.Phe
             var parameters = new AeadParameters(new KeyParameter(keyNonceSlice1.ToArray()), symTagLen * 8, keyNonceSlice2.ToArray());
             cipher.Init(true, parameters);
 
-            var cipherText = new byte[]{};
+            var cipherText = new byte[] { };
             var len = cipher.ProcessBytes(data, 0, data.Length, cipherText, 0);
             cipher.DoFinal(cipherText, len);
 
             return Bytes.Combine(salt, cipherText);
+        }
+
+        private HkdfBytesGenerator InitHkdf(byte[] key, byte[] salt, byte[] info)
+        {
+            var hkdf = new HkdfBytesGenerator(new Sha512Digest());
+            hkdf.Init(new HkdfParameters(key, salt, info));
+            return hkdf;
         }
 
         // Decrypt extracts 32 byte salt, derives key & nonce and decrypts ciphertext
@@ -247,18 +253,17 @@ namespace Passw0rd.Phe
         {
             if (key.Length != symKeyLen)
             {
-                throw new Exception("key must be exactly 32 bytes"); //todo
+                throw new Exception(String.Format("key must be exactly {0} bytes", symKeyLen)); //todo
             }
 
             if (cipherText.Length < (symSaltLen + symTagLen))
             {
-                throw new Exception("key must be exactly 32 bytes"); //todo
+                throw new Exception(String.Format("key must be exactly {0} bytes", symKeyLen)); //todo
             }
 
             var salt = ((Span<byte>)cipherText).Slice(0, symSaltLen).ToArray();
 
-            var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
-            hkdf.Init(new HkdfParameters(key, salt, encrypt));
+            var hkdf = InitHkdf(key, salt, encrypt);
 
             var keyNonce = new byte[symKeyLen + symNonceLen];
             hkdf.GenerateBytes(keyNonce, 0, keyNonce.Length);
@@ -505,8 +510,7 @@ namespace Passw0rd.Phe
         {
             var hash = this.sha512.ComputeHash(domain, datas);
 
-            var hkdf = new HkdfBytesGenerator(new Sha512tDigest(256));
-            hkdf.Init(new HkdfParameters(hash, domain, kdfInfoZ));
+            var hkdf = InitHkdf(hash, domain, kdfInfoZ);
             var result = new byte[32];
 
             BigInteger z;
@@ -535,6 +539,9 @@ namespace Passw0rd.Phe
             return (FpPoint)this.curve.CreatePoint(x, y);
         }
 
+        internal byte[] KdfInfoZ(){
+            return kdfInfoZ;
+        }
 
       
     }
