@@ -12,7 +12,7 @@ namespace Passw0rd.Tests
     public class CryptoCompatibilityTests
     {
         [Fact]
-        public void TupleHashCompute_Should_GenerateTheSameHash()
+        public void TupleHashCompute_Should_GenerateExpectedHash()
         {
             var expectedHash = "3696FB515910C43033D7BE0DD1ABFA4F3F8D8354EEC017D41F9"+
                 "3A344C9AAB02C006771824DC09C5040BEC8CE9C5FD3833D1301B62750726160098E9A1ED440E4";
@@ -29,7 +29,7 @@ namespace Passw0rd.Tests
         }
 
         [Fact]
-        public void HkdfGenerateBytes_Should_GenerateTheSameValue()
+        public void HkdfGenerateBytes_Should_GenerateExpectedValue()
         {
             var expectedValue = 
                 "0F097707AAB66A4CD5FCC79CEB96FB4B99DE2E73DF09295E" +
@@ -40,7 +40,7 @@ namespace Passw0rd.Tests
 
             var domain = Bytes.FromString("My Tuple App");
             var sha512 = new SHA512();
-            var key = sha512.ComputeHash(new byte[]{}, arr1, arr2, arr3);
+            var key = sha512.ComputeHash(null, arr1, arr2, arr3);
 
             var hkdf = new HkdfBytesGenerator(new Sha512Digest());
             var phe = new PheCrypto();

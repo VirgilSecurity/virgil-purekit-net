@@ -50,7 +50,9 @@ namespace Passw0rd.Phe
         {
             using (var stream = new MemoryStream())
             {
-                stream.Write(domain, 0, domain.Length);
+                if (domain != null){
+                    stream.Write(domain, 0, domain.Length);
+                }
 
                 foreach (var data in datas)
                 {

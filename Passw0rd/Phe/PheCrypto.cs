@@ -65,7 +65,7 @@ namespace Passw0rd.Phe
         private SecureRandom rng;
         private SHA512 sha512;
         private Swu swu;
-        private byte[] commonPrefix = new byte[]{0x56, 0x52, 0x47, 0x4c, 0x50, 0x48, 0x45}; //VRGLPHE
+        private byte[] commonPrefix; //VRGLPHE
         private byte[] dhc0;
         private byte[] dhc1;
         private byte[] dhs0;
@@ -85,6 +85,7 @@ namespace Passw0rd.Phe
         private const int pheNonceLen = 32;
         public PheCrypto()
         {
+            this.commonPrefix = new byte[] { 0x56, 0x52, 0x47, 0x4c, 0x50, 0x48, 0x45 };
             this.dhc0 = Bytes.Combine(commonPrefix, new byte[] { 0x31 });
             this.dhc1 = Bytes.Combine(commonPrefix, new byte[] { 0x32 });
             this.dhs0 = Bytes.Combine(commonPrefix, new byte[] { 0x33 });
@@ -109,7 +110,6 @@ namespace Passw0rd.Phe
         {
             var nonce = new byte[pheNonceLen];
             this.rng.NextBytes(nonce);
-
             return nonce;
         }
 
@@ -215,9 +215,16 @@ namespace Passw0rd.Phe
         // Salt is concatenated to the ciphertext
         public byte[] Encrypt(byte[] data, byte[] key)
         {
+            if (data == null){
+                throw new ArgumentNullException(nameof(data));
+            }
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
             if (key.Length != symKeyLen)
             {
-                throw new Exception(String.Format("key must be exactly {0} bytes", symKeyLen)); //todo
+                throw new ArgumentException(String.Format("key must be exactly {0} bytes", symKeyLen));
             }
             var salt = new byte[symSaltLen];
             this.rng.NextBytes(salt);
@@ -231,10 +238,12 @@ namespace Passw0rd.Phe
             var keyNonceSlice1 = ((Span<byte>)keyNonce).Slice(0, symKeyLen);
             var keyNonceSlice2 = ((Span<byte>)keyNonce).Slice(symKeyLen);
 
-            var parameters = new AeadParameters(new KeyParameter(keyNonceSlice1.ToArray()), symTagLen * 8, keyNonceSlice2.ToArray());
+            var parameters = new AeadParameters(new KeyParameter(keyNonceSlice1.ToArray()),
+                                                symTagLen * 8, keyNonceSlice2.ToArray());
             cipher.Init(true, parameters);
 
-            var cipherText = new byte[] { };
+            var cipherText = new byte[cipher.GetOutputSize(data.Length)];
+           // Array.Copy(a, 1, b, 0, 3);
             var len = cipher.ProcessBytes(data, 0, data.Length, cipherText, 0);
             cipher.DoFinal(cipherText, len);
 
@@ -251,14 +260,22 @@ namespace Passw0rd.Phe
         // Decrypt extracts 32 byte salt, derives key & nonce and decrypts ciphertext
         public byte[] Decrypt(byte[] cipherText, byte[] key)
         {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            if (cipherText == null)
+            {
+                throw new ArgumentNullException(nameof(cipherText));
+            }
             if (key.Length != symKeyLen)
             {
-                throw new Exception(String.Format("key must be exactly {0} bytes", symKeyLen)); //todo
+                throw new ArgumentException(String.Format("key must be exactly {0} bytes", symKeyLen)); //todo
             }
 
             if (cipherText.Length < (symSaltLen + symTagLen))
             {
-                throw new Exception(String.Format("key must be exactly {0} bytes", symKeyLen)); //todo
+                throw new ArgumentException("Invalid ciphertext length."); 
             }
 
             var salt = ((Span<byte>)cipherText).Slice(0, symSaltLen).ToArray();
@@ -275,12 +292,13 @@ namespace Passw0rd.Phe
             var parameters = new AeadParameters(new KeyParameter(keyNonceSlice1.ToArray()), symTagLen * 8, keyNonceSlice2.ToArray());
             cipher.Init(false, parameters);
 
-            var data = new byte[] { };
             var cipherTextExceptSalt = ((Span<byte>)cipherText).Slice(symSaltLen).ToArray();
-            var len = cipher.ProcessBytes(cipherTextExceptSalt, 0, cipherTextExceptSalt.Length, data, 0);
-            cipher.DoFinal(cipherText, len);
+            var plainText = new byte[cipher.GetOutputSize(cipherTextExceptSalt.Length)];
 
-            return Bytes.Combine(salt, cipherText);
+            var len = cipher.ProcessBytes(cipherTextExceptSalt, 0, cipherTextExceptSalt.Length, plainText, 0);
+            cipher.DoFinal(plainText, len);
+
+            return plainText;
         }
 
         /// <summary>
@@ -531,7 +549,9 @@ namespace Passw0rd.Phe
         private FpPoint HashToPoint(byte[] domain, params byte[][] datas)
         {
             var hash = this.sha512.ComputeHash(domain, datas);
-            var (x, y) = this.swu.HashToPoint(hash);
+            var hash256 = ((Span<byte>)hash).Slice(0, this.swu.PointHashLen()).ToArray();
+
+            var (x, y) = this.swu.HashToPoint(hash256);
 
             var xField = this.curve.FromBigInteger(x);
             var yField = this.curve.FromBigInteger(y);
@@ -543,6 +563,12 @@ namespace Passw0rd.Phe
             return kdfInfoZ;
         }
 
-      
+        internal int SymKeyLen(){
+            return symKeyLen;
+        }
+        internal int SymSaltLen()
+        {
+            return symSaltLen;
+        }
     }
 }

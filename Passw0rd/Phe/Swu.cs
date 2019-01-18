@@ -36,6 +36,7 @@
 
 namespace Passw0rd.Phe
 {
+    using System;
     using Org.BouncyCastle.Math;
 
     /// <summary>
@@ -49,7 +50,8 @@ namespace Passw0rd.Phe
         private readonly BigInteger p34;
         private readonly BigInteger p14;
         private readonly BigInteger mba;
-
+        private readonly SHA512 sha512;
+        private const int pointHashLen = 32;
         /// <summary>
         /// Initializes a new instance of the <see cref="Swu"/> class.
         /// </summary>
@@ -61,6 +63,15 @@ namespace Passw0rd.Phe
             this.mba = p.Neg(p.Div(this.b, a));
             this.p34 = p.Div(p.Sub(p, BigInteger.Three), BigInteger.ValueOf(4));
             this.p14 = p.Div(p.Add(p, BigInteger.One), BigInteger.ValueOf(4));
+            this.sha512 = new SHA512();
+        }
+
+        //DataToPoint hashes data using SHA-256 and maps it to a point on curve
+        internal (BigInteger x, BigInteger y) DataToPoint(byte[] data)
+        {
+            var hash = sha512.ComputeHash(null, data);
+            var hash256 = ((Span<byte>)hash).Slice(0, pointHashLen).ToArray();
+            return HashToPoint(hash256);
         }
 
         /// <summary>
@@ -68,6 +79,9 @@ namespace Passw0rd.Phe
         /// </summary>
         public (BigInteger x, BigInteger y) HashToPoint(byte[] hash)
         {
+            if (hash.Length != pointHashLen) {
+                throw new Exception("invalid hash length"); //todo unify exceptions
+            }
             var t = new BigInteger(1, hash, 0, hash.Length);
             t = t.Mod(p);
 
@@ -102,6 +116,11 @@ namespace Passw0rd.Phe
             return tmp2h2.Equals(BigInteger.One)
                 ? (x2, p.Mul(tmp, h2))
                 : (x3, p.Pow(h3, p14));
+        }
+
+
+        internal int PointHashLen(){
+            return pointHashLen;
         }
     }
 }
