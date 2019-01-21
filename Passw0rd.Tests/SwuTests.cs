@@ -14,8 +14,8 @@ namespace Passw0rd.Tests
         [Fact]
         public void HashToPoint_Should_GeneratePointOnCurve_When_RandomHashesArePassed()
         {
-            var curveParams = NistNamedCurves.GetByName("P-256");
-            var swu = new Swu(((FpCurve)curveParams.Curve).Q, curveParams.Curve.B.ToBigInteger());
+            var phe = new PheCrypto();
+            var swu = new Swu(phe.Curve.Q, phe.Curve.B.ToBigInteger());
             var rng = new SecureRandom();
             var sha512 = new SHA512();
 
@@ -26,8 +26,7 @@ namespace Passw0rd.Tests
                 rng.NextBytes(random);
                 var hash = sha512.ComputeHash(null, random);
                 var (x, y) = swu.DataToPoint(hash);
-                Assert.True(curveParams.Curve.CreatePoint(x, y).IsValid());
-
+                Assert.True(phe.Curve.CreatePoint(x, y).IsValid());
             }
         }
 

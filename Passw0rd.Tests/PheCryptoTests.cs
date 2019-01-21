@@ -2,9 +2,11 @@
 {
     using System;
     using Org.BouncyCastle.Crypto;
+    using Org.BouncyCastle.Math;
+    using Org.BouncyCastle.Math.EC;
     using Org.BouncyCastle.Security;
     using Passw0rd.Phe;
-    using Passw0rd.Utils; 
+    using Passw0rd.Utils;
 
     using Xunit;
     using Xunit.Abstractions;
@@ -39,34 +41,38 @@
         public void Should_ComputeIdenticalC0AndC1Values_When_TheSameKeyAndNonceArePassed()
         {
             var phe = new PheCrypto();
+            var skS = phe.DecodeSecretKey(clientPrivate);
+            var nonce = phe.GenerateNonce();
 
-            var skS = phe.DecodeSecretKey(Bytes.FromString("I4ETKFzr3QmUu+Olhp1L2KvRgjfseO530R/A+aQ80Go=", StringEncoding.BASE64));
-            var nS = Bytes.FromString("4g1N7hTxVWEHesoGZ5eTwbufdSnRtzxzkEQaBkXWsL4=", StringEncoding.BASE64);
-            var c0 = Bytes.FromString("BI4mieAp/rdVctneZnhj0Ucu8Sc4LGMu2P5z9j49iXtN3AhDBWgIS1A4kfLI1ktcQAJACK4vwgutomtuWSoYllc=", StringEncoding.BASE64);
-            var c1 = Bytes.FromString("BHENDFDcDsaWwpZLAWXDvEXlrEpIwr1p+OESiRCSemnk41WdfObVsvGPsYNFopaCJN762vP4MINb9HGzjmbM+aU=", StringEncoding.BASE64);
+            var (c0, c1) = phe.ComputeC(skS, nonce);
+            var (c00, c11) = phe.ComputeC(skS, nonce);
 
-            var (c00, c11) = phe.ComputeC(skS, nS);
-
-            Assert.Equal(c0, c00);
-            Assert.Equal(c1, c11);
+            Assert.Equal(Bytes.ToString(c0, StringEncoding.HEX), Bytes.ToString(c00, StringEncoding.HEX));
+            Assert.Equal(Bytes.ToString(c1, StringEncoding.HEX), Bytes.ToString(c11, StringEncoding.HEX));
         }
 
+       
         [Fact]
         public void Should_ComputeTheSameC0Value_For_SpecifiedListOfParameters()
         {
             var phe = new PheCrypto();
-
+            var ns = new byte[]{
+                0x04, 0x60, 0x41, 0x90, 0xea, 0xe3, 0x03, 0x48,
+                0xc4, 0x67, 0xa2, 0x56, 0xaa, 0x20, 0xf0, 0xe1,
+                0x22, 0xfd, 0x4c, 0x54, 0xb0, 0x2a, 0x03, 0x26,
+                0x84, 0xf1, 0x22, 0x11, 0xfc, 0x9a, 0x8e, 0xe3
+            };
             var pwd = Bytes.FromString("passw0rd");
-            var skC = phe.DecodeSecretKey(Bytes.FromString("gPdKsQRz9Vmc/DnbfxCHUioU6omEa0Sg7pncSHOhA7I=", StringEncoding.BASE64));
-            var nC = Bytes.FromString("CTnPcIn2xcz+4/9jjLuFZNJiWLBiohnaGVTb3X1zPt0=", StringEncoding.BASE64);
-            var c0 = Bytes.FromString("BKAH5Rww+a9+8lzO3oYE8zfz2Oxp3+Xrv2jp9EFGRlS7bWU5iYoWQHZqrkM+UYq2TYON3Gz8w3mzLSy3yS0XlJw=", StringEncoding.BASE64);
-            var t0 = Bytes.FromString("BPGwrvLl3CAolVo1RIoNT7TqTC3T66eLykxa/Vw1gyof+3scfaiqTAAQXQ57q6zEkEeJHjNl4GBghQceI/UNl7c=", StringEncoding.BASE64);
+            var skC = phe.DecodeSecretKey(clientPrivate);
 
-            var c00 = phe.ComputeC0(skC, pwd, nC, t0);
+            var expectedC0 = Bytes.FromString("047062653b3a156a0a211686506f86427f13cdbe3825ca4ee820a8f202b91cf76cd276cc2f506191b491e85f5ac412cc36b2502cfbf23b130b0808d93c37271651", StringEncoding.HEX);
+            var t0 = Bytes.FromString("04f1b0aef2e5dc2028955a35448a0d4fb4ea4c2dd3eba78bca4c5afd5c35832a1ffb7b1c7da8aa4c00105d0e7babacc49047891e3365e0606085071e23f50d97b7", StringEncoding.HEX);
 
-            Assert.Equal(c0, c00);
+            var c0 = phe.ComputeC0(skC, pwd, ns, t0);
+
+            Assert.Equal(expectedC0, c0);
         }
-        /*
+       /*
         [Fact]
         public void Should_ProveTheProofOfSuccess_For_SpecifiedListOfParameters()
         {
@@ -168,11 +174,32 @@
 
             Assert.Equal(pkS1, phePkC1.Encode());
         }*/
+
+
         [Fact]
-        public void TestEncrypt(){
+        public void TestRotatePrivateClientKey()
+        {
+            var phe = new PheCrypto();
+            var oldClientPrivateKey = phe.DecodeSecretKey(clientPrivate);
+            var newClientSecretKey = phe.RotateSecretKey(oldClientPrivateKey, token);
+            Assert.Equal(rotatedClientSk, newClientSecretKey.Encode());
+        }
+
+        [Fact]
+        public void TestRotatePublicServerKey()
+        {
+            var phe = new PheCrypto();
+            var oldPublicServerKey = phe.DecodePublicKey(serverPublic);
+            var newPublicServerKey = phe.RotatePublicKey(oldPublicServerKey, token);
+            Assert.Equal(rotatedServerPub, newPublicServerKey.Encode());
+        }
+
+        [Fact]
+        public void TestEncrypt()
+        {
             var phe = new PheCrypto();
             var rng = new SecureRandom();
-            var key = new byte[phe.SymKeyLen()];
+            var key = new byte[EncryptionService.SymKeyLen];
             rng.NextBytes(key);
 
             var plainText = new byte[365];
@@ -183,10 +210,11 @@
         }
 
         [Fact]
-        public void TestEncrypt_empty(){
+        public void TestEncrypt_empty()
+        {
             var phe = new PheCrypto();
             var rng = new SecureRandom();
-            var key = new byte[phe.SymKeyLen()];
+            var key = new byte[EncryptionService.SymKeyLen];
             rng.NextBytes(key);
 
             var plainText = new byte[0];
@@ -196,15 +224,16 @@
         }
 
         [Fact]
-        public void TestEncrypt_badKey(){
+        public void TestEncrypt_badKey()
+        {
             var phe = new PheCrypto();
             var rng = new SecureRandom();
-            var key = new byte[phe.SymKeyLen()];
+            var key = new byte[EncryptionService.SymKeyLen];
             rng.NextBytes(key);
 
             var plainText = new byte[365];
             rng.NextBytes(plainText);
-           
+
             var cipherText = phe.Encrypt(plainText, key);
 
             key[0]++;
@@ -215,23 +244,25 @@
             Assert.IsType<InvalidCipherTextException>(ex);
         }
         [Fact]
-        public void TestDecrypt_badLength(){
+        public void TestDecrypt_badLength()
+        {
             var phe = new PheCrypto();
             var rng = new SecureRandom();
-            var key = new byte[phe.SymKeyLen()];
+            var key = new byte[EncryptionService.SymKeyLen];
             rng.NextBytes(key);
 
-            var cipherText = new byte[phe.SymSaltLen() + 15];
+            var cipherText = new byte[EncryptionService.SymSaltLen + 15];
             rng.NextBytes(cipherText);
-           
-            var ex = Record.Exception(() => {phe.Decrypt(cipherText, key); });
+
+            var ex = Record.Exception(() => { phe.Decrypt(cipherText, key); });
 
             Assert.NotNull(ex);
             Assert.IsType<ArgumentException>(ex);
         }
 
         [Fact]
-        public void TestEncryptVector(){
+        public void TestEncryptVector()
+        {
             var rnd = new byte[]{
                 0x2b, 0x1a, 0x49, 0xe2, 0x6c, 0xcc, 0x33, 0xfe,
                 0x5e, 0x7d, 0x0e, 0x57, 0x3b, 0xc4, 0x02, 0xf0,
@@ -276,8 +307,8 @@
 
             var phe = new PheCrypto();
             var rng = new SecureRandom();
-
-            var cipherText = phe.Encrypt(plainText, key);
+            var encrService = new EncryptionService(key);
+            var cipherText = encrService.EncryptWithSalt(plainText, rnd);
             Assert.Equal(cipherText, expectedCipherText);
 
             var decyptedText = phe.Decrypt(cipherText, key);
@@ -285,51 +316,180 @@
         }
 
         [Fact]
-        public void TestHashZVector1(){
-            
+        public void TestHashZVector1()
+        {
+            var pub = new byte[]{
+                0x04, 0x21, 0xc3, 0x71, 0x95, 0x74, 0xaf, 0xce,
+                0xc6, 0x5e, 0x35, 0xbd, 0x77, 0x5a, 0x5b, 0xe3,
+                0x6c, 0x77, 0xc0, 0xbe, 0x45, 0x01, 0xf5, 0xd7,
+                0x0f, 0xf0, 0x70, 0xd5, 0x1a, 0x89, 0x3a, 0xd8,
+                0xe0, 0x0c, 0xe6, 0xb8, 0x9b, 0x17, 0x88, 0xe6,
+                0xc1, 0x27, 0xa0, 0xe1, 0x25, 0xd9, 0xde, 0x6a,
+                0x71, 0x16, 0x46, 0xa0, 0x38, 0x0f, 0xc4, 0xe9,
+                0x5a, 0x74, 0xe5, 0x2c, 0x89, 0xf1, 0x12, 0x2a,
+                0x7c
+            };
+
+            var c0X = "97803661066250274657510595696566855164534492744724548093309723513248461995097";
+            var c0Y = "32563640650805051226489658838020042684659728733816530715089727234214066735908";
+            var c1X = "83901588226167680046300869772314554609808129217097458603677198943293551162597";
+            var c1Y = "69578797673242144759724361924884259223786981560985539034793627438888366836078";
+            var t1X = "34051691470374495568913340263568595354597873005782528499014802063444122859583";
+            var t1Y = "55902370943165854960816059167184401667567213725158022607170263924097403943290";
+            var t2X = "101861885104337123215820986653465602199317278936192518417111183141791463240617";
+            var t2Y = "40785451420258280256125533532563267231769863378114083364571107590767796025737";
+            var t3X = "79689595215343344259388135277552904427007069090288122793121340067386243614518";
+            var t3Y = "63043970895569149637126206639504503565389755448934804609068720159153015056302";
+            var chlng = "93919747365284119397236447539917482315419780885577135068398876525953972539838";
+
+            var phe = new PheCrypto();
+            var c0 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(c0X, 10), new BigInteger(c0Y, 10));
+            var c1 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(c1X, 10), new BigInteger(c1Y, 10));
+            var t1 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(t1X, 10), new BigInteger(t1Y, 10));
+            var t2 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(t2X, 10), new BigInteger(t2Y, 10));
+            var t3 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(t3X, 10), new BigInteger(t3Y, 10));
+
+            var hashZ = phe.HashZ(Domains.ProofOK, pub, phe.CurveG.GetEncoded(), c0.GetEncoded(), c1.GetEncoded(), t1.GetEncoded(), t2.GetEncoded(), t3.GetEncoded());
+            Assert.Equal(new BigInteger(chlng, 10), hashZ);
         }
 
         [Fact]
         public void TestHashZVector2()
         {
+            var pub = new byte[]{
+                0x04, 0x39, 0x01, 0x9b, 0x9e, 0x2f, 0x1b, 0xae,
+                0x60, 0x65, 0xcd, 0x9b, 0x85, 0x94, 0xfe, 0xa6,
+                0xe3, 0x5a, 0x9a, 0xfd, 0xd3, 0x15, 0x96, 0xca,
+                0xd8, 0xf8, 0xa4, 0xb1, 0xbd, 0xcd, 0x9b, 0x24,
+                0x40, 0x5b, 0x8b, 0x13, 0x23, 0xf2, 0xdd, 0x6b,
+                0x1b, 0x1d, 0x3f, 0x57, 0x5d, 0x00, 0xf4, 0xa8,
+                0x5f, 0xb8, 0x67, 0x90, 0x69, 0x74, 0xea, 0x16,
+                0x4b, 0x41, 0x9e, 0x93, 0x66, 0x47, 0xd8, 0xfb,
+                0x7b
+            };
+
+            var c0X = "66305582120524875023859689648303664817335268054431490163250455437389177295478";
+            var c0Y = "19615011428787373705295950431517815162915845805720956004550495681707511034851";
+            var c1X = "11237049376971579382843942757546874380042467137583453135179008882019225463739";
+            var c1Y = "80961525191994723690800208523971748057046695876178833586656397502847317233228";
+            var t1X = "39244241269455735193598520026736537476566784866134072628798326598844377151651";
+            var t1Y = "10612278657611837393693400625940452527356993857624739575347941960949401758261";
+            var t2X = "108016526337105983792792579967716341976396349948643843073602635679441433077833";
+            var t2Y = "90379537067318020066230942533439624193620174277378193732900885672181004096656";
+            var t3X = "36913295823787819500630010367019659122715720420780370192192548665300728488299";
+            var t3Y = "36547572032269541322937508337036635249923361457001752921238955135105574250650";
+            var t4X = "49166285642990312777312778351013119878896537776050488997315166935690363463787";
+            var t4Y = "66983832439067043864623691503721372978034854603698954939248898067109763920732";
+            var chlng = "98801234524135497507777343590157351416109876307242902372535142932873423904771";
+
+            var phe = new PheCrypto();
+            var c0 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(c0X, 10), new BigInteger(c0Y, 10));
+            var c1 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(c1X, 10), new BigInteger(c1Y, 10));
+            var t1 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(t1X, 10), new BigInteger(t1Y, 10));
+            var t2 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(t2X, 10), new BigInteger(t2Y, 10));
+            var t3 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(t3X, 10), new BigInteger(t3Y, 10));
+            var t4 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(t4X, 10), new BigInteger(t4Y, 10));
+            var hashZ = phe.HashZ(Domains.ProofErr, pub, phe.CurveG.GetEncoded(), 
+                                  c0.GetEncoded(), c1.GetEncoded(), t1.GetEncoded(),
+                                  t2.GetEncoded(), t3.GetEncoded(), t4.GetEncoded());
+            Assert.Equal(new BigInteger(chlng, 10), hashZ);
         }
 
+       
         [Fact]
-        public void PointToBytes()
+        public void TestSimpleHashZ()
         {
+            var expectedHashZ = "69727408650258925666157816894980607074870114162787023360036165814485426747693";
+            var phe = new PheCrypto();
+            var hashZ = phe.HashZ(Domains.ProofOK, phe.CurveG.GetEncoded());
+            Assert.Equal(new BigInteger(expectedHashZ, 10), hashZ);
         }
 
         [Fact]
-        public void HashZ()
+        public void TestHs0()
         {
+            var ns = new byte[]{
+                0x8e, 0x48, 0xac, 0x4b, 0x4a, 0x0c, 0x3f, 0x87,
+                0x83, 0x69, 0x6f, 0x5d, 0x1f, 0x77, 0xd4, 0x25,
+                0x64, 0x84, 0xd5, 0xb0, 0x7f, 0xd3, 0x8a, 0xf6,
+                0xb2, 0xbf, 0x2d, 0x7b, 0x34, 0x57, 0x8a, 0x24
+            };
+
+            var expectedX = "25300858746488398178355367558777222618482687866522608982770829435057272700048";
+            var expectedY = "110446173948945874058011275277660983270153244227256872727234408438424462761061";
+            var phe = new PheCrypto();
+            var point = phe.HashToPoint(Domains.Dhs0, ns);
+
+            Assert.Equal(new BigInteger(expectedX, 10), point.XCoord.ToBigInteger());
+            Assert.Equal(new BigInteger(expectedY, 10), point.YCoord.ToBigInteger());
         }
 
         [Fact]
-        public void DataToHash()
+        public void TestHs1()
         {
+            var ns = new byte[]{
+                0x04, 0x60, 0x41, 0x90, 0xea, 0xe3, 0x03, 0x48,
+                0xc4, 0x67, 0xa2, 0x56, 0xaa, 0x20, 0xf0, 0xe1,
+                0x22, 0xfd, 0x4c, 0x54, 0xb0, 0x2a, 0x03, 0x26,
+                0x84, 0xf1, 0x22, 0x11, 0xfc, 0x9a, 0x8e, 0xe3
+            };
+
+            var expectedX = "17908376941582875772307252089828253420307082915473361881522058301944387204152";
+            var expectedY = "33408333837140987002065754540391028444871058307081963101365044681462597430369";
+            var phe = new PheCrypto();
+            var point = phe.HashToPoint(Domains.Dhs1, ns);
+
+            Assert.Equal(new BigInteger(expectedX, 10), point.XCoord.ToBigInteger());
+            Assert.Equal(new BigInteger(expectedY, 10), point.YCoord.ToBigInteger());
         }
 
-        [Fact]
-        public void hc0()
-        { 
-        }
 
         [Fact]
-        public void hc1()
+        public void TestHc0()
         {
-        }
+            var ns = new byte[]{
+                0xdb, 0x59, 0x4e, 0x9a, 0x53, 0xeb, 0x35, 0x39,
+                0x84, 0x63, 0x67, 0xf1, 0x4c, 0x15, 0xa1, 0x9b,
+                0x4b, 0xee, 0x1d, 0x27, 0x13, 0xf3, 0xaa, 0xb5,
+                0x3b, 0x11, 0x72, 0xd6, 0x02, 0x51, 0x63, 0x36
+            };
 
+            var pwd = new byte[]{
+                0x5a, 0xf6, 0xf9, 0x9a, 0xc2, 0x0d, 0x0d, 0x54,
+                0x52, 0xa2
+            };
+
+            var expectedX = "71581924212971445159021410682851786422010928474259399013091051697427945751880";
+            var expectedY = "82599985433400511569162075253342037148256984798119669265653399740244502620726";
+            var phe = new PheCrypto();
+            var point = phe.HashToPoint(Domains.Dhc0, ns, pwd);
+
+            Assert.Equal(new BigInteger(expectedX, 10), point.XCoord.ToBigInteger());
+            Assert.Equal(new BigInteger(expectedY, 10), point.YCoord.ToBigInteger());
+        }
 
         [Fact]
-        public void hs0()
+        public void TestHc1()
         {
+            var ns = new byte[]{
+                0x91, 0xd2, 0x04, 0x0b, 0x8e, 0x52, 0x7e, 0x8a,
+                0xe3, 0x40, 0xf6, 0x89, 0xda, 0x01, 0x7c, 0xd6,
+                0x1e, 0x20, 0x25, 0xd0, 0xbc, 0xc4, 0xd1, 0x24,
+                0x92, 0x5c, 0x87, 0xc3, 0xe9, 0x59, 0xc7, 0x54
+            };
+
+            var pwd = new byte[]{
+                0xb8, 0xce, 0xc3, 0xde, 0xfd, 0xfc, 0x80, 0x3c, 0x18,
+                0x5d
+            };
+
+            var expectedX = "49501362177553120463897295920682327704465381738906627606535872853621035764254";
+            var expectedY = "47270509952559745766619070899406283523267398868407265017727132307696482921539";
+            var phe = new PheCrypto();
+            var point = phe.HashToPoint(Domains.Dhc1, ns, pwd);
+
+            Assert.Equal(new BigInteger(expectedX, 10), point.XCoord.ToBigInteger());
+            Assert.Equal(new BigInteger(expectedY, 10), point.YCoord.ToBigInteger());
         }
-
-        [Fact]
-        public void hs1()
-        {
-        }
-
-
     }
 }

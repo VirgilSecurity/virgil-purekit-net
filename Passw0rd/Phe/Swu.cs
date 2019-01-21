@@ -42,7 +42,7 @@ namespace Passw0rd.Phe
     /// <summary>
     /// Implementation of Shallue-Woestijne-Ulas algorithm
     /// </summary>
-    public class Swu
+    internal class Swu
     {
         private readonly BigInteger a;
         private readonly BigInteger b;
@@ -67,7 +67,7 @@ namespace Passw0rd.Phe
         }
 
         //DataToPoint hashes data using SHA-256 and maps it to a point on curve
-        internal (BigInteger x, BigInteger y) DataToPoint(byte[] data)
+        public (BigInteger x, BigInteger y) DataToPoint(byte[] data)
         {
             var hash = sha512.ComputeHash(null, data);
             var hash256 = ((Span<byte>)hash).Slice(0, pointHashLen).ToArray();

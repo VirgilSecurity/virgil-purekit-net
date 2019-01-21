@@ -44,7 +44,7 @@ namespace Passw0rd.Tests
 
             var hkdf = new HkdfBytesGenerator(new Sha512Digest());
             var phe = new PheCrypto();
-            hkdf.Init(new HkdfParameters(key, domain, phe.KdfInfoZ()));
+            hkdf.Init(new HkdfParameters(key, domain, Domains.KdfInfoZ));
             var resultValue = new byte[64];
             hkdf.GenerateBytes(resultValue, 0, resultValue.Length);
 
