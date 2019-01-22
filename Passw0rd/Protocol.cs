@@ -79,15 +79,14 @@ namespace Passw0rd
         /// </summary>
         public async Task<(byte[], byte[])> EnrollAsync(string password)
         {
-            var version = this.ctx.Version;
-            var skC = this.ctx.ClientSecretKey;
-            var enrollmentResp = await this.ctx.Client.GetEnrollment(
-                new EnrollmentRequest() { Version = version })
+            var pheKeys = ctx.VersionedPheKeys[ctx.CurrentVersion];
+            var enrollmentResp = await ctx.Client.GetEnrollment(
+                new EnrollmentRequest() { Version = ctx.CurrentVersion })
                 .ConfigureAwait(false);
             var pheResp = global::Phe.EnrollmentResponse.Parser.ParseFrom(enrollmentResp.Response);
             var isValid = this.ctx.Crypto.ValidateProofOfSuccess(
                 pheResp.Proof,
-                this.ctx.ServerPublicKey,
+                pheKeys.ServerPublicKey,
                 pheResp.Ns.ToByteArray(),
                 pheResp.C0.ToByteArray(),
                 pheResp.C1.ToByteArray());
@@ -100,7 +99,7 @@ namespace Passw0rd
             var nC = this.ctx.Crypto.GenerateNonce();
             var pwdBytes = Bytes.FromString(password);
 
-            var (t0, t1, key) = ctx.Crypto.ComputeT(skC, pwdBytes, nC, pheResp.C0.ToByteArray(),pheResp.C1.ToByteArray());
+            var (t0, t1, key) = ctx.Crypto.ComputeT(pheKeys.ClientSecretKey, pwdBytes, nC, pheResp.C0.ToByteArray(),pheResp.C1.ToByteArray());
 
             var enrollmentRecord = new EnrollmentRecord
             {
@@ -112,7 +111,7 @@ namespace Passw0rd
 
             var record = new DatabaseRecord
             {
-                Version = version,
+                Version = ctx.CurrentVersion,
                 Record = ByteString.CopyFrom(enrollmentRecord.ToByteArray())
                                    
             };
@@ -126,14 +125,22 @@ namespace Passw0rd
         {
             var pwdBytes = Bytes.FromString(password);
             var databaseRecord = DatabaseRecord.Parser.ParseFrom(pwdRecord);
-            if (databaseRecord.Version != ctx.Version){
+            if (databaseRecord.Version < 1)
+            {
+                throw new Exception("Invalid record version");
+            }
+
+            if (!ctx.VersionedPheKeys.ContainsKey(databaseRecord.Version)){
                 //todo more specific exception???
                 throw new Exception("unable to find keys corresponding to this record's version");
             }
+           
+            var pheKeys = ctx.VersionedPheKeys[databaseRecord.Version];
+
             var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(databaseRecord.Record);
             // todo validate len(enrollmentRecord.Nc) len(enrollmentRecord.Ns) = 32 pheNonceLen
-            var c0 = this.ctx.Crypto.ComputeC0(
-                this.ctx.ClientSecretKey, pwdBytes, enrollmentRecord.Nc.ToByteArray(), enrollmentRecord.T0.ToByteArray());
+            var c0 = ctx.Crypto.ComputeC0(
+                pheKeys.ClientSecretKey, pwdBytes, enrollmentRecord.Nc.ToByteArray(), enrollmentRecord.T0.ToByteArray());
             
             var pheVerifyPasswordRequest = new global::Phe.VerifyPasswordRequest()
             {
@@ -143,12 +150,12 @@ namespace Passw0rd
 
             var versionedPasswordRequest = new Passw0Rd.VerifyPasswordRequest()
             {
-                Version = ctx.Version,
+                Version = databaseRecord.Version,
                 Request = ByteString.CopyFrom(pheVerifyPasswordRequest.ToByteArray())
             };
 
             //todo VerifyAsync(VerifyPasswordRequest)
-            var serverResponse = await this.ctx.Client.VerifyAsync(versionedPasswordRequest).ConfigureAwait(false);
+            var serverResponse = await ctx.Client.VerifyAsync(versionedPasswordRequest).ConfigureAwait(false);
             // todo if response == null exception 
           
 
@@ -164,7 +171,7 @@ namespace Passw0rd
 
            
                 var isValid = this.ctx.Crypto.ValidateProofOfSuccess(pheServerResponse.Success, 
-                                                                     ctx.ServerPublicKey,
+                                                                     pheKeys.ServerPublicKey,
                                                                      enrollmentRecord.Ns.ToByteArray(),
                                                                      c0, pheServerResponse.C1.ToByteArray());
                 if (!isValid)
@@ -172,7 +179,7 @@ namespace Passw0rd
                     throw new ProofOfSuccessNotValidException();
                 }
 
-                m = this.ctx.Crypto.DecryptM(ctx.ClientSecretKey, 
+                m = this.ctx.Crypto.DecryptM(pheKeys.ClientSecretKey, 
                                              pwdBytes,
                                              enrollmentRecord.Nc.ToByteArray(), 
                                              enrollmentRecord.T1.ToByteArray(), 
@@ -186,7 +193,7 @@ namespace Passw0rd
                 }
 
                 var isValid = this.ctx.Crypto.ValidateProofOfFail(pheServerResponse.Fail,
-                                                                  ctx.ServerPublicKey,
+                                                                  pheKeys.ServerPublicKey,
                                                                   enrollmentRecord.Ns.ToByteArray(),
                                                                   c0, pheServerResponse.C1.ToByteArray());
 
@@ -196,60 +203,6 @@ namespace Passw0rd
                 }
             }
             return m;
-        }
-
-        /// <summary>
-        /// Updates a <see cref="DatabaseRecord"/> with an specified <see cref="VersionedUpdateToken"/>.
-        /// </summary>
-        public byte[] Update(byte[] pwdRecord)
-        {
-            if (pwdRecord == null)
-            {
-                throw new ArgumentNullException(nameof(pwdRecord));
-            }
-
-            if (this.ctx.UpdateToken == null)
-            {
-                throw new Passw0rdProtocolException("UpdateToken is not provided in context");
-            }
-            var databaseRecord = DatabaseRecord.Parser.ParseFrom(pwdRecord);
-
-            if (databaseRecord.Version == ctx.UpdateToken.Version){
-                return pwdRecord;
-            }
-
-            if (databaseRecord.Version + 1 == ctx.UpdateToken.Version){
-                var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(databaseRecord.Record);
-
-                var t0 = enrollmentRecord.T0.ToByteArray();
-                var t1 = enrollmentRecord.T1.ToByteArray();
-                (t0, t1) = ctx.Crypto.UpdateT(enrollmentRecord.Ns.ToByteArray(),
-                                              enrollmentRecord.T0.ToByteArray(),
-                                              enrollmentRecord.T1.ToByteArray(),
-                                              ctx.UpdateToken.ToByteArray());
-
-
-                var updatedEnrollmentRecord = new EnrollmentRecord
-                {
-                    Nc = enrollmentRecord.Nc,
-                    Ns = enrollmentRecord.Ns,
-                    T0 = ByteString.CopyFrom(t0),
-                    T1 = ByteString.CopyFrom(t1)
-                };
-
-                var updatedDatabaseRecord = new DatabaseRecord
-                {
-                    Version = ctx.UpdateToken.Version,
-                    Record = ByteString.CopyFrom(enrollmentRecord.ToByteArray())
-
-                };
-                return updatedDatabaseRecord.ToByteArray();
-            }
-
-            throw new Passw0rdProtocolException(
-                String.Format("Record and update token versions mismatch: {0} and {1}",
-                              databaseRecord.Version, ctx.UpdateToken.Version)
-            );
         }
     }
 }
