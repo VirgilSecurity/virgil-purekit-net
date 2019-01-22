@@ -1,6 +1,7 @@
 ﻿namespace Passw0rd.Tests
 {
     using System;
+    using System.Collections.Generic;
     using Org.BouncyCastle.Crypto;
     using Org.BouncyCastle.Math;
     using Org.BouncyCastle.Math.EC;
@@ -64,7 +65,7 @@
             };
             var pwd = Bytes.FromString("passw0rd");
             var skC = phe.DecodeSecretKey(clientPrivate);
-
+            var hash = new Dictionary<string, int>();
             var expectedC0 = Bytes.FromString("047062653b3a156a0a211686506f86427f13cdbe3825ca4ee820a8f202b91cf76cd276cc2f506191b491e85f5ac412cc36b2502cfbf23b130b0808d93c37271651", StringEncoding.HEX);
             var t0 = Bytes.FromString("04f1b0aef2e5dc2028955a35448a0d4fb4ea4c2dd3eba78bca4c5afd5c35832a1ffb7b1c7da8aa4c00105d0e7babacc49047891e3365e0606085071e23f50d97b7", StringEncoding.HEX);
 

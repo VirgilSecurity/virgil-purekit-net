@@ -49,9 +49,6 @@ namespace Passw0rd
 
     public class ProtocolContext
     {
-        
-        public SecretKey ClientSecretKey { get; private set; }
-        public PublicKey ServerPublicKey { get; private set; }
         public Dictionary<uint, PheKeys> VersionedPheKeys { get; private set; }
         private ProtocolContext()
         {
@@ -131,8 +128,6 @@ namespace Passw0rd
                 }
             }
 
-            ctx.ClientSecretKey = skC;
-            ctx.ServerPublicKey = pkS;
 
             return ctx;
         }
