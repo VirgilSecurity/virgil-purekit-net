@@ -49,11 +49,13 @@ namespace Passw0rd
 
     public class ProtocolContext
     {
+        
         public SecretKey ClientSecretKey { get; private set; }
         public PublicKey ServerPublicKey { get; private set; }
-
+        public Dictionary<uint, PheKeys> VersionedPheKeys { get; private set; }
         private ProtocolContext()
         {
+            VersionedPheKeys = new Dictionary<uint, PheKeys>();
         }
 
         /// <summary>
@@ -75,12 +77,12 @@ namespace Passw0rd
         /// <summary>
         /// Gets the PHE Crypto instanse.
         /// </summary>
-        public uint Version { get; private set; }
+        public uint CurrentVersion { get; private set; }
 
         /// <summary>
         /// Gets the update tokens.
         /// </summary>
-        public VersionedUpdateToken UpdateToken { get; private set; } 
+        public VersionedUpdateToken VersionedUpdateToken { get; private set; } 
 
      
         public static ProtocolContext Create(string appToken, string accessToken, 
@@ -108,18 +110,25 @@ namespace Passw0rd
                 AppToken = appToken,
                 Client = client,
                 Crypto = phe,
-                Version = pkSVer
+                CurrentVersion = pkSVer
             };
+            ctx.VersionedPheKeys.Add(pkSVer, new PheKeys(skC, pkS));
 
             if (!String.IsNullOrWhiteSpace(updateToken))
             {
 
-                ctx.UpdateToken = ParseUpdateToken(updateToken);
-                if (ctx.UpdateToken.Version != pkSVer){
-                    //todo raise exception "incorrect token version"
+                ctx.VersionedUpdateToken = VersionedUpdateTokenExtension.ParseFromString(updateToken);
+                if (ctx.VersionedUpdateToken.Version != pkSVer)
+                {
+                    if (ctx.VersionedUpdateToken.Version != ctx.CurrentVersion + 1){
+                        throw new Exception("incorrect token version");
+                    } 
+
+                    pkS = phe.RotatePublicKey(pkS, ctx.VersionedUpdateToken.UpdateToken.ToByteArray());
+                    skC = phe.RotateSecretKey(skC, ctx.VersionedUpdateToken.UpdateToken.ToByteArray());
+                    ctx.VersionedPheKeys.Add(ctx.VersionedUpdateToken.Version, new PheKeys(skC, pkS));
+                    ctx.CurrentVersion = ctx.VersionedUpdateToken.Version;
                 }
-                    pkS = phe.RotatePublicKey(pkS, ctx.UpdateToken.UpdateToken.ToByteArray());
-                    skC = phe.RotateSecretKey(skC, ctx.UpdateToken.UpdateToken.ToByteArray());
             }
 
             ctx.ClientSecretKey = skC;
@@ -127,24 +136,7 @@ namespace Passw0rd
 
             return ctx;
         }
-
-        private static VersionedUpdateToken ParseUpdateToken(string token)
-        {
-            var keyParts = token.Split(".");
-            if (keyParts.Length != 3 ||
-                !UInt32.TryParse(keyParts[1], out uint version) ||
-                !keyParts[0].ToUpper().Equals("UT"))
-            {
-                throw new ArgumentException("has incorrect format", nameof(token));
-            }
-            //todo: version validate
-            var tokenBytes = Bytes.FromString(keyParts[2], StringEncoding.BASE64);
-
-            return new VersionedUpdateToken{
-                Version = version,
-                UpdateToken = ByteString.CopyFrom(tokenBytes)
-            };
-        }
+     
 
         //todo: refactoring
         private static (uint, PublicKey) EnsureServerPublicKey(string serverPublicKey, PheCrypto phe)
