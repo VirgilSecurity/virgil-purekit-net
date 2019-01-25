@@ -16,5 +16,6 @@ namespace Passw0rd.Tests
         public static string UpdateTokenV2 = ConfigurationManager.AppSettings["UpdateTokenV2"];
         public static string UpdateTokenV3 = ConfigurationManager.AppSettings["UpdateTokenV3"];
 
+        public static string ServiceAddress = ConfigurationManager.AppSettings["ServiceAddress"];
     }
 }

@@ -14,8 +14,6 @@
 
     public class ProtocolTests
     {
-       
-
         private string appToken = AppSettings.AppToken;
         private string servicePublicKey = AppSettings.ServicePublicKey;
         private string clientSecretKey = AppSettings.ClientSecretKey;
@@ -24,7 +22,7 @@
         private string myPassword = "passw9rd";
         private string updateTokenV2 = AppSettings.UpdateTokenV2;
         private string updateTokenV3 = AppSettings.UpdateTokenV3;
-
+        private string serviceAddress = AppSettings.ServiceAddress;
 
 
         [Fact] //HTC-1
@@ -34,7 +32,7 @@
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
                clientSecretKey: clientSecretKey2,
-               apiUrl: "https://dev.passw0rd.io/");
+                apiUrl: serviceAddress);
             
             var protocol = new Protocol(context);
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
@@ -56,7 +54,7 @@
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
                clientSecretKey: clientSecretKey2,
-               apiUrl: "https://dev.passw0rd.io/",
+                apiUrl: serviceAddress,
                 updateToken: updateTokenV3);
             
            // var pwd = Bytes.ToString(myPassword, StringEncoding.UTF8);
@@ -80,7 +78,7 @@
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
                clientSecretKey: clientSecretKey2,
-              apiUrl: "https://dev.passw0rd.io/");
+                apiUrl: serviceAddress);
             // var pwd = Bytes.ToString(myPassword, StringEncoding.UTF8);
             var protocol = new Protocol(context);
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
@@ -99,12 +97,12 @@
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
                clientSecretKey: clientSecretKey2,
-              apiUrl: "https://dev.passw0rd.io/");
+                apiUrl: serviceAddress);
              var contextWithWrongServerKey = ProtocolContext.Create(
                appToken: appToken,
                 servicePublicKey: "PK.2.BK6oQNcAEyMc0fmc7coHbaQHqwoYPTiIM6A4393wEE9vRbCeUjKZSHzluHI80bGhJ61/eg1SUZNtgmMie4U80gI=",
                clientSecretKey: clientSecretKey2,
-              apiUrl: "https://dev.passw0rd.io/");
+                apiUrl: serviceAddress);
 
             var protocol = new Protocol(context);
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
@@ -130,13 +128,13 @@
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
                clientSecretKey: clientSecretKey2,
-              apiUrl: "https://dev.passw0rd.io/");
+                apiUrl: serviceAddress);
             
             var contextWithUpdateToken = ProtocolContext.Create(
               appToken: appToken,
               servicePublicKey: servicePublicKey2,
               clientSecretKey: clientSecretKey2,
-              apiUrl: "https://dev.passw0rd.io/",
+                apiUrl: serviceAddress,
               updateToken: updateTokenV3);
 
             var protocol = new Protocol(context);
@@ -166,7 +164,7 @@
                servicePublicKey: servicePublicKey2,
                clientSecretKey: clientSecretKey2,
                updateToken: updateTokenV3,
-               apiUrl: "https://dev.passw0rd.io/");
+                apiUrl: serviceAddress);
 
 
             var protocol = new Protocol(context);
@@ -190,7 +188,7 @@
                servicePublicKey: servicePublicKey2,
                clientSecretKey: clientSecretKey2,
                updateToken: updateTokenV3,
-               apiUrl: "https://dev.passw0rd.io/");
+                apiUrl: serviceAddress);
             
 
             var protocol = new Protocol(context);
@@ -218,7 +216,7 @@
               appToken: appToken,
               servicePublicKey: servicePublicKey2,
               clientSecretKey: clientSecretKey2,
-             apiUrl: "https://dev.passw0rd.io/",
+                apiUrl: serviceAddress,
                 updateToken: updateTokenV3);
 
             var protocol = new Protocol(contextWithUpdateToken);
