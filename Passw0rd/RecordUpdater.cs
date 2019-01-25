@@ -16,7 +16,7 @@ namespace Passw0rd
             {
                 throw new ArgumentNullException("UpdateToken is not provided in context");
             }
-            this.UpdateToken = VersionedUpdateTokenExtension.ParseFromString(token);
+            this.UpdateToken = StringUpdateTokenParser.Parse(token);
             this.PheCrypto = new PheCrypto();
         }
 
@@ -35,16 +35,17 @@ namespace Passw0rd
 
             if (databaseRecord.Version == UpdateToken.Version)
             {
-                return oldPwdRecord;
+                throw new WrongVersionException(
+                    String.Format("Record can't be updated with the same version"));
             }
 
             if (databaseRecord.Version + 1 == UpdateToken.Version)
             {
                 var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(databaseRecord.Record);
 
-                var t0 = enrollmentRecord.T0.ToByteArray();
-                var t1 = enrollmentRecord.T1.ToByteArray();
-                (t0, t1) = PheCrypto.UpdateT(enrollmentRecord.Ns.ToByteArray(),
+               // var t0 = enrollmentRecord.T0.ToByteArray();
+               // var t1 = enrollmentRecord.T1.ToByteArray();
+                var (t0, t1) = PheCrypto.UpdateT(enrollmentRecord.Ns.ToByteArray(),
                                               enrollmentRecord.T0.ToByteArray(),
                                               enrollmentRecord.T1.ToByteArray(),
                                               UpdateToken.ToByteArray());
@@ -61,13 +62,13 @@ namespace Passw0rd
                 var updatedDatabaseRecord = new DatabaseRecord
                 {
                     Version = UpdateToken.Version,
-                    Record = ByteString.CopyFrom(enrollmentRecord.ToByteArray())
+                    Record = ByteString.CopyFrom(updatedEnrollmentRecord.ToByteArray())
 
                 };
                 return updatedDatabaseRecord.ToByteArray();
             }
 
-            throw new Passw0rdProtocolException(
+            throw new WrongVersionException(
                 String.Format("Record and update token versions mismatch: {0} and {1}",
                               databaseRecord.Version, UpdateToken.Version)
             );

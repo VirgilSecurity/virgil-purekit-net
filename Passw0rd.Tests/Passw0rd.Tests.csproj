@@ -12,9 +12,16 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
     <PackageReference Include="BouncyCastle" Version="1.8.3.1" />
+    <PackageReference Include="Bogus" Version="25.0.4" />
+    <PackageReference Include="NSubstitute" Version="3.1.0" />
+    <PackageReference Include="Moq" Version="4.10.1" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Passw0rd\Passw0rd.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="PasswordRecordTests.cs" />
   </ItemGroup>
 </Project>

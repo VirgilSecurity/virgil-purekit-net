@@ -61,31 +61,39 @@ namespace Passw0rd.Phe
     public class PheCrypto
     {
         private X9ECParameters curveParams;
-        public FpCurve Curve { get; private set; }
-        public ECPoint CurveG { get; private set; }
-        private SecureRandom rng;
+        internal FpCurve Curve { get; private set; }
+        internal ECPoint CurveG { get; private set; }
+        internal PheRandomGenerator Rng{ get; set; }
+       
         private SHA512 sha512;
         private Swu swu;
         private const int pheClientKeyLen = 32;
         private const int pheNonceLen = 32;
+        private const int zLen = 32;
         public PheCrypto()
         {
             this.curveParams = NistNamedCurves.GetByName("P-256");
             this.Curve = (FpCurve)curveParams.Curve;
             this.CurveG = this.curveParams.G.Multiply(BigInteger.ValueOf(1));
-            this.rng = new SecureRandom();
+            this.Rng = new PheRandomGenerator(); 
             this.sha512 = new SHA512();
             this.swu = new Swu(Curve.Q, Curve.B.ToBigInteger());
         }
 
         /// <summary>
-        /// Generates a random nonce.
+        /// Generates a random default length nonce.
         /// </summary>
         public byte[] GenerateNonce()
         {
-            var nonce = new byte[pheNonceLen];
-            this.rng.NextBytes(nonce);
-            return nonce;
+            return GenerateNonce(pheNonceLen);
+        }
+
+        /// <summary>
+        /// Generates a random nonce.
+        /// </summary>
+        public byte[] GenerateNonce(int length)
+        {
+            return Rng.GenerateNonce(length);
         }
 
         /// <summary>
@@ -134,14 +142,11 @@ namespace Passw0rd.Phe
             var c0Point  = this.Curve.DecodePoint(c0);
             var c1Point  = this.Curve.DecodePoint(c1);
 
-            //todo ==swu.PointHashLen
-            var mbuf = new byte[32];
-            this.rng.NextBytes(mbuf);
-
-            var mPoint   = this.HashToPoint(mbuf);
+            var mPoint   = this.HashToPoint(GenerateNonce(swu.PointHashLen));
             var hc0Point = this.HashToPoint(Domains.Dhc0, nC, pwd);
             var hc1Point = this.HashToPoint(Domains.Dhc1, nC, pwd);
 
+            // encryption key in a form of a random point
             var hkdf = InitHkdf(mPoint.GetEncoded(), null, Domains.KdfInfoClientKey);
             var key = new byte[pheClientKeyLen];
             hkdf.GenerateBytes(key, 0, key.Length);
@@ -428,12 +433,9 @@ namespace Passw0rd.Phe
         private BigInteger RandomZ()
         {
             BigInteger z;
-            byte[] zBytes = new byte[32];
-
             do
             {
-                this.rng.NextBytes(zBytes);
-                z = new BigInteger(1, zBytes);
+                z = new BigInteger(1, GenerateNonce(zLen));
             }
             while (z.CompareTo(this.curveParams.N) >= 0);
 
@@ -468,7 +470,7 @@ namespace Passw0rd.Phe
         public FpPoint HashToPoint(byte[] domain, params byte[][] datas)
         {
             var hash = this.sha512.ComputeHash(domain, datas);
-            var hash256 = ((Span<byte>)hash).Slice(0, this.swu.PointHashLen()).ToArray();
+            var hash256 = ((Span<byte>)hash).Slice(0, this.swu.PointHashLen).ToArray();
 
             var (x, y) = this.swu.HashToPoint(hash256);
 

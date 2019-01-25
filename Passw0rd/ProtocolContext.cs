@@ -79,15 +79,18 @@ namespace Passw0rd
         /// <summary>
         /// Gets the update tokens.
         /// </summary>
-        public VersionedUpdateToken VersionedUpdateToken { get; private set; } 
+        public VersionedUpdateToken VersionedUpdateToken { get; private set; }
 
-     
-        public static ProtocolContext Create(string appToken, string accessToken, 
-            string serverPublicKey, string clientSecretKey, string updateToken = null)
+
+        public static ProtocolContext Create(string appToken,
+            string servicePublicKey,
+            string clientSecretKey,
+            string updateToken = null,
+            string apiUrl = null)
         {
             // todo: validate params
             var phe = new PheCrypto();
-            var (pkSVer, pkS) = EnsureServerPublicKey(serverPublicKey, phe);
+            var (pkSVer, pkS) = EnsureServerPublicKey(servicePublicKey, phe);
             var (skCVer, skC) = EnsureClientSecretKey(clientSecretKey, phe);
 
             if (pkSVer != skCVer) 
@@ -96,10 +99,12 @@ namespace Passw0rd
             }
 
             var serializer = new HttpBodySerializer();
+            var url = String.IsNullOrWhiteSpace(apiUrl) ? "https://api.passw0rd.io/"
+                            : apiUrl;
             var client = new PheClient(serializer)
             {
-                AccessToken = accessToken,
-                BaseUri = new Uri("https://api.passw0rd.io/")
+                AppToken = appToken,
+                BaseUri = new Uri(url)
             };
 
             var ctx = new ProtocolContext
@@ -114,7 +119,7 @@ namespace Passw0rd
             if (!String.IsNullOrWhiteSpace(updateToken))
             {
 
-                ctx.VersionedUpdateToken = VersionedUpdateTokenExtension.ParseFromString(updateToken);
+                ctx.VersionedUpdateToken = StringUpdateTokenParser.Parse(updateToken);
                 if (ctx.VersionedUpdateToken.Version != pkSVer)
                 {
                     if (ctx.VersionedUpdateToken.Version != ctx.CurrentVersion + 1){
@@ -127,31 +132,35 @@ namespace Passw0rd
                     ctx.CurrentVersion = ctx.VersionedUpdateToken.Version;
                 }
             }
-
-
             return ctx;
         }
      
 
         //todo: refactoring
-        private static (uint, PublicKey) EnsureServerPublicKey(string serverPublicKey, PheCrypto phe)
+        private static (uint, PublicKey) EnsureServerPublicKey(string servicePublicKey, PheCrypto phe)
         {
-            var keyParts = serverPublicKey.Split(".");
+            var keyParts = servicePublicKey.Split(".");
             if (keyParts.Length != 3 ||
                 !UInt32.TryParse(keyParts[1], out uint version) ||
                 !keyParts[0].ToUpper().Equals("PK"))
             {
-                throw new ArgumentException("has incorrect format", nameof(serverPublicKey));
+                throw new ArgumentException("has incorrect format", nameof(servicePublicKey));
             }
 
             var keyBytes = Bytes.FromString(keyParts[2], StringEncoding.BASE64);
             if (keyBytes.Length != 65)
             {
-                throw new ArgumentException("has incorrect length", nameof(serverPublicKey));
+                throw new ArgumentException("has incorrect length", nameof(servicePublicKey));
             }
-
-            var publicKey = phe.DecodePublicKey(keyBytes);
-            return (version, publicKey); 
+           
+            PublicKey publicKey;
+            try
+            {
+                publicKey = phe.DecodePublicKey(keyBytes);
+            }catch(Exception e){
+                throw new WrongServiceKeyException(e.ToString());
+            }
+            return (version, publicKey);
         }
 
         //todo: refactoring
@@ -171,8 +180,16 @@ namespace Passw0rd
                 throw new ArgumentException("has incorrect length", nameof(clientSecretKey));
             }
 
-            var secretKey = phe.DecodeSecretKey(keyBytes);
-            return (version, secretKey); 
+            SecretKey secretKey;
+            try
+            {
+                secretKey = phe.DecodeSecretKey(keyBytes);
+            }
+            catch (Exception e)
+            {
+                throw new WrongClientSecretKeyException(e.ToString());
+            }
+            return (version, secretKey);
         }
     }
 }

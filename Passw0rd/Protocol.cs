@@ -77,8 +77,11 @@ namespace Passw0rd
         /// <summary>
         /// Enrolls a new <see cref="DatabaseRecord"/> for specified password.
         /// </summary>
-        public async Task<(byte[], byte[])> EnrollAsync(string password)
+        public async Task<(byte[], byte[])> EnrollAccountAsync(string password)
         {
+            if (String.IsNullOrWhiteSpace(password)){
+                throw new ArgumentException(String.Format("Password can't be empty {0}", password));
+            }
             var pheKeys = ctx.VersionedPheKeys[ctx.CurrentVersion];
             var enrollmentResp = await ctx.Client.GetEnrollment(
                 new EnrollmentRequest() { Version = ctx.CurrentVersion })
@@ -86,7 +89,7 @@ namespace Passw0rd
             var pheResp = global::Phe.EnrollmentResponse.Parser.ParseFrom(enrollmentResp.Response);
             var isValid = this.ctx.Crypto.ValidateProofOfSuccess(
                 pheResp.Proof,
-                pheKeys.ServerPublicKey,
+                pheKeys.ServicePublicKey,
                 pheResp.Ns.ToByteArray(),
                 pheResp.C0.ToByteArray(),
                 pheResp.C1.ToByteArray());
@@ -99,7 +102,9 @@ namespace Passw0rd
             var nC = this.ctx.Crypto.GenerateNonce();
             var pwdBytes = Bytes.FromString(password);
 
-            var (t0, t1, key) = ctx.Crypto.ComputeT(pheKeys.ClientSecretKey, pwdBytes, nC, pheResp.C0.ToByteArray(),pheResp.C1.ToByteArray());
+            var (t0, t1, key) = ctx.Crypto.ComputeT(pheKeys.ClientSecretKey, 
+                                                    pwdBytes, nC,
+                                                    pheResp.C0.ToByteArray(),pheResp.C1.ToByteArray());
 
             var enrollmentRecord = new EnrollmentRecord
             {
@@ -115,24 +120,24 @@ namespace Passw0rd
                 Record = ByteString.CopyFrom(enrollmentRecord.ToByteArray())
                                    
             };
-            return (enrollmentRecord.ToByteArray(), key);
+            return (record.ToByteArray(), key);
         }
 
         /// <summary>
         /// Verifies a <see cref="DatabaseRecord"/> by specified password.
         /// </summary>
-        public async Task<byte[]> VerifyAsync(byte[] pwdRecord, string password)
+        public async Task<byte[]> VerifyPasswordAsync(string password, byte[] pwdRecord)
         {
             var pwdBytes = Bytes.FromString(password);
             var databaseRecord = DatabaseRecord.Parser.ParseFrom(pwdRecord);
             if (databaseRecord.Version < 1)
             {
-                throw new Exception("Invalid record version");
+                throw new WrongVersionException("Invalid record version");
             }
 
             if (!ctx.VersionedPheKeys.ContainsKey(databaseRecord.Version)){
                 //todo more specific exception???
-                throw new Exception("unable to find keys corresponding to this record's version");
+                throw new WrongVersionException("unable to find keys corresponding to this record's version");
             }
            
             var pheKeys = ctx.VersionedPheKeys[databaseRecord.Version];
@@ -171,7 +176,7 @@ namespace Passw0rd
 
            
                 var isValid = this.ctx.Crypto.ValidateProofOfSuccess(pheServerResponse.Success, 
-                                                                     pheKeys.ServerPublicKey,
+                                                                     pheKeys.ServicePublicKey,
                                                                      enrollmentRecord.Ns.ToByteArray(),
                                                                      c0, pheServerResponse.C1.ToByteArray());
                 if (!isValid)
@@ -193,7 +198,7 @@ namespace Passw0rd
                 }
 
                 var isValid = this.ctx.Crypto.ValidateProofOfFail(pheServerResponse.Fail,
-                                                                  pheKeys.ServerPublicKey,
+                                                                  pheKeys.ServicePublicKey,
                                                                   enrollmentRecord.Ns.ToByteArray(),
                                                                   c0, pheServerResponse.C1.ToByteArray());
 
@@ -201,6 +206,7 @@ namespace Passw0rd
                 {
                     throw new ProofOfFailNotValidException();
                 }
+                throw new WrongPasswordException("You provide wrong password.");
             }
             return m;
         }

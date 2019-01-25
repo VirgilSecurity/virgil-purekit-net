@@ -64,7 +64,7 @@ namespace Passw0rd.Client.Connection
         /// <summary>
         /// Gets or sets the access token.
         /// </summary>
-        public string AccessToken { get; set; }
+        public string AppToken { get; set; }
 
         /// <summary>
         /// Gets or sets the base URI.
@@ -101,9 +101,9 @@ namespace Passw0rd.Client.Connection
 
             var request = new HttpRequestMessage(method, endpointUri);
 
-            if (!string.IsNullOrWhiteSpace(this.AccessToken))
+            if (!string.IsNullOrWhiteSpace(this.AppToken))
             {
-                request.Headers.TryAddWithoutValidation("Authorization", $"{this.AccessToken}");
+                request.Headers.TryAddWithoutValidation("AppToken", $"{this.AppToken}");
             }
 
             return request;

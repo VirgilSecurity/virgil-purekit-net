@@ -1,47 +1,233 @@
 ﻿namespace Passw0rd.Tests
 {
+    using System;
+    using System.Linq;
     using System.Threading.Tasks;
+    using Google.Protobuf;
+    using Moq;
+    using NSubstitute;
+    using Passw0rd.Phe;
+    using Passw0rd.Utils;
+    using Passw0Rd;
+    using Phe;
     using Xunit;
 
     public class ProtocolTests
     {
-        [Fact]
-        public async Task Should_EnrollNewRecord_When_PasswordSpecified()
+       
+
+        private string appToken = AppSettings.AppToken;
+        private string servicePublicKey = AppSettings.ServicePublicKey;
+        private string clientSecretKey = AppSettings.ClientSecretKey;
+        private string clientSecretKey2 = AppSettings.ClientSecretKey2;
+        private string servicePublicKey2 = AppSettings.ServicePublicKey2;
+        private string myPassword = "passw9rd";
+        private string updateTokenV2 = AppSettings.UpdateTokenV2;
+        private string updateTokenV3 = AppSettings.UpdateTokenV3;
+
+
+
+        [Fact] //HTC-1
+        public async Task EncrollAccount_Should_GenerateNewRecord()
         {
-            //var context = ProtocolContext.Create(
-            //    appToken: "e60e6d91b0e3480b816f306337e96aaa",
-            //    accessToken: "-rTsFFkAOGf6am4bEF_aAdoHt2kOGy78",
-            //    serverPublicKey: "PK.1.BJ2+TUK/WVTfuYjgKj0KOVH4nKUqdBihqhH/EN1fyggwATu4gzGMC0P35jBDZnSTEFdm2zmC4qndyI5MKBvFjX8=",
-            //    clientSecretKey: "SK.1.W7FVp+LhG/ton7P+wKu0ndIPECY5+mTzX7iWaW9+sXA="
-            //);
-
-            //var protocol = new Protocol(context);
-
-            //var record = await protocol.EnrollAsync("passw0rd");
-
-            //await Task.Delay(2000);
+            var context = ProtocolContext.Create(
+               appToken: appToken,
+               servicePublicKey: servicePublicKey2,
+               clientSecretKey: clientSecretKey2,
+               apiUrl: "https://dev.passw0rd.io/");
             
-            //var verifyResult = await protocol.VerifyAsync(record, "passw0rd");
+            var protocol = new Protocol(context);
+            var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
+            var rec = DatabaseRecord.Parser.ParseFrom(recBytes);
+            Assert.Equal<uint>(2, rec.Version);
+            Assert.NotNull(rec.Record);
+            Assert.NotNull(key);
+            Assert.Equal(32, key.Length);
 
-            //var context1 = ProtocolContext.Create(
-            //    appToken: "e60e6d91b0e3480b816f306337e96aaa",
-            //    accessToken: "-rTsFFkAOGf6am4bEF_aAdoHt2kOGy78",
-            //    serverPublicKey: "PK.1.BJ2+TUK/WVTfuYjgKj0KOVH4nKUqdBihqhH/EN1fyggwATu4gzGMC0P35jBDZnSTEFdm2zmC4qndyI5MKBvFjX8=",
-            //    clientSecretKey: "SK.1.W7FVp+LhG/ton7P+wKu0ndIPECY5+mTzX7iWaW9+sXA=",
-            //    updateToken: new[] {
-            //        "UT.2.MEQEIGw7O3Hm/9rSUBrShEFKiQQk8yi39TnGS7dpUP9/8aQiBCBhp5NxCylYeCpJq/hjK2SuTiA9Pl8zD8BZUDau6B72Ag=="
-            //    }
-            //);
+            var accountKey = await protocol.VerifyPasswordAsync(myPassword, recBytes);
+            Assert.Equal(key, accountKey);
+        }
 
-            //var protocol1 = new Protocol(context1);
+        [Fact] //HTC-2
+        public async Task EncrollAccountWithUpdateToken_Should_GenerateNewRecordWithTokenVersion()
+        {
+            // if token has version =  (keys' version + 1), then database record will have token version
+            var context = ProtocolContext.Create(
+               appToken: appToken,
+               servicePublicKey: servicePublicKey2,
+               clientSecretKey: clientSecretKey2,
+               apiUrl: "https://dev.passw0rd.io/",
+                updateToken: updateTokenV3);
+            
+           // var pwd = Bytes.ToString(myPassword, StringEncoding.UTF8);
+            var protocol = new Protocol(context);
+            var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
+            var rec = DatabaseRecord.Parser.ParseFrom(recBytes);
+            Assert.Equal<uint>(3, rec.Version);
+            Assert.NotNull(rec.Record);
+            Assert.NotNull(key);
+            Assert.Equal(32, key.Length);
 
-            //var record1 = protocol1.Update(record);
+            var accountKey = await protocol.VerifyPasswordAsync(myPassword, recBytes);
+            Assert.Equal(key, accountKey);
+        }
 
-            //await Task.Delay(2000);
+        [Fact] //HTC-3
+        public async Task VerifyPasswordWithWrongPassword_Should_RaiseWrongPasswordException()
+        {
+            // you can't verify database record if provide wrong password
+            var context = ProtocolContext.Create(
+               appToken: appToken,
+               servicePublicKey: servicePublicKey2,
+               clientSecretKey: clientSecretKey2,
+              apiUrl: "https://dev.passw0rd.io/");
+            // var pwd = Bytes.ToString(myPassword, StringEncoding.UTF8);
+            var protocol = new Protocol(context);
+            var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
+            var ex = await Record.ExceptionAsync( async() => { 
+                 await protocol.VerifyPasswordAsync("wrong password", recBytes); });
 
-            //var verifyResult1 = await protocol1.VerifyAsync(record1, "passw0rd");
+            Assert.IsType<WrongPasswordException>(ex); 
+        }
 
-            //Assert.True(verifyResult.IsSuccess);
+        
+        [Fact] //HTC-4
+        public async Task ProtocolWithWrongServiceKey_Should_RaiseProofOfSuccessNotValidException()
+        {
+            // you will get ProofOfSuccessNotValidException if try to enroll with wrong servicePublicKey
+            var context = ProtocolContext.Create(
+               appToken: appToken,
+               servicePublicKey: servicePublicKey2,
+               clientSecretKey: clientSecretKey2,
+              apiUrl: "https://dev.passw0rd.io/");
+             var contextWithWrongServerKey = ProtocolContext.Create(
+               appToken: appToken,
+                servicePublicKey: "PK.2.BK6oQNcAEyMc0fmc7coHbaQHqwoYPTiIM6A4393wEE9vRbCeUjKZSHzluHI80bGhJ61/eg1SUZNtgmMie4U80gI=",
+               clientSecretKey: clientSecretKey2,
+              apiUrl: "https://dev.passw0rd.io/");
+
+            var protocol = new Protocol(context);
+            var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
+
+            var protocolWithWrongServerKey = new Protocol(contextWithWrongServerKey);
+            var ex = await Record.ExceptionAsync( async() => { 
+                await protocolWithWrongServerKey.EnrollAccountAsync(myPassword); });
+
+            Assert.IsType<ProofOfSuccessNotValidException>(ex); 
+
+            var ex2 = await Record.ExceptionAsync( async() => { 
+                await protocolWithWrongServerKey.VerifyPasswordAsync(myPassword, recBytes); });
+
+            Assert.IsType<ProofOfSuccessNotValidException>(ex2); 
+        }
+
+
+        [Fact] //HTC-5
+        public async Task ProtocolWithUpdateToken_Should_VerifyUpdatedRecord()
+        {
+            // you can verify updated record if context has updateToken with equal version
+            var context = ProtocolContext.Create(
+               appToken: appToken,
+               servicePublicKey: servicePublicKey2,
+               clientSecretKey: clientSecretKey2,
+              apiUrl: "https://dev.passw0rd.io/");
+            
+            var contextWithUpdateToken = ProtocolContext.Create(
+              appToken: appToken,
+              servicePublicKey: servicePublicKey2,
+              clientSecretKey: clientSecretKey2,
+              apiUrl: "https://dev.passw0rd.io/",
+              updateToken: updateTokenV3);
+
+            var protocol = new Protocol(context);
+            var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
+
+            Assert.Equal<uint>(2, DatabaseRecord.Parser.ParseFrom(recBytes).Version);
+
+            var recordUpdater = new RecordUpdater(updateTokenV3);
+            var updatedRecBytes = recordUpdater.Update(recBytes);
+
+            Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(updatedRecBytes).Version); 
+            var protocolWithUpdateToken = new Protocol(contextWithUpdateToken);
+
+            var recBytesKey = await protocol.VerifyPasswordAsync(myPassword, recBytes);
+            var keyFromVerify = await protocolWithUpdateToken.VerifyPasswordAsync(myPassword, updatedRecBytes);
+            Assert.Equal(key, recBytesKey);
+            Assert.Equal(key, keyFromVerify);
+        }
+
+
+        [Fact] //HTC-6
+        public async Task Updater_Should_RaiseWrongVersionExceptionIfRecordHasTheSameVersionAsUpdater()
+        {
+            // you will get exception if record version == updater version
+            var context = ProtocolContext.Create(
+               appToken: appToken,
+               servicePublicKey: servicePublicKey2,
+               clientSecretKey: clientSecretKey2,
+               updateToken: updateTokenV3,
+               apiUrl: "https://dev.passw0rd.io/");
+
+
+            var protocol = new Protocol(context);
+            var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
+            Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(recBytes).Version); 
+
+            var recordUpdater = new RecordUpdater(updateTokenV3);
+
+            var ex = Record.Exception( () => { 
+                recordUpdater.Update(recBytes); });
+
+            Assert.IsType<WrongVersionException>(ex); 
+        }
+
+        [Fact] //HTC-7
+        public async Task Updater_Should_RaiseWrongVersionExceptionIfRecordHasWrongVersion()
+        {
+            // you will get exception if record version != (updater version - 1) 
+            var context = ProtocolContext.Create(
+               appToken: appToken,
+               servicePublicKey: servicePublicKey2,
+               clientSecretKey: clientSecretKey2,
+               updateToken: updateTokenV3,
+               apiUrl: "https://dev.passw0rd.io/");
+            
+
+            var protocol = new Protocol(context);
+            var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
+            var databaseRec = DatabaseRecord.Parser.ParseFrom(recBytes);
+            databaseRec.Version = 1;
+
+
+            var recordUpdater = new RecordUpdater(updateTokenV3);
+            var ex = Record.Exception( () => {
+                recordUpdater.Update(databaseRec.ToByteArray()); });
+            Assert.IsType<WrongVersionException>(ex); 
+
+            var ex2 = await Record.ExceptionAsync( async() => { 
+                await protocol.VerifyPasswordAsync(myPassword, databaseRec.ToByteArray()); });
+
+            Assert.IsType<WrongVersionException>(ex2); 
+        }
+
+
+        [Fact] //HTC-11
+        public async Task Enroll_Should_RaiseArgumentExceptionIfEmptyPassword()
+        {
+            var contextWithUpdateToken = ProtocolContext.Create(
+              appToken: appToken,
+              servicePublicKey: servicePublicKey2,
+              clientSecretKey: clientSecretKey2,
+             apiUrl: "https://dev.passw0rd.io/",
+                updateToken: updateTokenV3);
+
+            var protocol = new Protocol(contextWithUpdateToken);
+
+            var ex = await Record.ExceptionAsync( async() => { 
+                await protocol.EnrollAccountAsync(""); });
+
+            Assert.IsType<ArgumentException>(ex); 
+            //raise exception
         }
     }
 }

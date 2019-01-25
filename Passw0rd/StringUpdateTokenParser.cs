@@ -5,9 +5,9 @@ using Passw0Rd;
 
 namespace Passw0rd
 {
-    internal static class VersionedUpdateTokenExtension
+    internal static class StringUpdateTokenParser
     {
-        public static VersionedUpdateToken ParseFromString(string token)
+        public static VersionedUpdateToken Parse(string token)
         {
             var keyParts = token.Split(".");
             if (keyParts.Length != 3 ||

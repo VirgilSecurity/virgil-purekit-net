@@ -22,6 +22,7 @@
     <Folder Include="Utils\" />
     <Folder Include="Client\" />
     <Folder Include="Utils\Asn1\" />
+    <Folder Include="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BouncyCastle" Version="1.8.3.1" />
@@ -32,6 +33,9 @@
     <Compile Remove="Class1.cs" />
     <Compile Remove="Client\ValidationModel.cs" />
     <Compile Remove="ClientSecretKey.cs" />
+    <Compile Remove="Phe\IPheCrypto.cs" />
+    <Compile Remove="UpdateTokenOld.cs" />
+    <Compile Remove="Phe\ProofOfFailOld.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Phe\phe.proto" />

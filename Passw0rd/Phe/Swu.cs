@@ -42,7 +42,7 @@ namespace Passw0rd.Phe
     /// <summary>
     /// Implementation of Shallue-Woestijne-Ulas algorithm
     /// </summary>
-    internal class Swu
+    public class Swu
     {
         private readonly BigInteger a;
         private readonly BigInteger b;
@@ -51,7 +51,7 @@ namespace Passw0rd.Phe
         private readonly BigInteger p14;
         private readonly BigInteger mba;
         private readonly SHA512 sha512;
-        private const int pointHashLen = 32;
+        public readonly int PointHashLen = 32;
         /// <summary>
         /// Initializes a new instance of the <see cref="Swu"/> class.
         /// </summary>
@@ -70,7 +70,7 @@ namespace Passw0rd.Phe
         public (BigInteger x, BigInteger y) DataToPoint(byte[] data)
         {
             var hash = sha512.ComputeHash(null, data);
-            var hash256 = ((Span<byte>)hash).Slice(0, pointHashLen).ToArray();
+            var hash256 = ((Span<byte>)hash).Slice(0, PointHashLen).ToArray();
             return HashToPoint(hash256);
         }
 
@@ -79,7 +79,7 @@ namespace Passw0rd.Phe
         /// </summary>
         public (BigInteger x, BigInteger y) HashToPoint(byte[] hash)
         {
-            if (hash.Length != pointHashLen) {
+            if (hash.Length != PointHashLen) {
                 throw new Exception("invalid hash length"); //todo unify exceptions
             }
             var t = new BigInteger(1, hash, 0, hash.Length);
@@ -117,10 +117,6 @@ namespace Passw0rd.Phe
                 ? (x2, p.Mul(tmp, h2))
                 : (x3, p.Pow(h3, p14));
         }
-
-
-        internal int PointHashLen(){
-            return pointHashLen;
-        }
+    
     }
 }
