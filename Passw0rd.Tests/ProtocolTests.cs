@@ -1,9 +1,11 @@
 ﻿namespace Passw0rd.Tests
 {
     using System;
+    using System.Configuration;
     using System.Linq;
     using System.Threading.Tasks;
     using Google.Protobuf;
+    using Microsoft.Extensions.Configuration;
     using Moq;
     using NSubstitute;
     using Passw0rd.Phe;
@@ -14,20 +16,31 @@
 
     public class ProtocolTests
     {
-        private string appToken = AppSettings.AppToken;
-        private string servicePublicKey = AppSettings.ServicePublicKey;
-        private string clientSecretKey = AppSettings.ClientSecretKey;
-        private string clientSecretKey2 = AppSettings.ClientSecretKey2;
-        private string servicePublicKey2 = AppSettings.ServicePublicKey2;
+        private string appToken;
+        private string servicePublicKey;
+        private string clientSecretKey;
+        private string clientSecretKey2;
+        private string servicePublicKey2;
         private string myPassword = "passw9rd";
-        private string updateTokenV2 = AppSettings.UpdateTokenV2;
-        private string updateTokenV3 = AppSettings.UpdateTokenV3;
-        private string serviceAddress = AppSettings.ServiceAddress;
+        private string updateTokenV2;
+        private string updateTokenV3;
+        private string serviceAddress;
 
-
+        public ProtocolTests(){
+            IConfigurationRoot configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true).Build();
+            appToken = configuration["AppToken"];
+            servicePublicKey = configuration["ServicePublicKey"];
+            clientSecretKey = configuration["ClientSecretKey"];
+            clientSecretKey2 = configuration["ClientSecretKey2"];
+            servicePublicKey2 = configuration["ServicePublicKey2"];
+            updateTokenV2 = configuration["UpdateTokenV2"];
+            updateTokenV3 = configuration["UpdateTokenV3"];
+            serviceAddress = configuration["ServiceAddress"];
+        }
         [Fact] //HTC-1
         public async Task EncrollAccount_Should_GenerateNewRecord()
         {
+           // var a = configuration["AppToken"];
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
@@ -134,7 +147,7 @@
               appToken: appToken,
               servicePublicKey: servicePublicKey2,
               clientSecretKey: clientSecretKey2,
-                apiUrl: serviceAddress,
+              apiUrl: serviceAddress,
               updateToken: updateTokenV3);
 
             var protocol = new Protocol(context);
