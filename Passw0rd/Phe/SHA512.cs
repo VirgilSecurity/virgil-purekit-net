@@ -38,10 +38,9 @@ namespace Passw0rd.Phe
 {
     using System;
     using System.IO;
-
     using Org.BouncyCastle.Crypto.Digests;
 
-    public class SHA512
+    internal class SHA512
     {
         /// <summary>
         /// Hashes a list of byte arrays, prefixing each one with its length.

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package phe;
+package Passw0rd.Phe;
 
 message Keypair {
     bytes public_key = 1;

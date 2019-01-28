@@ -37,7 +37,6 @@
 namespace Passw0rd.Phe
 {
     using System;
-
     using Org.BouncyCastle.Math.EC;
 
     /// <summary>

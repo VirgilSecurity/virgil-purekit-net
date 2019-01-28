@@ -36,7 +36,7 @@ namespace Passw0rd.Client.Connection
 {
     using Google.Protobuf;
 
-    public class HttpBodySerializer : IHttpBodySerializer
+    internal class HttpBodySerializer : IHttpBodySerializer
     {
         /// <summary>
         /// Deserializes a json string to the specified object.

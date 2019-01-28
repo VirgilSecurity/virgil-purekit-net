@@ -9,6 +9,7 @@ namespace Passw0rd
     {
         public static VersionedUpdateToken Parse(string token)
         {
+            Validation.NotNullOrWhiteSpace(token);
             var keyParts = token.Split(".");
             if (keyParts.Length != 3 ||
                 !UInt32.TryParse(keyParts[1], out uint version) ||

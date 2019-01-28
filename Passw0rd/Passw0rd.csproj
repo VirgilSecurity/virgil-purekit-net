@@ -36,6 +36,7 @@
     <Compile Remove="Phe\IPheCrypto.cs" />
     <Compile Remove="UpdateTokenOld.cs" />
     <Compile Remove="Phe\ProofOfFailOld.cs" />
+    <Compile Remove="Client\ProofOfSuccessModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Phe\phe.proto" />

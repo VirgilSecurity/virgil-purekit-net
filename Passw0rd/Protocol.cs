@@ -38,16 +38,10 @@ namespace Passw0rd
 {
     using System;
     using System.Threading.Tasks;
-
     using Passw0rd.Phe;
-    using Passw0rd.Client;
     using Passw0rd.Utils;
-    using System.Linq;
     using Passw0Rd;
-    using global::Phe;
     using Google.Protobuf;
-
-    // using global::Phe;
 
     /// <summary>
     /// The <see cref="Protocol"/> provides an implementation of PHE (Password 
@@ -71,6 +65,9 @@ namespace Passw0rd
         /// </summary>
         public Protocol(ProtocolContext context)
         {
+            Validation.NotNull(context,
+                               "Context with Application token, Service Public" +
+                               " Key and Application Secret Key isn't provided.");
             this.ctx = context;
         }
 
@@ -79,14 +76,13 @@ namespace Passw0rd
         /// </summary>
         public async Task<(byte[], byte[])> EnrollAccountAsync(string password)
         {
-            if (String.IsNullOrWhiteSpace(password)){
-                throw new ArgumentException(String.Format("Password can't be empty {0}", password));
-            }
+            Validation.NotNullOrWhiteSpace(password, "User's password isn't provided.");
+
             var pheKeys = ctx.VersionedPheKeys[ctx.CurrentVersion];
             var enrollmentResp = await ctx.Client.GetEnrollment(
                 new EnrollmentRequest() { Version = ctx.CurrentVersion })
                 .ConfigureAwait(false);
-            var pheResp = global::Phe.EnrollmentResponse.Parser.ParseFrom(enrollmentResp.Response);
+            var pheResp = Phe.EnrollmentResponse.Parser.ParseFrom(enrollmentResp.Response);
             var isValid = this.ctx.Crypto.ValidateProofOfSuccess(
                 pheResp.Proof,
                 pheKeys.ServicePublicKey,
@@ -128,6 +124,9 @@ namespace Passw0rd
         /// </summary>
         public async Task<byte[]> VerifyPasswordAsync(string password, byte[] pwdRecord)
         {
+            Validation.NotNullOrWhiteSpace(password, "User's password isn't provided.");
+            Validation.NotNullOrEmptyByteArray(pwdRecord, "User's record isn't provided.");
+
             var pwdBytes = Bytes.FromString(password);
             var databaseRecord = DatabaseRecord.Parser.ParseFrom(pwdRecord);
             if (databaseRecord.Version < 1)
@@ -136,7 +135,6 @@ namespace Passw0rd
             }
 
             if (!ctx.VersionedPheKeys.ContainsKey(databaseRecord.Version)){
-                //todo more specific exception???
                 throw new WrongVersionException("unable to find keys corresponding to this record's version");
             }
            
@@ -147,7 +145,7 @@ namespace Passw0rd
             var c0 = ctx.Crypto.ComputeC0(
                 pheKeys.ClientSecretKey, pwdBytes, enrollmentRecord.Nc.ToByteArray(), enrollmentRecord.T0.ToByteArray());
             
-            var pheVerifyPasswordRequest = new global::Phe.VerifyPasswordRequest()
+            var pheVerifyPasswordRequest = new Phe.VerifyPasswordRequest()
             {
                 Ns = enrollmentRecord.Ns,
                 C0 = ByteString.CopyFrom(c0)
@@ -165,7 +163,7 @@ namespace Passw0rd
           
 
             byte[] m = null;
-            var pheServerResponse = global::Phe.VerifyPasswordResponse.Parser.ParseFrom(serverResponse.Response);
+            var pheServerResponse = Phe.VerifyPasswordResponse.Parser.ParseFrom(serverResponse.Response);
 
             if (pheServerResponse.Res)
             {
@@ -173,7 +171,6 @@ namespace Passw0rd
                 {
                     throw new ProofNotProvidedException();
                 }
-
            
                 var isValid = this.ctx.Crypto.ValidateProofOfSuccess(pheServerResponse.Success, 
                                                                      pheKeys.ServicePublicKey,

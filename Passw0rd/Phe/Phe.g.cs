@@ -5,11 +5,11 @@
 #pragma warning disable 1591, 0612, 3021
 #region Designer generated code
 
-using pb = global::Google.Protobuf;
-using pbc = global::Google.Protobuf.Collections;
-using pbr = global::Google.Protobuf.Reflection;
-using scg = global::System.Collections.Generic;
-namespace Phe {
+using pb = Google.Protobuf;
+using pbc = Google.Protobuf.Collections;
+using pbr = Google.Protobuf.Reflection;
+using scg = System.Collections.Generic;
+namespace Passw0rd.Phe {
 
   /// <summary>Holder for reflection information generated from Phe.proto</summary>
   public static partial class PheReflection {
@@ -22,7 +22,7 @@ namespace Phe {
     private static pbr::FileDescriptor descriptor;
 
     static PheReflection() {
-      byte[] descriptorData = global::System.Convert.FromBase64String(
+      byte[] descriptorData = System.Convert.FromBase64String(
           string.Concat(
             "CglQaGUucHJvdG8SA3BoZSIyCgdLZXlwYWlyEhIKCnB1YmxpY19rZXkYASAB",
             "KAwSEwoLcHJpdmF0ZV9rZXkYAiABKAwiQgoQRW5yb2xsbWVudFJlY29yZBIK",
@@ -42,14 +42,14 @@ namespace Phe {
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::Phe.Keypair), global::Phe.Keypair.Parser, new[]{ "PublicKey", "PrivateKey" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Phe.EnrollmentRecord), global::Phe.EnrollmentRecord.Parser, new[]{ "Ns", "Nc", "T0", "T1" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Phe.ProofOfSuccess), global::Phe.ProofOfSuccess.Parser, new[]{ "Term1", "Term2", "Term3", "BlindX" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Phe.ProofOfFail), global::Phe.ProofOfFail.Parser, new[]{ "Term1", "Term2", "Term3", "Term4", "BlindA", "BlindB" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Phe.UpdateToken), global::Phe.UpdateToken.Parser, new[]{ "A", "B" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Phe.EnrollmentResponse), global::Phe.EnrollmentResponse.Parser, new[]{ "Ns", "C0", "C1", "Proof" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Phe.VerifyPasswordRequest), global::Phe.VerifyPasswordRequest.Parser, new[]{ "Ns", "C0" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Phe.VerifyPasswordResponse), global::Phe.VerifyPasswordResponse.Parser, new[]{ "Res", "C1", "Success", "Fail" }, new[]{ "Proof" }, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(Phe.Keypair), Phe.Keypair.Parser, new[]{ "PublicKey", "PrivateKey" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(Phe.EnrollmentRecord), Phe.EnrollmentRecord.Parser, new[]{ "Ns", "Nc", "T0", "T1" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(Phe.ProofOfSuccess), Phe.ProofOfSuccess.Parser, new[]{ "Term1", "Term2", "Term3", "BlindX" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(Phe.ProofOfFail), Phe.ProofOfFail.Parser, new[]{ "Term1", "Term2", "Term3", "Term4", "BlindA", "BlindB" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(Phe.UpdateToken), Phe.UpdateToken.Parser, new[]{ "A", "B" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(Phe.EnrollmentResponse), Phe.EnrollmentResponse.Parser, new[]{ "Ns", "C0", "C1", "Proof" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(Phe.VerifyPasswordRequest), Phe.VerifyPasswordRequest.Parser, new[]{ "Ns", "C0" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(Phe.VerifyPasswordResponse), Phe.VerifyPasswordResponse.Parser, new[]{ "Res", "C1", "Success", "Fail" }, new[]{ "Proof" }, null, null)
           }));
     }
     #endregion
@@ -59,34 +59,34 @@ namespace Phe {
   public sealed partial class Keypair : pb::IMessage<Keypair> {
     private static readonly pb::MessageParser<Keypair> _parser = new pb::MessageParser<Keypair>(() => new Keypair());
     private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pb::MessageParser<Keypair> Parser { get { return _parser; } }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Phe.PheReflection.Descriptor.MessageTypes[0]; }
+      get { return PheReflection.Descriptor.MessageTypes[0]; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     pbr::MessageDescriptor pb::IMessage.Descriptor {
       get { return Descriptor; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public Keypair() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public Keypair(Keypair other) : this() {
       publicKey_ = other.publicKey_;
       privateKey_ = other.privateKey_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public Keypair Clone() {
       return new Keypair(this);
     }
@@ -94,7 +94,7 @@ namespace Phe {
     /// <summary>Field number for the "public_key" field.</summary>
     public const int PublicKeyFieldNumber = 1;
     private pb::ByteString publicKey_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString PublicKey {
       get { return publicKey_; }
       set {
@@ -105,7 +105,7 @@ namespace Phe {
     /// <summary>Field number for the "private_key" field.</summary>
     public const int PrivateKeyFieldNumber = 2;
     private pb::ByteString privateKey_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString PrivateKey {
       get { return privateKey_; }
       set {
@@ -113,12 +113,12 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as Keypair);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool Equals(Keypair other) {
       if (ReferenceEquals(other, null)) {
         return false;
@@ -131,7 +131,7 @@ namespace Phe {
       return Equals(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
       if (PublicKey.Length != 0) hash ^= PublicKey.GetHashCode();
@@ -142,12 +142,12 @@ namespace Phe {
       return hash;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override string ToString() {
       return pb::JsonFormatter.ToDiagnosticString(this);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
       if (PublicKey.Length != 0) {
         output.WriteRawTag(10);
@@ -162,7 +162,7 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
       if (PublicKey.Length != 0) {
@@ -177,7 +177,7 @@ namespace Phe {
       return size;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(Keypair other) {
       if (other == null) {
         return;
@@ -191,7 +191,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
@@ -216,27 +216,27 @@ namespace Phe {
   public sealed partial class EnrollmentRecord : pb::IMessage<EnrollmentRecord> {
     private static readonly pb::MessageParser<EnrollmentRecord> _parser = new pb::MessageParser<EnrollmentRecord>(() => new EnrollmentRecord());
     private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pb::MessageParser<EnrollmentRecord> Parser { get { return _parser; } }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Phe.PheReflection.Descriptor.MessageTypes[1]; }
+      get { return Phe.PheReflection.Descriptor.MessageTypes[1]; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     pbr::MessageDescriptor pb::IMessage.Descriptor {
       get { return Descriptor; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public EnrollmentRecord() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public EnrollmentRecord(EnrollmentRecord other) : this() {
       ns_ = other.ns_;
       nc_ = other.nc_;
@@ -245,7 +245,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public EnrollmentRecord Clone() {
       return new EnrollmentRecord(this);
     }
@@ -253,7 +253,7 @@ namespace Phe {
     /// <summary>Field number for the "ns" field.</summary>
     public const int NsFieldNumber = 1;
     private pb::ByteString ns_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString Ns {
       get { return ns_; }
       set {
@@ -264,7 +264,7 @@ namespace Phe {
     /// <summary>Field number for the "nc" field.</summary>
     public const int NcFieldNumber = 2;
     private pb::ByteString nc_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString Nc {
       get { return nc_; }
       set {
@@ -275,7 +275,7 @@ namespace Phe {
     /// <summary>Field number for the "t0" field.</summary>
     public const int T0FieldNumber = 3;
     private pb::ByteString t0_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString T0 {
       get { return t0_; }
       set {
@@ -286,7 +286,7 @@ namespace Phe {
     /// <summary>Field number for the "t1" field.</summary>
     public const int T1FieldNumber = 4;
     private pb::ByteString t1_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString T1 {
       get { return t1_; }
       set {
@@ -294,12 +294,12 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as EnrollmentRecord);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool Equals(EnrollmentRecord other) {
       if (ReferenceEquals(other, null)) {
         return false;
@@ -314,7 +314,7 @@ namespace Phe {
       return Equals(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
       if (Ns.Length != 0) hash ^= Ns.GetHashCode();
@@ -327,12 +327,12 @@ namespace Phe {
       return hash;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override string ToString() {
       return pb::JsonFormatter.ToDiagnosticString(this);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
       if (Ns.Length != 0) {
         output.WriteRawTag(10);
@@ -355,7 +355,7 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
       if (Ns.Length != 0) {
@@ -376,7 +376,7 @@ namespace Phe {
       return size;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(EnrollmentRecord other) {
       if (other == null) {
         return;
@@ -396,7 +396,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
@@ -429,27 +429,27 @@ namespace Phe {
   public sealed partial class ProofOfSuccess : pb::IMessage<ProofOfSuccess> {
     private static readonly pb::MessageParser<ProofOfSuccess> _parser = new pb::MessageParser<ProofOfSuccess>(() => new ProofOfSuccess());
     private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pb::MessageParser<ProofOfSuccess> Parser { get { return _parser; } }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Phe.PheReflection.Descriptor.MessageTypes[2]; }
+      get { return Phe.PheReflection.Descriptor.MessageTypes[2]; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     pbr::MessageDescriptor pb::IMessage.Descriptor {
       get { return Descriptor; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public ProofOfSuccess() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public ProofOfSuccess(ProofOfSuccess other) : this() {
       term1_ = other.term1_;
       term2_ = other.term2_;
@@ -458,7 +458,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public ProofOfSuccess Clone() {
       return new ProofOfSuccess(this);
     }
@@ -466,7 +466,7 @@ namespace Phe {
     /// <summary>Field number for the "term1" field.</summary>
     public const int Term1FieldNumber = 1;
     private pb::ByteString term1_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString Term1 {
       get { return term1_; }
       set {
@@ -477,7 +477,7 @@ namespace Phe {
     /// <summary>Field number for the "term2" field.</summary>
     public const int Term2FieldNumber = 2;
     private pb::ByteString term2_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString Term2 {
       get { return term2_; }
       set {
@@ -488,7 +488,7 @@ namespace Phe {
     /// <summary>Field number for the "term3" field.</summary>
     public const int Term3FieldNumber = 3;
     private pb::ByteString term3_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString Term3 {
       get { return term3_; }
       set {
@@ -499,7 +499,7 @@ namespace Phe {
     /// <summary>Field number for the "blind_x" field.</summary>
     public const int BlindXFieldNumber = 4;
     private pb::ByteString blindX_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString BlindX {
       get { return blindX_; }
       set {
@@ -507,12 +507,12 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as ProofOfSuccess);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool Equals(ProofOfSuccess other) {
       if (ReferenceEquals(other, null)) {
         return false;
@@ -527,7 +527,7 @@ namespace Phe {
       return Equals(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
       if (Term1.Length != 0) hash ^= Term1.GetHashCode();
@@ -540,12 +540,12 @@ namespace Phe {
       return hash;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override string ToString() {
       return pb::JsonFormatter.ToDiagnosticString(this);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
       if (Term1.Length != 0) {
         output.WriteRawTag(10);
@@ -568,7 +568,7 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
       if (Term1.Length != 0) {
@@ -589,7 +589,7 @@ namespace Phe {
       return size;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(ProofOfSuccess other) {
       if (other == null) {
         return;
@@ -609,7 +609,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
@@ -642,27 +642,27 @@ namespace Phe {
   public sealed partial class ProofOfFail : pb::IMessage<ProofOfFail> {
     private static readonly pb::MessageParser<ProofOfFail> _parser = new pb::MessageParser<ProofOfFail>(() => new ProofOfFail());
     private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pb::MessageParser<ProofOfFail> Parser { get { return _parser; } }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Phe.PheReflection.Descriptor.MessageTypes[3]; }
+      get { return Phe.PheReflection.Descriptor.MessageTypes[3]; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     pbr::MessageDescriptor pb::IMessage.Descriptor {
       get { return Descriptor; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public ProofOfFail() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public ProofOfFail(ProofOfFail other) : this() {
       term1_ = other.term1_;
       term2_ = other.term2_;
@@ -673,7 +673,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public ProofOfFail Clone() {
       return new ProofOfFail(this);
     }
@@ -681,7 +681,7 @@ namespace Phe {
     /// <summary>Field number for the "term1" field.</summary>
     public const int Term1FieldNumber = 1;
     private pb::ByteString term1_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString Term1 {
       get { return term1_; }
       set {
@@ -692,7 +692,7 @@ namespace Phe {
     /// <summary>Field number for the "term2" field.</summary>
     public const int Term2FieldNumber = 2;
     private pb::ByteString term2_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString Term2 {
       get { return term2_; }
       set {
@@ -703,7 +703,7 @@ namespace Phe {
     /// <summary>Field number for the "term3" field.</summary>
     public const int Term3FieldNumber = 3;
     private pb::ByteString term3_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString Term3 {
       get { return term3_; }
       set {
@@ -714,7 +714,7 @@ namespace Phe {
     /// <summary>Field number for the "term4" field.</summary>
     public const int Term4FieldNumber = 4;
     private pb::ByteString term4_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString Term4 {
       get { return term4_; }
       set {
@@ -725,7 +725,7 @@ namespace Phe {
     /// <summary>Field number for the "blind_a" field.</summary>
     public const int BlindAFieldNumber = 5;
     private pb::ByteString blindA_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString BlindA {
       get { return blindA_; }
       set {
@@ -736,7 +736,7 @@ namespace Phe {
     /// <summary>Field number for the "blind_b" field.</summary>
     public const int BlindBFieldNumber = 6;
     private pb::ByteString blindB_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString BlindB {
       get { return blindB_; }
       set {
@@ -744,12 +744,12 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as ProofOfFail);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool Equals(ProofOfFail other) {
       if (ReferenceEquals(other, null)) {
         return false;
@@ -766,7 +766,7 @@ namespace Phe {
       return Equals(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
       if (Term1.Length != 0) hash ^= Term1.GetHashCode();
@@ -781,12 +781,12 @@ namespace Phe {
       return hash;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override string ToString() {
       return pb::JsonFormatter.ToDiagnosticString(this);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
       if (Term1.Length != 0) {
         output.WriteRawTag(10);
@@ -817,7 +817,7 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
       if (Term1.Length != 0) {
@@ -844,7 +844,7 @@ namespace Phe {
       return size;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(ProofOfFail other) {
       if (other == null) {
         return;
@@ -870,7 +870,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
@@ -911,34 +911,34 @@ namespace Phe {
   public sealed partial class UpdateToken : pb::IMessage<UpdateToken> {
     private static readonly pb::MessageParser<UpdateToken> _parser = new pb::MessageParser<UpdateToken>(() => new UpdateToken());
     private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pb::MessageParser<UpdateToken> Parser { get { return _parser; } }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Phe.PheReflection.Descriptor.MessageTypes[4]; }
+      get { return Phe.PheReflection.Descriptor.MessageTypes[4]; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     pbr::MessageDescriptor pb::IMessage.Descriptor {
       get { return Descriptor; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public UpdateToken() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public UpdateToken(UpdateToken other) : this() {
       a_ = other.a_;
       b_ = other.b_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public UpdateToken Clone() {
       return new UpdateToken(this);
     }
@@ -946,7 +946,7 @@ namespace Phe {
     /// <summary>Field number for the "a" field.</summary>
     public const int AFieldNumber = 1;
     private pb::ByteString a_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString A {
       get { return a_; }
       set {
@@ -957,7 +957,7 @@ namespace Phe {
     /// <summary>Field number for the "b" field.</summary>
     public const int BFieldNumber = 2;
     private pb::ByteString b_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString B {
       get { return b_; }
       set {
@@ -965,12 +965,12 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as UpdateToken);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool Equals(UpdateToken other) {
       if (ReferenceEquals(other, null)) {
         return false;
@@ -983,7 +983,7 @@ namespace Phe {
       return Equals(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
       if (A.Length != 0) hash ^= A.GetHashCode();
@@ -994,12 +994,12 @@ namespace Phe {
       return hash;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override string ToString() {
       return pb::JsonFormatter.ToDiagnosticString(this);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
       if (A.Length != 0) {
         output.WriteRawTag(10);
@@ -1014,7 +1014,7 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
       if (A.Length != 0) {
@@ -1029,7 +1029,7 @@ namespace Phe {
       return size;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(UpdateToken other) {
       if (other == null) {
         return;
@@ -1043,7 +1043,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
@@ -1068,27 +1068,27 @@ namespace Phe {
   public sealed partial class EnrollmentResponse : pb::IMessage<EnrollmentResponse> {
     private static readonly pb::MessageParser<EnrollmentResponse> _parser = new pb::MessageParser<EnrollmentResponse>(() => new EnrollmentResponse());
     private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pb::MessageParser<EnrollmentResponse> Parser { get { return _parser; } }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Phe.PheReflection.Descriptor.MessageTypes[5]; }
+      get { return Phe.PheReflection.Descriptor.MessageTypes[5]; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     pbr::MessageDescriptor pb::IMessage.Descriptor {
       get { return Descriptor; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public EnrollmentResponse() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public EnrollmentResponse(EnrollmentResponse other) : this() {
       ns_ = other.ns_;
       c0_ = other.c0_;
@@ -1097,7 +1097,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public EnrollmentResponse Clone() {
       return new EnrollmentResponse(this);
     }
@@ -1105,7 +1105,7 @@ namespace Phe {
     /// <summary>Field number for the "ns" field.</summary>
     public const int NsFieldNumber = 1;
     private pb::ByteString ns_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString Ns {
       get { return ns_; }
       set {
@@ -1116,7 +1116,7 @@ namespace Phe {
     /// <summary>Field number for the "c0" field.</summary>
     public const int C0FieldNumber = 2;
     private pb::ByteString c0_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString C0 {
       get { return c0_; }
       set {
@@ -1127,7 +1127,7 @@ namespace Phe {
     /// <summary>Field number for the "c1" field.</summary>
     public const int C1FieldNumber = 3;
     private pb::ByteString c1_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString C1 {
       get { return c1_; }
       set {
@@ -1137,21 +1137,21 @@ namespace Phe {
 
     /// <summary>Field number for the "proof" field.</summary>
     public const int ProofFieldNumber = 4;
-    private global::Phe.ProofOfSuccess proof_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::Phe.ProofOfSuccess Proof {
+    private ProofOfSuccess proof_;
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public ProofOfSuccess Proof {
       get { return proof_; }
       set {
         proof_ = value;
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as EnrollmentResponse);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool Equals(EnrollmentResponse other) {
       if (ReferenceEquals(other, null)) {
         return false;
@@ -1166,7 +1166,7 @@ namespace Phe {
       return Equals(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
       if (Ns.Length != 0) hash ^= Ns.GetHashCode();
@@ -1179,12 +1179,12 @@ namespace Phe {
       return hash;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override string ToString() {
       return pb::JsonFormatter.ToDiagnosticString(this);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
       if (Ns.Length != 0) {
         output.WriteRawTag(10);
@@ -1207,7 +1207,7 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
       if (Ns.Length != 0) {
@@ -1228,7 +1228,7 @@ namespace Phe {
       return size;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(EnrollmentResponse other) {
       if (other == null) {
         return;
@@ -1244,14 +1244,14 @@ namespace Phe {
       }
       if (other.proof_ != null) {
         if (proof_ == null) {
-          proof_ = new global::Phe.ProofOfSuccess();
+          proof_ = new Phe.ProofOfSuccess();
         }
         Proof.MergeFrom(other.Proof);
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
@@ -1273,7 +1273,7 @@ namespace Phe {
           }
           case 34: {
             if (proof_ == null) {
-              proof_ = new global::Phe.ProofOfSuccess();
+              proof_ = new Phe.ProofOfSuccess();
             }
             input.ReadMessage(proof_);
             break;
@@ -1287,34 +1287,34 @@ namespace Phe {
   public sealed partial class VerifyPasswordRequest : pb::IMessage<VerifyPasswordRequest> {
     private static readonly pb::MessageParser<VerifyPasswordRequest> _parser = new pb::MessageParser<VerifyPasswordRequest>(() => new VerifyPasswordRequest());
     private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pb::MessageParser<VerifyPasswordRequest> Parser { get { return _parser; } }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Phe.PheReflection.Descriptor.MessageTypes[6]; }
+      get { return Phe.PheReflection.Descriptor.MessageTypes[6]; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     pbr::MessageDescriptor pb::IMessage.Descriptor {
       get { return Descriptor; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public VerifyPasswordRequest() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public VerifyPasswordRequest(VerifyPasswordRequest other) : this() {
       ns_ = other.ns_;
       c0_ = other.c0_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public VerifyPasswordRequest Clone() {
       return new VerifyPasswordRequest(this);
     }
@@ -1322,7 +1322,7 @@ namespace Phe {
     /// <summary>Field number for the "ns" field.</summary>
     public const int NsFieldNumber = 1;
     private pb::ByteString ns_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString Ns {
       get { return ns_; }
       set {
@@ -1333,7 +1333,7 @@ namespace Phe {
     /// <summary>Field number for the "c0" field.</summary>
     public const int C0FieldNumber = 2;
     private pb::ByteString c0_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString C0 {
       get { return c0_; }
       set {
@@ -1341,12 +1341,12 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as VerifyPasswordRequest);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool Equals(VerifyPasswordRequest other) {
       if (ReferenceEquals(other, null)) {
         return false;
@@ -1359,7 +1359,7 @@ namespace Phe {
       return Equals(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
       if (Ns.Length != 0) hash ^= Ns.GetHashCode();
@@ -1370,12 +1370,12 @@ namespace Phe {
       return hash;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override string ToString() {
       return pb::JsonFormatter.ToDiagnosticString(this);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
       if (Ns.Length != 0) {
         output.WriteRawTag(10);
@@ -1390,7 +1390,7 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
       if (Ns.Length != 0) {
@@ -1405,7 +1405,7 @@ namespace Phe {
       return size;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(VerifyPasswordRequest other) {
       if (other == null) {
         return;
@@ -1419,7 +1419,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
@@ -1444,27 +1444,27 @@ namespace Phe {
   public sealed partial class VerifyPasswordResponse : pb::IMessage<VerifyPasswordResponse> {
     private static readonly pb::MessageParser<VerifyPasswordResponse> _parser = new pb::MessageParser<VerifyPasswordResponse>(() => new VerifyPasswordResponse());
     private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pb::MessageParser<VerifyPasswordResponse> Parser { get { return _parser; } }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Phe.PheReflection.Descriptor.MessageTypes[7]; }
+      get { return Phe.PheReflection.Descriptor.MessageTypes[7]; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     pbr::MessageDescriptor pb::IMessage.Descriptor {
       get { return Descriptor; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public VerifyPasswordResponse() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public VerifyPasswordResponse(VerifyPasswordResponse other) : this() {
       res_ = other.res_;
       c1_ = other.c1_;
@@ -1480,7 +1480,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public VerifyPasswordResponse Clone() {
       return new VerifyPasswordResponse(this);
     }
@@ -1488,7 +1488,7 @@ namespace Phe {
     /// <summary>Field number for the "res" field.</summary>
     public const int ResFieldNumber = 1;
     private bool res_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool Res {
       get { return res_; }
       set {
@@ -1499,7 +1499,7 @@ namespace Phe {
     /// <summary>Field number for the "c1" field.</summary>
     public const int C1FieldNumber = 2;
     private pb::ByteString c1_ = pb::ByteString.Empty;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pb::ByteString C1 {
       get { return c1_; }
       set {
@@ -1509,9 +1509,9 @@ namespace Phe {
 
     /// <summary>Field number for the "success" field.</summary>
     public const int SuccessFieldNumber = 3;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::Phe.ProofOfSuccess Success {
-      get { return proofCase_ == ProofOneofCase.Success ? (global::Phe.ProofOfSuccess) proof_ : null; }
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public ProofOfSuccess Success {
+      get { return proofCase_ == ProofOneofCase.Success ? (Phe.ProofOfSuccess) proof_ : null; }
       set {
         proof_ = value;
         proofCase_ = value == null ? ProofOneofCase.None : ProofOneofCase.Success;
@@ -1520,9 +1520,9 @@ namespace Phe {
 
     /// <summary>Field number for the "fail" field.</summary>
     public const int FailFieldNumber = 4;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::Phe.ProofOfFail Fail {
-      get { return proofCase_ == ProofOneofCase.Fail ? (global::Phe.ProofOfFail) proof_ : null; }
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public ProofOfFail Fail {
+      get { return proofCase_ == ProofOneofCase.Fail ? (Phe.ProofOfFail) proof_ : null; }
       set {
         proof_ = value;
         proofCase_ = value == null ? ProofOneofCase.None : ProofOneofCase.Fail;
@@ -1537,23 +1537,23 @@ namespace Phe {
       Fail = 4,
     }
     private ProofOneofCase proofCase_ = ProofOneofCase.None;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public ProofOneofCase ProofCase {
       get { return proofCase_; }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void ClearProof() {
       proofCase_ = ProofOneofCase.None;
       proof_ = null;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as VerifyPasswordResponse);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool Equals(VerifyPasswordResponse other) {
       if (ReferenceEquals(other, null)) {
         return false;
@@ -1569,7 +1569,7 @@ namespace Phe {
       return Equals(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
       if (Res != false) hash ^= Res.GetHashCode();
@@ -1583,12 +1583,12 @@ namespace Phe {
       return hash;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override string ToString() {
       return pb::JsonFormatter.ToDiagnosticString(this);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
       if (Res != false) {
         output.WriteRawTag(8);
@@ -1611,7 +1611,7 @@ namespace Phe {
       }
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
       if (Res != false) {
@@ -1632,7 +1632,7 @@ namespace Phe {
       return size;
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(VerifyPasswordResponse other) {
       if (other == null) {
         return;
@@ -1646,13 +1646,13 @@ namespace Phe {
       switch (other.ProofCase) {
         case ProofOneofCase.Success:
           if (Success == null) {
-            Success = new global::Phe.ProofOfSuccess();
+            Success = new Phe.ProofOfSuccess();
           }
           Success.MergeFrom(other.Success);
           break;
         case ProofOneofCase.Fail:
           if (Fail == null) {
-            Fail = new global::Phe.ProofOfFail();
+            Fail = new Phe.ProofOfFail();
           }
           Fail.MergeFrom(other.Fail);
           break;
@@ -1661,7 +1661,7 @@ namespace Phe {
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
@@ -1678,7 +1678,7 @@ namespace Phe {
             break;
           }
           case 26: {
-            global::Phe.ProofOfSuccess subBuilder = new global::Phe.ProofOfSuccess();
+            Phe.ProofOfSuccess subBuilder = new Phe.ProofOfSuccess();
             if (proofCase_ == ProofOneofCase.Success) {
               subBuilder.MergeFrom(Success);
             }
@@ -1687,7 +1687,7 @@ namespace Phe {
             break;
           }
           case 34: {
-            global::Phe.ProofOfFail subBuilder = new global::Phe.ProofOfFail();
+            Phe.ProofOfFail subBuilder = new Phe.ProofOfFail();
             if (proofCase_ == ProofOneofCase.Fail) {
               subBuilder.MergeFrom(Fail);
             }

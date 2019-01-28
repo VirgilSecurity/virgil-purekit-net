@@ -38,9 +38,6 @@ namespace Passw0rd
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using global::Phe;
-    using Google.Protobuf;
     using Passw0rd.Client;
     using Passw0rd.Client.Connection;
     using Passw0rd.Phe;
@@ -88,14 +85,17 @@ namespace Passw0rd
             string updateToken = null,
             string apiUrl = null)
         {
-            // todo: validate params
+            Validation.NotNullOrWhiteSpace(appToken, "Application token isn't provided.");
+            Validation.NotNullOrWhiteSpace(servicePublicKey, "Service Public Key isn't provided.");
+            Validation.NotNullOrWhiteSpace(clientSecretKey, "Application Secret Key isn't provided.");
+
             var phe = new PheCrypto();
             var (pkSVer, pkS) = EnsureServerPublicKey(servicePublicKey, phe);
             var (skCVer, skC) = EnsureClientSecretKey(clientSecretKey, phe);
 
             if (pkSVer != skCVer) 
             {
-                throw new ArgumentException("Incorrect versions for Server/Client keys.");
+                throw new WrongVersionException("Incorrect versions for Server/Client keys.");
             }
 
             var serializer = new HttpBodySerializer();
@@ -123,7 +123,7 @@ namespace Passw0rd
                 if (ctx.VersionedUpdateToken.Version != pkSVer)
                 {
                     if (ctx.VersionedUpdateToken.Version != ctx.CurrentVersion + 1){
-                        throw new Exception("incorrect token version");
+                        throw new WrongVersionException("Incorrect token version.");
                     } 
 
                     pkS = phe.RotatePublicKey(pkS, ctx.VersionedUpdateToken.UpdateToken.ToByteArray());
@@ -139,6 +139,8 @@ namespace Passw0rd
         //todo: refactoring
         private static (uint, PublicKey) EnsureServerPublicKey(string servicePublicKey, PheCrypto phe)
         {
+            Validation.NotNullOrWhiteSpace(servicePublicKey);
+            Validation.NotNull(phe);
             var keyParts = servicePublicKey.Split(".");
             if (keyParts.Length != 3 ||
                 !UInt32.TryParse(keyParts[1], out uint version) ||
@@ -163,9 +165,11 @@ namespace Passw0rd
             return (version, publicKey);
         }
 
-        //todo: refactoring
         private static (uint, SecretKey) EnsureClientSecretKey(string clientSecretKey, PheCrypto phe)
         {
+            Validation.NotNullOrWhiteSpace(clientSecretKey);
+            Validation.NotNull(phe);
+
             var keyParts = clientSecretKey.Split(".");
             if (keyParts.Length != 3 ||
                 !UInt32.TryParse(keyParts[1], out uint version) ||

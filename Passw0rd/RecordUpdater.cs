@@ -2,21 +2,16 @@
 using Google.Protobuf;
 using Passw0rd.Phe;
 using Passw0Rd;
-using Phe;
-
 namespace Passw0rd
 {
     public class RecordUpdater
     {
-        public VersionedUpdateToken UpdateToken {get; private set;}
+        public VersionedUpdateToken VersionedUpdateToken {get; private set;}
         public PheCrypto PheCrypto { get; private set; }
         public RecordUpdater(string token)
         {
-            if (token == null)
-            {
-                throw new ArgumentNullException("UpdateToken is not provided in context");
-            }
-            this.UpdateToken = StringUpdateTokenParser.Parse(token);
+            Validation.NotNullOrWhiteSpace(token, "UpdateToken isn't provided.");
+            this.VersionedUpdateToken = StringUpdateTokenParser.Parse(token);
             this.PheCrypto = new PheCrypto();
         }
 
@@ -24,22 +19,17 @@ namespace Passw0rd
         /// Updates a <see cref="DatabaseRecord"/> with an specified <see cref="VersionedUpdateToken"/>.
         /// </summary>
         public byte[] Update(byte[] oldPwdRecord){
-
-            if (oldPwdRecord == null)
-            {
-                throw new ArgumentNullException(nameof(oldPwdRecord));
-            }
-
+            Validation.NotNullOrEmptyByteArray(oldPwdRecord, "Record isn't provided.");
 
             var databaseRecord = DatabaseRecord.Parser.ParseFrom(oldPwdRecord);
 
-            if (databaseRecord.Version == UpdateToken.Version)
+            if (databaseRecord.Version == VersionedUpdateToken.Version)
             {
                 throw new WrongVersionException(
                     String.Format("Record can't be updated with the same version"));
             }
 
-            if (databaseRecord.Version + 1 == UpdateToken.Version)
+            if (databaseRecord.Version + 1 == VersionedUpdateToken.Version)
             {
                 var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(databaseRecord.Record);
 
@@ -48,8 +38,7 @@ namespace Passw0rd
                 var (t0, t1) = PheCrypto.UpdateT(enrollmentRecord.Ns.ToByteArray(),
                                               enrollmentRecord.T0.ToByteArray(),
                                               enrollmentRecord.T1.ToByteArray(),
-                                              UpdateToken.ToByteArray());
-
+                                              VersionedUpdateToken.UpdateToken.ToByteArray());
 
                 var updatedEnrollmentRecord = new EnrollmentRecord
                 {
@@ -61,16 +50,15 @@ namespace Passw0rd
 
                 var updatedDatabaseRecord = new DatabaseRecord
                 {
-                    Version = UpdateToken.Version,
+                    Version = VersionedUpdateToken.Version,
                     Record = ByteString.CopyFrom(updatedEnrollmentRecord.ToByteArray())
-
                 };
                 return updatedDatabaseRecord.ToByteArray();
             }
 
             throw new WrongVersionException(
                 String.Format("Record and update token versions mismatch: {0} and {1}",
-                              databaseRecord.Version, UpdateToken.Version)
+                              databaseRecord.Version, VersionedUpdateToken.Version)
             );
         }
     }

@@ -9,7 +9,7 @@ using Passw0rd.Utils;
 
 namespace Passw0rd.Phe
 {
-    public class EncryptionService
+    internal class EncryptionService
     {
         public static readonly int SymKeyLen = 32;
         public static readonly int SymSaltLen = 32;

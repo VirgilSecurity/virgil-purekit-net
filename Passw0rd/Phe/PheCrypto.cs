@@ -38,9 +38,6 @@
 namespace Passw0rd.Phe
 {
     using System;
-    using System.Text;
-
-    using Passw0rd.Utils;
 
     using Org.BouncyCastle.Asn1.Nist;
     using Org.BouncyCastle.Asn1.X9;
@@ -49,11 +46,7 @@ namespace Passw0rd.Phe
     using Org.BouncyCastle.Crypto.Parameters;
     using Org.BouncyCastle.Math;
     using Org.BouncyCastle.Math.EC;
-    using Org.BouncyCastle.Security;
-    using global::Phe;
     using Google.Protobuf;
-    using Org.BouncyCastle.Crypto.Modes;
-    using Org.BouncyCastle.Crypto.Engines;
 
     /// <summary>
     /// Phe crypto.
@@ -91,7 +84,7 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Generates a random nonce.
         /// </summary>
-        public byte[] GenerateNonce(int length)
+        private byte[] GenerateNonce(int length)
         {
             return Rng.GenerateNonce(length);
         }
@@ -112,6 +105,8 @@ namespace Passw0rd.Phe
         /// </summary>
         public SecretKey DecodeSecretKey(byte[] encodedSecretKey)
         {
+            Validation.NotNullOrEmptyByteArray(encodedSecretKey);
+
             var secretKeyInt = new BigInteger(1, encodedSecretKey);
             var point = this.curveParams.G.Multiply(secretKeyInt);
 
@@ -129,6 +124,8 @@ namespace Passw0rd.Phe
         /// </summary>
         public PublicKey DecodePublicKey(byte[] encodedPublicKey)
         {
+            Validation.NotNullOrEmptyByteArray(encodedPublicKey);
+
             var point = (FpPoint)this.Curve.DecodePoint(encodedPublicKey);
             return new PublicKey(point);
         }
@@ -138,7 +135,12 @@ namespace Passw0rd.Phe
         /// </summary>
         public (byte[], byte[], byte[]) ComputeT(SecretKey skC, byte[] pwd, byte[] nC, byte[] c0, byte[] c1)
         {
-            // TODO: validation, doc
+            Validation.NotNull(skC);
+            Validation.NotNullOrEmptyByteArray(pwd);
+            Validation.NotNullOrEmptyByteArray(nC);
+            Validation.NotNullOrEmptyByteArray(c0);
+            Validation.NotNullOrEmptyByteArray(c1);
+
             var c0Point  = this.Curve.DecodePoint(c0);
             var c1Point  = this.Curve.DecodePoint(c1);
 
@@ -150,7 +152,6 @@ namespace Passw0rd.Phe
             var hkdf = InitHkdf(mPoint.GetEncoded(), null, Domains.KdfInfoClientKey);
             var key = new byte[pheClientKeyLen];
             hkdf.GenerateBytes(key, 0, key.Length);
-
 
             var t0Point  = c0Point.Add(hc0Point.Multiply(skC.Value));
             var t1Point  = c1Point.Add(hc1Point.Multiply(skC.Value).Add(mPoint.Multiply(skC.Value)));
