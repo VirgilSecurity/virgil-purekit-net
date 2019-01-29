@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -69,16 +69,28 @@ namespace Passw0rd
 
 
         /// <summary>
-        /// Gets the PHE Crypto instanse.
+        /// Gets the Current Version.
         /// </summary>
         public uint CurrentVersion { get; private set; }
 
         /// <summary>
-        /// Gets the update tokens.
+        /// Gets the update token.
         /// </summary>
         public VersionedUpdateToken VersionedUpdateToken { get; private set; }
 
-
+        /// <summary>
+        /// Create the context with passw0rd's application credentials.
+        /// How to get passw0rd's application credentials
+        /// you will find <see href="https://github.com/passw0rd/cli">here</see>.
+        /// </summary>
+        /// <returns>The new instance of the <see cref="ProtocolContext"/>
+        ///  which contains application credentials.</returns>
+        /// <param name="appToken">Application token.</param>
+        /// <param name="servicePublicKey">Service public key.</param>
+        /// <param name="clientSecretKey">Application Secret Key.</param>
+        /// <param name="updateToken">Update token.
+        /// How to generate Update Token you will find 
+        /// <see href="https://github.com/passw0rd/cli#get-an-update-token">here</see>.</param>
         public static ProtocolContext Create(string appToken,
             string servicePublicKey,
             string clientSecretKey,
@@ -90,8 +102,9 @@ namespace Passw0rd
             Validation.NotNullOrWhiteSpace(clientSecretKey, "Application Secret Key isn't provided.");
 
             var phe = new PheCrypto();
-            var (pkSVer, pkS) = EnsureServerPublicKey(servicePublicKey, phe);
-            var (skCVer, skC) = EnsureClientSecretKey(clientSecretKey, phe);
+            var keyParser = new StringKeyParser(phe);
+            var (pkSVer, pkS) = keyParser.ParsePublicKey(servicePublicKey);
+            var (skCVer, skC) = keyParser.ParseSecretKey(clientSecretKey);
 
             if (pkSVer != skCVer) 
             {
@@ -118,7 +131,6 @@ namespace Passw0rd
 
             if (!String.IsNullOrWhiteSpace(updateToken))
             {
-
                 ctx.VersionedUpdateToken = StringUpdateTokenParser.Parse(updateToken);
                 if (ctx.VersionedUpdateToken.Version != pkSVer)
                 {
@@ -133,67 +145,6 @@ namespace Passw0rd
                 }
             }
             return ctx;
-        }
-     
-
-        //todo: refactoring
-        private static (uint, PublicKey) EnsureServerPublicKey(string servicePublicKey, PheCrypto phe)
-        {
-            Validation.NotNullOrWhiteSpace(servicePublicKey);
-            Validation.NotNull(phe);
-            var keyParts = servicePublicKey.Split(".");
-            if (keyParts.Length != 3 ||
-                !UInt32.TryParse(keyParts[1], out uint version) ||
-                !keyParts[0].ToUpper().Equals("PK"))
-            {
-                throw new ArgumentException("has incorrect format", nameof(servicePublicKey));
-            }
-
-            var keyBytes = Bytes.FromString(keyParts[2], StringEncoding.BASE64);
-            if (keyBytes.Length != 65)
-            {
-                throw new ArgumentException("has incorrect length", nameof(servicePublicKey));
-            }
-           
-            PublicKey publicKey;
-            try
-            {
-                publicKey = phe.DecodePublicKey(keyBytes);
-            }catch(Exception e){
-                throw new WrongServiceKeyException(e.ToString());
-            }
-            return (version, publicKey);
-        }
-
-        private static (uint, SecretKey) EnsureClientSecretKey(string clientSecretKey, PheCrypto phe)
-        {
-            Validation.NotNullOrWhiteSpace(clientSecretKey);
-            Validation.NotNull(phe);
-
-            var keyParts = clientSecretKey.Split(".");
-            if (keyParts.Length != 3 ||
-                !UInt32.TryParse(keyParts[1], out uint version) ||
-                !keyParts[0].ToUpper().Equals("SK"))
-            {
-                throw new ArgumentException("has incorrect format", nameof(clientSecretKey));
-            }
-
-            var keyBytes = Bytes.FromString(keyParts[2], StringEncoding.BASE64);
-            if (keyBytes.Length != 32)
-            {
-                throw new ArgumentException("has incorrect length", nameof(clientSecretKey));
-            }
-
-            SecretKey secretKey;
-            try
-            {
-                secretKey = phe.DecodeSecretKey(keyBytes);
-            }
-            catch (Exception e)
-            {
-                throw new WrongClientSecretKeyException(e.ToString());
-            }
-            return (version, secretKey);
         }
     }
 }

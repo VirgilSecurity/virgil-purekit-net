@@ -37,11 +37,35 @@
 namespace Passw0rd
 {
     using System;
+    using Google.Protobuf;
+    using Passw0rd.Utils;
+    using Passw0Rd;
 
-    public class WrongPasswordException : Passw0rdProtocolException
+    internal static class StringUpdateTokenParser
     {
-        public WrongPasswordException(string message) : base(message)
+        public static VersionedUpdateToken Parse(string token)
         {
+            Validation.NotNullOrWhiteSpace(token);
+            var keyParts = token.Split(".");
+            if (keyParts.Length != 3 ||
+                !UInt32.TryParse(keyParts[1], out uint version) ||
+                !keyParts[0].ToUpper().Equals("UT"))
+            {
+                throw new ArgumentException("has incorrect format", nameof(token));
+            }
+
+            if (version < 1){
+                throw new WrongVersionException("Token has invalid version.");
+            }
+            var tokenBytes = Bytes.FromString(keyParts[2], StringEncoding.BASE64);
+
+            return new VersionedUpdateToken
+            {
+                Version = version,
+                UpdateToken = ByteString.CopyFrom(tokenBytes)
+            };
         }
     }
+
+
 }

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -80,7 +80,7 @@ namespace Passw0rd.Phe
         public (BigInteger x, BigInteger y) HashToPoint(byte[] hash)
         {
             if (hash.Length != PointHashLen) {
-                throw new Exception("invalid hash length"); //todo unify exceptions
+                throw new WrongPasswordException("invalid hash length"); 
             }
             var t = new BigInteger(1, hash, 0, hash.Length);
             t = t.Mod(p);

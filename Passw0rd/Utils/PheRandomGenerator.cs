@@ -36,12 +36,26 @@
 
 namespace Passw0rd
 {
-    using System;
+    using Org.BouncyCastle.Security;
 
-    public class WrongPasswordException : Passw0rdProtocolException
+    internal class PheRandomGenerator
     {
-        public WrongPasswordException(string message) : base(message)
+        private SecureRandom rng;
+
+        public PheRandomGenerator()
         {
+            this.rng = new SecureRandom();
+        }
+
+        /// <summary>
+        /// Generates a random nonce.
+        /// </summary>
+        /// <param name="length">Length of generated nonce.</param>
+        public virtual byte[] GenerateNonce(int length)
+        {
+            var nonce = new byte[length];
+            this.rng.NextBytes(nonce);
+            return nonce;
         }
     }
 }

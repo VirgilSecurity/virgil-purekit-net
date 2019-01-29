@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -33,12 +33,12 @@
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
+
 [assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Passw0rd.Tests")]
 
 namespace Passw0rd.Phe
 {
     using System;
-
     using Org.BouncyCastle.Asn1.Nist;
     using Org.BouncyCastle.Asn1.X9;
     using Org.BouncyCastle.Crypto.Digests;
@@ -95,8 +95,6 @@ namespace Passw0rd.Phe
         public SecretKey GenerateSecretKey()
         {
             var randomZ = this.RandomZ();
-            // var point   = this.curveParams.G.Multiply(randomZ);
-
             return new SecretKey(randomZ);
         }
 
@@ -133,7 +131,7 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Computes the record T for specified password.
         /// </summary>
-        public (byte[], byte[], byte[]) ComputeT(SecretKey skC, byte[] pwd, byte[] nC, byte[] c0, byte[] c1)
+        internal (byte[], byte[], byte[]) ComputeT(SecretKey skC, byte[] pwd, byte[] nC, byte[] c0, byte[] c1)
         {
             Validation.NotNull(skC);
             Validation.NotNullOrEmptyByteArray(pwd);
@@ -162,8 +160,11 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Computes the c.
         /// </summary>
-        public Tuple<byte[], byte[]> ComputeC(SecretKey skS, byte[] nS)
+        internal Tuple<byte[], byte[]> ComputeC(SecretKey skS, byte[] nS)
         {
+            Validation.NotNull(skS);
+            Validation.NotNullOrEmptyByteArray(nS);
+
             var hs0 = this.HashToPoint(Domains.Dhs0, nS);
             var hs1 = this.HashToPoint(Domains.Dhs1, nS);
 
@@ -176,8 +177,14 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Decrypts the M value for specified password.
         /// </summary>
-        public byte[] DecryptM(SecretKey skC, byte[] pwd, byte[] nC, byte[] t1, byte[] c1)
+        internal byte[] DecryptM(SecretKey skC, byte[] pwd, byte[] nC, byte[] t1, byte[] c1)
         {
+            Validation.NotNull(skC);
+            Validation.NotNullOrEmptyByteArray(pwd);
+            Validation.NotNullOrEmptyByteArray(nC);
+            Validation.NotNullOrEmptyByteArray(t1);
+            Validation.NotNullOrEmptyByteArray(c1);
+
             var t1Point  = this.Curve.DecodePoint(t1);
             var c1Point  = this.Curve.DecodePoint(c1);
             var hc1Point = this.HashToPoint(Domains.Dhc1, nC, pwd);
@@ -192,40 +199,47 @@ namespace Passw0rd.Phe
             return key;
         }
 
-        // Encrypt generates 32 byte salt, uses master key & salt to generate per-data key & nonce with the help of HKDF
-        // Salt is concatenated to the ciphertext
+        /// <summary>
+        /// Encrypt the specified data using the specified key.
+        /// Encrypt generates 32 byte salt, uses master key 
+        /// & salt to generate per-data key & nonce with the help of HKDF
+        /// Salt is concatenated to the ciphertext
+        /// </summary>
+        /// <returns>The encrypted data bytes.</returns>
+        /// <param name="data">Data to be encrypted.</param>
+        /// <param name="key">Key to be used for encryption.</param>
         public byte[] Encrypt(byte[] data, byte[] key)
         {
-            if (data == null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            Validation.NotNull(data);
+            Validation.NotNullOrEmptyByteArray(key);
+           
             var encryptionService = new EncryptionService(key);
             return encryptionService.Encrypt(data);
         }
 
         private HkdfBytesGenerator InitHkdf(byte[] key, byte[] salt, byte[] info)
         {
+            Validation.NotNullOrEmptyByteArray(key);
+            Validation.NotNullOrEmptyByteArray(info);
+
             var hkdf = new HkdfBytesGenerator(new Sha512Digest());
             hkdf.Init(new HkdfParameters(key, salt, info));
             return hkdf;
         }
 
-        // Decrypt extracts 32 byte salt, derives key & nonce and decrypts ciphertext
+        /// <summary>
+        /// Decrypt the specified cipherText using the specified key.
+        /// Decrypt extracts 32 byte salt, derives key & nonce and decrypts
+        /// ciphertext with the help of HKDF 
+        /// </summary>
+        /// <returns>The decrypted data bytes.</returns>
+        /// <param name="cipherText">Encrypted data to be decrypted.</param>
+        /// <param name="key">Key to be used for decryption.</param>
         public byte[] Decrypt(byte[] cipherText, byte[] key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
-            if (cipherText == null)
-            {
-                throw new ArgumentNullException(nameof(cipherText));
-            }
+            Validation.NotNullOrEmptyByteArray(cipherText);
+            Validation.NotNullOrEmptyByteArray(key);
+
             var encryptionService = new EncryptionService(key);
             return encryptionService.Decrypt(cipherText);
         }
@@ -235,6 +249,11 @@ namespace Passw0rd.Phe
         /// </summary>
         public byte[] ComputeC0(SecretKey skC, byte[] pwd, byte[] nc, byte[] t0)
         {
+            Validation.NotNull(skC);
+            Validation.NotNullOrEmptyByteArray(pwd);
+            Validation.NotNullOrEmptyByteArray(nc);
+            Validation.NotNullOrEmptyByteArray(t0);
+
             var hc0Point = this.HashToPoint(Domains.Dhc0, nc, pwd);
             var minusY = skC.Value.Negate();
 
@@ -247,8 +266,13 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Updates an encryption record T with the specified update token parameters.
         /// </summary>
-        public Tuple<byte[], byte[]> UpdateT(byte[] nS, byte[] t0, byte[] t1, byte[] tokenBytes)
+        internal Tuple<byte[], byte[]> UpdateT(byte[] nS, byte[] t0, byte[] t1, byte[] tokenBytes)
         {
+            Validation.NotNullOrEmptyByteArray(nS);
+            Validation.NotNullOrEmptyByteArray(t0);
+            Validation.NotNullOrEmptyByteArray(t1);
+            Validation.NotNullOrEmptyByteArray(tokenBytes);
+
             var token = UpdateToken.Parser.ParseFrom(tokenBytes);
 
             var hs0Point = this.HashToPoint(Domains.Dhs0, nS);
@@ -269,8 +293,13 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Proves the success.
         /// </summary>
-        public ProofOfSuccess ProveSuccess(SecretKey skS, byte[] nS, byte[] c0, byte[] c1)
+        internal ProofOfSuccess ProveSuccess(SecretKey skS, byte[] nS, byte[] c0, byte[] c1)
         {
+            Validation.NotNull(skS);
+            Validation.NotNullOrEmptyByteArray(nS);
+            Validation.NotNullOrEmptyByteArray(c0);
+            Validation.NotNullOrEmptyByteArray(c1);
+
             var pkSPoint = this.curveParams.G.Multiply(skS.Value);
 
             var blindX    = this.RandomZ();
@@ -296,8 +325,14 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Validates the proof of success.
         /// </summary>
-        public bool ValidateProofOfSuccess(ProofOfSuccess proof, PublicKey pkS, byte[] nS, byte[] c0, byte[] c1)
+        internal bool ValidateProofOfSuccess(ProofOfSuccess proof, PublicKey pkS, byte[] nS, byte[] c0, byte[] c1)
         {
+            Validation.NotNull(proof);
+            Validation.NotNull(pkS);
+            Validation.NotNullOrEmptyByteArray(nS);
+            Validation.NotNullOrEmptyByteArray(c0);
+            Validation.NotNullOrEmptyByteArray(c1);
+
             var term1 = proof.Term1.ToByteArray();
             var term2 = proof.Term2.ToByteArray();
             var term3 = proof.Term3.ToByteArray();
@@ -351,8 +386,14 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Validates the proof of fail.
         /// </summary>
-        public bool ValidateProofOfFail(ProofOfFail proof, PublicKey pkS,  byte[] nS, byte[] c0, byte[] c1)
+        internal bool ValidateProofOfFail(ProofOfFail proof, PublicKey pkS,  byte[] nS, byte[] c0, byte[] c1)
         {
+            Validation.NotNull(proof);
+            Validation.NotNull(pkS);
+            Validation.NotNullOrEmptyByteArray(nS);
+            Validation.NotNullOrEmptyByteArray(c0);
+            Validation.NotNullOrEmptyByteArray(c1);
+
             var term1 = proof.Term1.ToByteArray();
             var term2 = proof.Term2.ToByteArray();
             var term3 = proof.Term3.ToByteArray();
@@ -401,6 +442,9 @@ namespace Passw0rd.Phe
         /// </summary>
         public SecretKey RotateSecretKey(SecretKey secretKey, byte[] tokenBytes)
         {
+            Validation.NotNull(secretKey);
+            Validation.NotNullOrEmptyByteArray(tokenBytes);
+
             var token = UpdateToken.Parser.ParseFrom(tokenBytes);
 
             var aInt = new BigInteger(1, token.A.ToByteArray());
@@ -415,6 +459,9 @@ namespace Passw0rd.Phe
         /// </summary>
         public PublicKey RotatePublicKey(PublicKey publicKey, byte[] tokenBytes)
         {
+            Validation.NotNull(publicKey);
+            Validation.NotNullOrEmptyByteArray(tokenBytes);
+
             var token = UpdateToken.Parser.ParseFrom(tokenBytes);
 
             var aInt = new BigInteger(1, token.A.ToByteArray());
@@ -446,8 +493,11 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Maps arrays of bytes to an integer less than curve's N parameter
         /// </summary>
-        public BigInteger HashZ(byte[] domain, params byte[][] datas)
+        internal BigInteger HashZ(byte[] domain, params byte[][] datas)
         {
+            Validation.NotNullOrEmptyByteArray(domain);
+            Validation.NotNullOrEmptyByteArray(datas);
+
             var key = this.sha512.ComputeHash(null, datas);
 
             var hkdf = InitHkdf(key, domain, Domains.KdfInfoZ);
@@ -468,18 +518,21 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Maps arrays of bytes to a valid curve point.
         /// </summary>
-        public FpPoint HashToPoint(byte[] domain, params byte[][] datas)
+        internal FpPoint HashToPoint(byte[] domain, params byte[][] datas)
         {
             var hash = this.sha512.ComputeHash(domain, datas);
             var hash256 = ((Span<byte>)hash).Slice(0, this.swu.PointHashLen).ToArray();
 
             var (x, y) = this.swu.HashToPoint(hash256);
 
-            var xField = this.Curve.FromBigInteger(x); //todo ?
-            var yField = this.Curve.FromBigInteger(y); //todo ?
+            var xField = this.Curve.FromBigInteger(x);
+            var yField = this.Curve.FromBigInteger(y); 
 
             return (FpPoint)this.Curve.CreatePoint(x, y);
         }
 
+        internal int NonceLength(){
+            return pheNonceLen;
+        }
     }
 }

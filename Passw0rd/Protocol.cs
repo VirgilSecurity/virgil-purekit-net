@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -36,7 +36,6 @@
 
 namespace Passw0rd
 {
-    using System;
     using System.Threading.Tasks;
     using Passw0rd.Phe;
     using Passw0rd.Utils;
@@ -63,6 +62,10 @@ namespace Passw0rd
         /// <summary>
         /// Initializes a new instance of the <see cref="Protocol"/> class.
         /// </summary>
+        /// <param name="context">The instance of the <see cref="ProtocolContext"/>
+        /// which contains application credentials.
+        /// How to get passw0rd's application credentials
+        /// you will find <see href="https://github.com/passw0rd/cli">here</see>.</param>
         public Protocol(ProtocolContext context)
         {
             Validation.NotNull(context,
@@ -71,9 +74,14 @@ namespace Passw0rd
             this.ctx = context;
         }
 
-        /// <summary>
-        /// Enrolls a new <see cref="DatabaseRecord"/> for specified password.
-        /// </summary>
+       /// <summary>
+        /// Creates a new encrypted password record using user's password. 
+       /// </summary>
+        /// <returns>
+        /// Encrypted Passw0rd's record.(Is associated with the user. You can keep it in your database.)
+        /// Secret key, that can be used to encrypt user's data. 
+        /// </returns>
+       /// <param name="password">User's Password.</param>
         public async Task<(byte[], byte[])> EnrollAccountAsync(string password)
         {
             Validation.NotNullOrWhiteSpace(password, "User's password isn't provided.");
@@ -120,8 +128,11 @@ namespace Passw0rd
         }
 
         /// <summary>
-        /// Verifies a <see cref="DatabaseRecord"/> by specified password.
+        /// Verifies encrypted password record using user's password.
         /// </summary>
+        /// <returns>EncryptionKey wich you can use for decrypting user's data.</returns>
+        /// <param name="password">User's password.</param>
+        /// <param name="pwdRecord">Encrypted password record to be verified.</param>
         public async Task<byte[]> VerifyPasswordAsync(string password, byte[] pwdRecord)
         {
             Validation.NotNullOrWhiteSpace(password, "User's password isn't provided.");
@@ -141,7 +152,11 @@ namespace Passw0rd
             var pheKeys = ctx.VersionedPheKeys[databaseRecord.Version];
 
             var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(databaseRecord.Record);
-            // todo validate len(enrollmentRecord.Nc) len(enrollmentRecord.Ns) = 32 pheNonceLen
+
+            if (enrollmentRecord.Nc.Length != ctx.Crypto.NonceLength() || 
+                enrollmentRecord.Ns.Length != ctx.Crypto.NonceLength()){
+                throw new Passw0rdProtocolException("Invalid record.");
+            }
             var c0 = ctx.Crypto.ComputeC0(
                 pheKeys.ClientSecretKey, pwdBytes, enrollmentRecord.Nc.ToByteArray(), enrollmentRecord.T0.ToByteArray());
             
@@ -157,12 +172,9 @@ namespace Passw0rd
                 Request = ByteString.CopyFrom(pheVerifyPasswordRequest.ToByteArray())
             };
 
-            //todo VerifyAsync(VerifyPasswordRequest)
             var serverResponse = await ctx.Client.VerifyAsync(versionedPasswordRequest).ConfigureAwait(false);
-            // todo if response == null exception 
           
-
-            byte[] m = null;
+            byte[] key = null;
             var pheServerResponse = Phe.VerifyPasswordResponse.Parser.ParseFrom(serverResponse.Response);
 
             if (pheServerResponse.Res)
@@ -181,7 +193,7 @@ namespace Passw0rd
                     throw new ProofOfSuccessNotValidException();
                 }
 
-                m = this.ctx.Crypto.DecryptM(pheKeys.ClientSecretKey, 
+                key = this.ctx.Crypto.DecryptM(pheKeys.ClientSecretKey, 
                                              pwdBytes,
                                              enrollmentRecord.Nc.ToByteArray(), 
                                              enrollmentRecord.T1.ToByteArray(), 
@@ -205,7 +217,7 @@ namespace Passw0rd
                 }
                 throw new WrongPasswordException("You provide wrong password.");
             }
-            return m;
+            return key;
         }
     }
 }

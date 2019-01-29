@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -38,7 +38,6 @@ namespace Passw0rd
 {
     using System;
 
-    [Serializable]
     public class ProofNotProvidedException : Passw0rdProtocolException
     {
         public ProofNotProvidedException() : base("Proof of the operation isn't provided")
