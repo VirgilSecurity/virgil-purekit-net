@@ -24,22 +24,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="PasswordRecordTests.cs" />
-    <Compile Remove="AppSettings.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Remove="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="App.config">
+   <ItemGroup> 
+   <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="App.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 </Project>
