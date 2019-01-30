@@ -25,9 +25,9 @@
   <ItemGroup>
     <Compile Remove="PasswordRecordTests.cs" />
   </ItemGroup>
-   <ItemGroup> 
-   <None Update="appsettings.json">
+  <ItemGroup>
+    <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 </Project>
