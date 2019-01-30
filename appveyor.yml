@@ -6,7 +6,7 @@ environment:
   key: 
     secure: ea1leb4xc7sU33OH7dJcUbTUg0x0jM0gkK0s+pKIdiNWrjyptWOBykvwEKYpde7uVOaTvS+qOhUIjCoqkd35JkPsPWCaw4jwgpULMbkhLioDqUcCI2BKZZcQggyeAzcs
 install:
-- cmd: appveyor-tools\secure-file -decrypt Passw0rd.Tests\appsettings.json.enc -secret %key%
+- sh: ./appveyor-tools/secure-file -decrypt Passw0rd.Tests/appsettings.json.enc -secret %key%
 before_build:
 - cmd: nuget restore Passw0rd.sln
 build:
