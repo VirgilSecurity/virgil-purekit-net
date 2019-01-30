@@ -55,6 +55,8 @@
             Assert.NotNull(key);
             Assert.Equal(32, key.Length);
 
+            System.Threading.Thread.Sleep(4000);
+
             var accountKey = await protocol.VerifyPasswordAsync(myPassword, recBytes);
             Assert.Equal(key, accountKey);
         }
@@ -72,6 +74,9 @@
             
            // var pwd = Bytes.ToString(myPassword, StringEncoding.UTF8);
             var protocol = new Protocol(context);
+           
+            System.Threading.Thread.Sleep(5000);
+
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
             var rec = DatabaseRecord.Parser.ParseFrom(recBytes);
             Assert.Equal<uint>(3, rec.Version);
@@ -116,6 +121,8 @@
                 servicePublicKey: "PK.2.BK6oQNcAEyMc0fmc7coHbaQHqwoYPTiIM6A4393wEE9vRbCeUjKZSHzluHI80bGhJ61/eg1SUZNtgmMie4U80gI=",
                clientSecretKey: clientSecretKey2,
                 apiUrl: serviceAddress);
+
+            System.Threading.Thread.Sleep(5000);
 
             var protocol = new Protocol(context);
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);

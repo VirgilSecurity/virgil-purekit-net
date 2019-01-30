@@ -5,10 +5,13 @@ platform: Any CPU
 environment:
   key: 
     secure: ea1leb4xc7sU33OH7dJcUbTUg0x0jM0gkK0s+pKIdiNWrjyptWOBykvwEKYpde7uVOaTvS+qOhUIjCoqkd35JkPsPWCaw4jwgpULMbkhLioDqUcCI2BKZZcQggyeAzcs
-install:
-- sh: ./appveyor-tools/secure-file -decrypt Passw0rd.Tests/appsettings.json.enc -secret %key%
 before_build:
-- cmd: nuget restore Passw0rd.sln
+- cmd: >-
+    nuget restore Passw0rd.sln
+
+    nuget install secure-file -ExcludeVersion
+
+    secure-file\tools\secure-file -decrypt C:\projects\sdk-net\Passw0rd.Tests\appsettings.json.enc -secret %key%
 build:
   project: Passw0rd.sln
   verbosity: detailed
