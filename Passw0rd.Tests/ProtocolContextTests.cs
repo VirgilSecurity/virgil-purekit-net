@@ -1,16 +1,7 @@
 ﻿namespace Passw0rd.Tests
 {
-    using System;
     using System.Linq;
-    using System.Threading.Tasks;
-    using Google.Protobuf;
     using Microsoft.Extensions.Configuration;
-    using Moq;
-    using NSubstitute;
-    using Passw0rd.Phe;
-    using Passw0rd.Utils;
-    using Passw0Rd;
-    using Phe;
     using Xunit;
 
     public class ProtocolContextTests
@@ -20,7 +11,6 @@
         private string clientSecretKey;
         private string clientSecretKey2;
         private string servicePublicKey2;
-        private string myPassword = "passw9rd";
         private string updateTokenV2;
         private string updateTokenV3;
         private string serviceAddress;
@@ -39,7 +29,7 @@
         }
 
         [Fact] //HTC-8
-        public async Task Create_Should_SetKeysVersionToCurrentVersion()
+        public void Create_Should_SetKeysVersionToCurrentVersion()
         {
             // if there is no updateToken, then
             // 1)current version is set up from keys' version
@@ -47,17 +37,17 @@
             var contextWithUpdateToken = ProtocolContext.Create(
               appToken: appToken,
               servicePublicKey: servicePublicKey2,
-              clientSecretKey: clientSecretKey2,
+              appSecretKey: clientSecretKey2,
               apiUrl: serviceAddress);
             
             Assert.Equal<uint>(2, contextWithUpdateToken.CurrentVersion);
-            Assert.Equal(1, contextWithUpdateToken.VersionedPheKeys.Count);
+            Assert.Equal<int>(1, contextWithUpdateToken.VersionedPheKeys.Count);
             Assert.Equal<uint>(2, contextWithUpdateToken.VersionedPheKeys.Keys.First<uint>());
         }
 
 
         [Fact] //HTC-9
-        public async Task Create_Should_RotateKeysIfUpdateTokenIsBigger()
+        public void Create_Should_RotateKeysIfUpdateTokenIsBigger()
         {
             // if update token version == current version + 1, then 
             // 1)new keys are calculated
@@ -66,7 +56,7 @@
             var contextWithUpdateToken = ProtocolContext.Create(
               appToken: appToken,
               servicePublicKey: servicePublicKey,
-              clientSecretKey: clientSecretKey,
+              appSecretKey: clientSecretKey,
               apiUrl: serviceAddress,
               updateToken: updateTokenV2);
 
@@ -76,7 +66,7 @@
         }
 
         [Fact] //HTC-10
-        public async Task Create_Should_RaiseExceptionIfUpdateTokenVersionIsIncorect()
+        public void Create_Should_RaiseExceptionIfUpdateTokenVersionIsIncorect()
         {
             // if update token version != current version + 1, then raise exception.
             var ex = Record.Exception(() =>
@@ -84,7 +74,7 @@
                 ProtocolContext.Create(
               appToken: appToken,
               servicePublicKey: servicePublicKey,
-              clientSecretKey: clientSecretKey,
+              appSecretKey: clientSecretKey,
               apiUrl: serviceAddress,
                     updateToken: updateTokenV3);
             });

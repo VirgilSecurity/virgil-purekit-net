@@ -34,11 +34,10 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
-namespace Passw0rd
+namespace Passw0rd.Utils
 {
     using System;
     using Passw0rd.Phe;
-    using Passw0rd.Utils;
 
     internal class StringKeyParser
     {

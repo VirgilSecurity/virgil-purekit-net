@@ -34,11 +34,13 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
+using Passw0rd.Utils;
+
 namespace Passw0rd.Phe
 {
     public class PheKeys
     {
-        public SecretKey ClientSecretKey { get; private set; }
+        public SecretKey AppSecretKey { get; private set; }
         public PublicKey ServicePublicKey { get; private set; } 
 
         public PheKeys(SecretKey secretKey, PublicKey publicKey)
@@ -46,7 +48,7 @@ namespace Passw0rd.Phe
             Validation.NotNull(secretKey);
             Validation.NotNull(publicKey);
 
-            this.ClientSecretKey = secretKey;
+            this.AppSecretKey = secretKey;
             this.ServicePublicKey = publicKey;
         }
     }

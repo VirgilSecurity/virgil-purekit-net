@@ -1,17 +1,10 @@
 ﻿namespace Passw0rd.Tests
 {
     using System;
-    using System.Configuration;
-    using System.Linq;
     using System.Threading.Tasks;
     using Google.Protobuf;
     using Microsoft.Extensions.Configuration;
-    using Moq;
-    using NSubstitute;
-    using Passw0rd.Phe;
-    using Passw0rd.Utils;
     using Passw0Rd;
-    using Phe;
     using Xunit;
 
     public class ProtocolTests
@@ -44,7 +37,7 @@
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
-               clientSecretKey: clientSecretKey2,
+               appSecretKey: clientSecretKey2,
                 apiUrl: serviceAddress);
             
             var protocol = new Protocol(context);
@@ -68,7 +61,7 @@
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
-               clientSecretKey: clientSecretKey2,
+               appSecretKey: clientSecretKey2,
                 apiUrl: serviceAddress,
                 updateToken: updateTokenV3);
             
@@ -95,7 +88,7 @@
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
-               clientSecretKey: clientSecretKey2,
+               appSecretKey: clientSecretKey2,
                 apiUrl: serviceAddress);
             // var pwd = Bytes.ToString(myPassword, StringEncoding.UTF8);
             var protocol = new Protocol(context);
@@ -114,12 +107,12 @@
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
-               clientSecretKey: clientSecretKey2,
+               appSecretKey: clientSecretKey2,
                 apiUrl: serviceAddress);
              var contextWithWrongServerKey = ProtocolContext.Create(
                appToken: appToken,
                 servicePublicKey: "PK.2.BK6oQNcAEyMc0fmc7coHbaQHqwoYPTiIM6A4393wEE9vRbCeUjKZSHzluHI80bGhJ61/eg1SUZNtgmMie4U80gI=",
-               clientSecretKey: clientSecretKey2,
+               appSecretKey: clientSecretKey2,
                 apiUrl: serviceAddress);
 
             System.Threading.Thread.Sleep(5000);
@@ -147,13 +140,13 @@
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
-               clientSecretKey: clientSecretKey2,
+               appSecretKey: clientSecretKey2,
                 apiUrl: serviceAddress);
             
             var contextWithUpdateToken = ProtocolContext.Create(
               appToken: appToken,
               servicePublicKey: servicePublicKey2,
-              clientSecretKey: clientSecretKey2,
+              appSecretKey: clientSecretKey2,
               apiUrl: serviceAddress,
               updateToken: updateTokenV3);
 
@@ -182,7 +175,7 @@
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
-               clientSecretKey: clientSecretKey2,
+               appSecretKey: clientSecretKey2,
                updateToken: updateTokenV3,
                 apiUrl: serviceAddress);
 
@@ -206,7 +199,7 @@
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
-               clientSecretKey: clientSecretKey2,
+               appSecretKey: clientSecretKey2,
                updateToken: updateTokenV3,
                 apiUrl: serviceAddress);
             
@@ -235,7 +228,7 @@
             var contextWithUpdateToken = ProtocolContext.Create(
               appToken: appToken,
               servicePublicKey: servicePublicKey2,
-              clientSecretKey: clientSecretKey2,
+              appSecretKey: clientSecretKey2,
                 apiUrl: serviceAddress,
                 updateToken: updateTokenV3);
 

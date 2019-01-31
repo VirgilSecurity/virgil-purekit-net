@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="PasswordRecordTests.cs" />
+    <Compile Remove="EmptyClass.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="appsettings.json">

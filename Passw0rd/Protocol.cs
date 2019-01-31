@@ -106,7 +106,7 @@ namespace Passw0rd
             var nC = this.ctx.Crypto.GenerateNonce();
             var pwdBytes = Bytes.FromString(password);
 
-            var (t0, t1, key) = ctx.Crypto.ComputeT(pheKeys.ClientSecretKey, 
+            var (t0, t1, key) = ctx.Crypto.ComputeT(pheKeys.AppSecretKey, 
                                                     pwdBytes, nC,
                                                     pheResp.C0.ToByteArray(),pheResp.C1.ToByteArray());
 
@@ -158,7 +158,7 @@ namespace Passw0rd
                 throw new Passw0rdProtocolException("Invalid record.");
             }
             var c0 = ctx.Crypto.ComputeC0(
-                pheKeys.ClientSecretKey, pwdBytes, enrollmentRecord.Nc.ToByteArray(), enrollmentRecord.T0.ToByteArray());
+                pheKeys.AppSecretKey, pwdBytes, enrollmentRecord.Nc.ToByteArray(), enrollmentRecord.T0.ToByteArray());
             
             var pheVerifyPasswordRequest = new Phe.VerifyPasswordRequest()
             {
@@ -193,7 +193,7 @@ namespace Passw0rd
                     throw new ProofOfSuccessNotValidException();
                 }
 
-                key = this.ctx.Crypto.DecryptM(pheKeys.ClientSecretKey, 
+                key = this.ctx.Crypto.DecryptM(pheKeys.AppSecretKey, 
                                              pwdBytes,
                                              enrollmentRecord.Nc.ToByteArray(), 
                                              enrollmentRecord.T1.ToByteArray(), 

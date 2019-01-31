@@ -47,6 +47,7 @@ namespace Passw0rd.Phe
     using Org.BouncyCastle.Math;
     using Org.BouncyCastle.Math.EC;
     using Google.Protobuf;
+    using Passw0rd.Utils;
 
     /// <summary>
     /// Phe crypto.

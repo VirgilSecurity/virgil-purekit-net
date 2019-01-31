@@ -87,24 +87,24 @@ namespace Passw0rd
         ///  which contains application credentials.</returns>
         /// <param name="appToken">Application token.</param>
         /// <param name="servicePublicKey">Service public key.</param>
-        /// <param name="clientSecretKey">Application Secret Key.</param>
+        /// <param name="appSecretKey">Application Secret Key.</param>
         /// <param name="updateToken">Update token.
         /// How to generate Update Token you will find 
         /// <see href="https://github.com/passw0rd/cli#get-an-update-token">here</see>.</param>
         public static ProtocolContext Create(string appToken,
             string servicePublicKey,
-            string clientSecretKey,
+            string appSecretKey,
             string updateToken = null,
             string apiUrl = null)
         {
             Validation.NotNullOrWhiteSpace(appToken, "Application token isn't provided.");
             Validation.NotNullOrWhiteSpace(servicePublicKey, "Service Public Key isn't provided.");
-            Validation.NotNullOrWhiteSpace(clientSecretKey, "Application Secret Key isn't provided.");
+            Validation.NotNullOrWhiteSpace(appSecretKey, "Application Secret Key isn't provided.");
 
             var phe = new PheCrypto();
             var keyParser = new StringKeyParser(phe);
             var (pkSVer, pkS) = keyParser.ParsePublicKey(servicePublicKey);
-            var (skCVer, skC) = keyParser.ParseSecretKey(clientSecretKey);
+            var (skCVer, skC) = keyParser.ParseSecretKey(appSecretKey);
 
             if (pkSVer != skCVer) 
             {
