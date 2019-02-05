@@ -59,7 +59,7 @@ namespace Passw0rd.Phe
         internal ECPoint CurveG { get; private set; }
         internal PheRandomGenerator Rng{ get; set; }
        
-        private SHA512 sha512;
+        private SHA512Helper sha512;
         private Swu swu;
         private const int pheClientKeyLen = 32;
         private const int pheNonceLen = 32;
@@ -70,7 +70,7 @@ namespace Passw0rd.Phe
             this.Curve = (FpCurve)curveParams.Curve;
             this.CurveG = this.curveParams.G.Multiply(BigInteger.ValueOf(1));
             this.Rng = new PheRandomGenerator(); 
-            this.sha512 = new SHA512();
+            this.sha512 = new SHA512Helper();
             this.swu = new Swu(Curve.Q, Curve.B.ToBigInteger());
         }
 

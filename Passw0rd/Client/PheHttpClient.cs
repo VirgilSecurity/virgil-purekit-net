@@ -34,12 +34,41 @@
 
 namespace Passw0rd.Client
 {
+    using System.Net.Http;
     using System.Threading.Tasks;
+    using Passw0rd.Client.Connection;
     using Passw0Rd;
 
-    public interface IPheClient
+    public class PheHttpClient : HttpClientBase, IPheHttpClient
     {
-        Task<VerifyPasswordResponse> VerifyAsync(VerifyPasswordRequest request);
-        Task<EnrollmentResponse> GetEnrollment(EnrollmentRequest request);
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PheHttpClient"/> class.
+        /// </summary>
+        public PheHttpClient(IHttpBodySerializer serializer) : base(serializer)
+        {
+        }
+        /// <summary>
+        /// Send post request to enroll User Record.
+        /// </summary>
+        /// <returns>A new instance of the <see cref="EnrollmentResponse"/> class.</returns>
+        /// <param name="request">An instance of the <see cref="EnrollmentRequest"/> class.</param>
+        public async Task<EnrollmentResponse> GetEnrollment(EnrollmentRequest request){
+            var response = await this.SendAsync<EnrollmentRequest, EnrollmentResponse>(
+               HttpMethod.Post, $"phe/v1/enroll", request).ConfigureAwait(false);
+            return response;
+        }
+     
+        /// <summary>
+        /// Send post request to Verify User Record.
+        /// </summary>
+        /// <returns>A new instance of the <see cref="VerifyPasswordResponse"/> class.</returns>
+        /// <param name="request">An instance of the <see cref="VerifyPasswordRequest"/> class.</param>
+        public async Task<VerifyPasswordResponse> VerifyAsync(VerifyPasswordRequest request)
+        {
+            var response = await this.SendAsync<VerifyPasswordRequest, VerifyPasswordResponse>(
+                HttpMethod.Post, $"phe/v1/verify-password", request).ConfigureAwait(false);
+
+            return response;
+        }
     }
 }

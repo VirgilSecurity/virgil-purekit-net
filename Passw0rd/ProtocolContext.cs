@@ -40,16 +40,14 @@ namespace Passw0rd
     using System.Collections.Generic;
     using Passw0rd.Client;
     using Passw0rd.Client.Connection;
-    using Passw0rd.Phe;
     using Passw0rd.Utils;
     using Passw0Rd;
 
     public class ProtocolContext
     {
-        public Dictionary<uint, PheKeys> VersionedPheKeys { get; private set; }
         private ProtocolContext()
         {
-            VersionedPheKeys = new Dictionary<uint, PheKeys>();
+            PheClients = new Dictionary<uint, PheClient>();
         }
 
         /// <summary>
@@ -60,13 +58,13 @@ namespace Passw0rd
         /// <summary>
         /// Gets the client instance.
         /// </summary> 
-        public IPheClient Client { get; private set; }
+        public IPheHttpClient Client { get; private set; }
 
+     
         /// <summary>
-        /// Gets the PHE Crypto instanse.
-        /// </summary>
-        public PheCrypto Crypto { get; private set; }
-
+        /// Gets the client instance.
+        /// </summary> 
+        public Dictionary<uint, PheClient> PheClients { get; private set; }
 
         /// <summary>
         /// Gets the Current Version.
@@ -101,8 +99,7 @@ namespace Passw0rd
             Validation.NotNullOrWhiteSpace(servicePublicKey, "Service Public Key isn't provided.");
             Validation.NotNullOrWhiteSpace(appSecretKey, "Application Secret Key isn't provided.");
 
-            var phe = new PheCrypto();
-            var keyParser = new StringKeyParser(phe);
+            var keyParser = new StringKeyParser();
             var (pkSVer, pkS) = keyParser.ParsePublicKey(servicePublicKey);
             var (skCVer, skC) = keyParser.ParseSecretKey(appSecretKey);
 
@@ -114,7 +111,7 @@ namespace Passw0rd
             var serializer = new HttpBodySerializer();
             var url = String.IsNullOrWhiteSpace(apiUrl) ? "https://api.passw0rd.io/"
                             : apiUrl;
-            var client = new PheClient(serializer)
+            var client = new PheHttpClient(serializer)
             {
                 AppToken = appToken,
                 BaseUri = new Uri(url)
@@ -124,25 +121,21 @@ namespace Passw0rd
             {
                 AppToken = appToken,
                 Client = client,
-                Crypto = phe,
                 CurrentVersion = pkSVer
             };
-            ctx.VersionedPheKeys.Add(pkSVer, new PheKeys(skC, pkS));
+
+            var pheClient = new PheClient(skC, pkS);
+            ctx.PheClients.Add(pkSVer, pheClient);
 
             if (!String.IsNullOrWhiteSpace(updateToken))
             {
                 ctx.VersionedUpdateToken = StringUpdateTokenParser.Parse(updateToken);
-                if (ctx.VersionedUpdateToken.Version != pkSVer)
-                {
                     if (ctx.VersionedUpdateToken.Version != ctx.CurrentVersion + 1){
                         throw new WrongVersionException("Incorrect token version.");
-                    } 
-
-                    pkS = phe.RotatePublicKey(pkS, ctx.VersionedUpdateToken.UpdateToken.ToByteArray());
-                    skC = phe.RotateSecretKey(skC, ctx.VersionedUpdateToken.UpdateToken.ToByteArray());
-                    ctx.VersionedPheKeys.Add(ctx.VersionedUpdateToken.Version, new PheKeys(skC, pkS));
+                    }
+                    var (newSecretKey, newPublicKey) = pheClient.RotateKeys(ctx.VersionedUpdateToken.UpdateToken.ToByteArray());
+                    ctx.PheClients.Add(ctx.VersionedUpdateToken.Version, new PheClient(newSecretKey, newPublicKey));
                     ctx.CurrentVersion = ctx.VersionedUpdateToken.Version;
-                }
             }
             return ctx;
         }

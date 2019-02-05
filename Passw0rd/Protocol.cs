@@ -86,42 +86,17 @@ namespace Passw0rd
         {
             Validation.NotNullOrWhiteSpace(password, "User's password isn't provided.");
 
-            var pheKeys = ctx.VersionedPheKeys[ctx.CurrentVersion];
             var enrollmentResp = await ctx.Client.GetEnrollment(
                 new EnrollmentRequest() { Version = ctx.CurrentVersion })
                 .ConfigureAwait(false);
-            var pheResp = Phe.EnrollmentResponse.Parser.ParseFrom(enrollmentResp.Response);
-            var isValid = this.ctx.Crypto.ValidateProofOfSuccess(
-                pheResp.Proof,
-                pheKeys.ServicePublicKey,
-                pheResp.Ns.ToByteArray(),
-                pheResp.C0.ToByteArray(),
-                pheResp.C1.ToByteArray());
-            if (!isValid)
-            {
-                throw new ProofOfSuccessNotValidException();
-            }
-
-            var nS = pheResp.Ns;
-            var nC = this.ctx.Crypto.GenerateNonce();
             var pwdBytes = Bytes.FromString(password);
-
-            var (t0, t1, key) = ctx.Crypto.ComputeT(pheKeys.AppSecretKey, 
-                                                    pwdBytes, nC,
-                                                    pheResp.C0.ToByteArray(),pheResp.C1.ToByteArray());
-
-            var enrollmentRecord = new EnrollmentRecord
-            {
-                Nc = ByteString.CopyFrom(nC),
-                Ns = nS,
-                T0 = ByteString.CopyFrom(t0),
-                T1 = ByteString.CopyFrom(t1)
-            };
-
+            var pheClient = ctx.PheClients[ctx.CurrentVersion];
+            var (enrollmentRecord, key) = pheClient.EnrollAccount(pwdBytes,
+                                                                  enrollmentResp.Response.ToByteArray());
             var record = new DatabaseRecord
             {
                 Version = ctx.CurrentVersion,
-                Record = ByteString.CopyFrom(enrollmentRecord.ToByteArray())
+                Record = ByteString.CopyFrom(enrollmentRecord)
                                    
             };
             return (record.ToByteArray(), key);
@@ -145,79 +120,25 @@ namespace Passw0rd
                 throw new WrongVersionException("Invalid record version");
             }
 
-            if (!ctx.VersionedPheKeys.ContainsKey(databaseRecord.Version)){
+            if (!ctx.PheClients.ContainsKey(databaseRecord.Version)){
                 throw new WrongVersionException("unable to find keys corresponding to this record's version");
             }
            
-            var pheKeys = ctx.VersionedPheKeys[databaseRecord.Version];
-
-            var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(databaseRecord.Record);
-
-            if (enrollmentRecord.Nc.Length != ctx.Crypto.NonceLength() || 
-                enrollmentRecord.Ns.Length != ctx.Crypto.NonceLength()){
-                throw new Passw0rdProtocolException("Invalid record.");
-            }
-            var c0 = ctx.Crypto.ComputeC0(
-                pheKeys.AppSecretKey, pwdBytes, enrollmentRecord.Nc.ToByteArray(), enrollmentRecord.T0.ToByteArray());
-            
-            var pheVerifyPasswordRequest = new Phe.VerifyPasswordRequest()
-            {
-                Ns = enrollmentRecord.Ns,
-                C0 = ByteString.CopyFrom(c0)
-            };
+            var pheClient = ctx.PheClients[databaseRecord.Version];
+            var pheVerifyPasswordRequest = pheClient.CreateVerifyPasswordRequest(pwdBytes,
+                                                                                 databaseRecord.Record.ToByteArray());
 
             var versionedPasswordRequest = new Passw0Rd.VerifyPasswordRequest()
             {
                 Version = databaseRecord.Version,
-                Request = ByteString.CopyFrom(pheVerifyPasswordRequest.ToByteArray())
+                Request = ByteString.CopyFrom(pheVerifyPasswordRequest)
             };
 
             var serverResponse = await ctx.Client.VerifyAsync(versionedPasswordRequest).ConfigureAwait(false);
-          
-            byte[] key = null;
-            var pheServerResponse = Phe.VerifyPasswordResponse.Parser.ParseFrom(serverResponse.Response);
 
-            if (pheServerResponse.Res)
-            {
-                if (pheServerResponse.Success == null)
-                {
-                    throw new ProofNotProvidedException();
-                }
-           
-                var isValid = this.ctx.Crypto.ValidateProofOfSuccess(pheServerResponse.Success, 
-                                                                     pheKeys.ServicePublicKey,
-                                                                     enrollmentRecord.Ns.ToByteArray(),
-                                                                     c0, pheServerResponse.C1.ToByteArray());
-                if (!isValid)
-                {
-                    throw new ProofOfSuccessNotValidException();
-                }
-
-                key = this.ctx.Crypto.DecryptM(pheKeys.AppSecretKey, 
-                                             pwdBytes,
-                                             enrollmentRecord.Nc.ToByteArray(), 
-                                             enrollmentRecord.T1.ToByteArray(), 
-                                             pheServerResponse.C1.ToByteArray());
-            }
-            else
-            {
-                if (pheServerResponse.Fail == null)
-                {
-                    throw new ProofNotProvidedException();
-                }
-
-                var isValid = this.ctx.Crypto.ValidateProofOfFail(pheServerResponse.Fail,
-                                                                  pheKeys.ServicePublicKey,
-                                                                  enrollmentRecord.Ns.ToByteArray(),
-                                                                  c0, pheServerResponse.C1.ToByteArray());
-
-                if (!isValid)
-                {
-                    throw new ProofOfFailNotValidException();
-                }
-                throw new WrongPasswordException("You provide wrong password.");
-            }
-            return key;
+            return pheClient.CheckResponseAndDecrypt(pwdBytes,
+                                                     databaseRecord.Record.ToByteArray(),
+                                                     serverResponse.Response.ToByteArray());
         }
     }
 }

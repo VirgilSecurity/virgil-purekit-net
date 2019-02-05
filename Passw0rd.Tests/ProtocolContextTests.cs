@@ -41,8 +41,8 @@
               apiUrl: serviceAddress);
             
             Assert.Equal<uint>(2, contextWithUpdateToken.CurrentVersion);
-            Assert.Equal<int>(1, contextWithUpdateToken.VersionedPheKeys.Count);
-            Assert.Equal<uint>(2, contextWithUpdateToken.VersionedPheKeys.Keys.First<uint>());
+            Assert.Equal<int>(1, contextWithUpdateToken.PheClients.Count);
+            Assert.Equal<uint>(2, contextWithUpdateToken.PheClients.Keys.First<uint>());
         }
 
 
@@ -61,8 +61,8 @@
               updateToken: updateTokenV2);
 
             Assert.Equal<uint>(2, contextWithUpdateToken.CurrentVersion);
-            Assert.Equal(2, contextWithUpdateToken.VersionedPheKeys.Count);
-            Assert.Equal<uint>(2, contextWithUpdateToken.VersionedPheKeys.Keys.Last<uint>());
+            Assert.Equal(2, contextWithUpdateToken.PheClients.Count);
+            Assert.Equal<uint>(2, contextWithUpdateToken.PheClients.Keys.Last<uint>());
         }
 
         [Fact] //HTC-10

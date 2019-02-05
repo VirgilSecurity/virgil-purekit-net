@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
@@ -34,22 +34,62 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
-using Passw0rd.Utils;
-
 namespace Passw0rd.Phe
 {
-    public class PheKeys
+    using System;
+    using System.IO;
+    using Org.BouncyCastle.Crypto.Digests;
+
+    internal class SHA512Helper
     {
-        public SecretKey AppSecretKey { get; private set; }
-        public PublicKey ServicePublicKey { get; private set; } 
-
-        public PheKeys(SecretKey secretKey, PublicKey publicKey)
+        /// <summary>
+        /// Hashes a list of byte arrays, prefixing each one with its length.
+        /// </summary>
+        public byte[] ComputeHash(byte[] domain, params byte[][] datas)
         {
-            Validation.NotNull(secretKey);
-            Validation.NotNull(publicKey);
+            using (var stream = new MemoryStream())
+            {
+                if (domain != null){
+                    stream.Write(domain, 0, domain.Length);
+                }
 
-            this.AppSecretKey = secretKey;
-            this.ServicePublicKey = publicKey;
+                foreach (var data in datas)
+                {
+                    stream.Write(data, 0, data.Length);
+                }
+
+                var result = stream.ToArray();
+
+                byte[] hash;
+                var sha = new Sha512Digest();
+
+                try
+                {
+                    sha.BlockUpdate(result, 0, result.Length);
+                    hash = new byte[sha.GetDigestSize()];
+                    sha.DoFinal(hash, 0);
+                }
+                finally
+                {
+                    sha.Finish();
+                }
+
+                return hash;
+            }
+        }
+
+        /// <summary>
+        /// Converts UInt64 value into byte arraty with big endian bytes order.
+        /// </summary>
+        private byte[] UInt64ToBytes(ulong value)
+        {
+            var ulongBytes = BitConverter.GetBytes(value);
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(ulongBytes);
+            }
+
+            return ulongBytes;
         }
     }
 }

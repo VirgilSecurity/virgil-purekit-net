@@ -41,18 +41,17 @@ namespace Passw0rd.Utils
 
     internal class StringKeyParser
     {
-        const string PublicKeyFlag = "PK";
-        const string SecretKeyFlag = "SK";
+        const string PublicKeyPref = "PK";
+        const string SecretKeyPref = "SK";
         private readonly PheCrypto crypto;
 
-        public StringKeyParser(PheCrypto crypto){
-            Validation.NotNull(crypto);
-            this.crypto = crypto;  
+        public StringKeyParser(){
+            this.crypto = new PheCrypto();  
         }
         public (uint, PublicKey) ParsePublicKey(string servicePublicKey)
         {
             Validation.NotNullOrWhiteSpace(servicePublicKey);
-            var (version, keyBytes) = ParseKeyBytesByFlag(servicePublicKey, PublicKeyFlag);
+            var (version, keyBytes) = ParseKeyBytesByPrefix(servicePublicKey, PublicKeyPref);
 
             if (keyBytes.Length != 65)
             {
@@ -74,7 +73,7 @@ namespace Passw0rd.Utils
         public (uint, SecretKey) ParseSecretKey(string clientSecretKey)
         {
             Validation.NotNullOrWhiteSpace(clientSecretKey);
-            var (version, keyBytes) = ParseKeyBytesByFlag(clientSecretKey, SecretKeyFlag);
+            var (version, keyBytes) = ParseKeyBytesByPrefix(clientSecretKey, SecretKeyPref);
 
             if (keyBytes.Length != 32)
             {
@@ -93,7 +92,7 @@ namespace Passw0rd.Utils
             return (version, secretKey);
         }
 
-        private (uint, byte[]) ParseKeyBytesByFlag(string key, string keyFlag)
+        private (uint, byte[]) ParseKeyBytesByPrefix(string key, string keyFlag)
         {
             Validation.NotNullOrWhiteSpace(key);
 

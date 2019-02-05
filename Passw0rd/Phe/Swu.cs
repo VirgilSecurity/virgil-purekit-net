@@ -50,7 +50,7 @@ namespace Passw0rd.Phe
         private readonly BigInteger p34;
         private readonly BigInteger p14;
         private readonly BigInteger mba;
-        private readonly SHA512 sha512;
+        private readonly SHA512Helper sha512;
         public readonly int PointHashLen = 32;
         /// <summary>
         /// Initializes a new instance of the <see cref="Swu"/> class.
@@ -63,7 +63,7 @@ namespace Passw0rd.Phe
             this.mba = p.Neg(p.Div(this.b, a));
             this.p34 = p.Div(p.Sub(p, BigInteger.Three), BigInteger.ValueOf(4));
             this.p14 = p.Div(p.Add(p, BigInteger.One), BigInteger.ValueOf(4));
-            this.sha512 = new SHA512();
+            this.sha512 = new SHA512Helper();
         }
 
         //DataToPoint hashes data using SHA-256 and maps it to a point on curve

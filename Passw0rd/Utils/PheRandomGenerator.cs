@@ -34,11 +34,13 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
-namespace Passw0rd
+[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Passw0rd.Tests")]
+
+namespace Passw0rd.Utils
 {
     using Org.BouncyCastle.Security;
 
-    internal class PheRandomGenerator
+    public class PheRandomGenerator
     {
         private SecureRandom rng;
 

@@ -37,6 +37,7 @@
     <Compile Remove="UpdateTokenOld.cs" />
     <Compile Remove="Phe\ProofOfFailOld.cs" />
     <Compile Remove="Client\ProofOfSuccessModel.cs" />
+    <Compile Remove="Phe\PheKeys.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Phe\phe.proto" />

@@ -23,7 +23,7 @@ namespace Passw0rd.Tests
 
             var domain = Bytes.FromString("My Tuple App");
 
-            var tupleHash = new SHA512();
+            var tupleHash = new SHA512Helper();
             var hash = tupleHash.ComputeHash(domain, arr1, arr2, arr3);
             Assert.Equal(expectedHash, Bytes.ToString(hash, StringEncoding.HEX).ToUpper());
         }
@@ -39,7 +39,7 @@ namespace Passw0rd.Tests
             var arr3 = new byte[] { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28 };
 
             var domain = Bytes.FromString("My Tuple App");
-            var sha512 = new SHA512();
+            var sha512 = new SHA512Helper();
             var key = sha512.ComputeHash(null, arr1, arr2, arr3);
 
             var hkdf = new HkdfBytesGenerator(new Sha512Digest());

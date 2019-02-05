@@ -17,7 +17,7 @@ namespace Passw0rd.Tests
             var phe = new PheCrypto();
             var swu = new Swu(phe.Curve.Q, phe.Curve.B.ToBigInteger());
             var rng = new SecureRandom();
-            var sha512 = new SHA512();
+            var sha512 = new SHA512Helper();
 
             var random = new byte[32];
 
