@@ -38,7 +38,6 @@ namespace Passw0rd
 {
     using System;
     using Google.Protobuf;
-    using Passw0rd.Phe;
     using Passw0rd.Utils;
     using Passw0Rd;
 
@@ -50,9 +49,10 @@ namespace Passw0rd
         public VersionedUpdateToken VersionedUpdateToken {get; private set;}
 
         /// <summary>
-        /// Gets the PHE Crypto instanse.
+        /// Gets the PHE Client instanse.
         /// </summary>
-        public PheCrypto PheCrypto { get; private set; }
+        private PheClient pheClient;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="T:Passw0rd.RecordUpdater"/> class.
         /// </summary>
@@ -63,7 +63,7 @@ namespace Passw0rd
         {
             Validation.NotNullOrWhiteSpace(token, "UpdateToken isn't provided.");
             this.VersionedUpdateToken = StringUpdateTokenParser.Parse(token);
-            this.PheCrypto = new PheCrypto();
+            this.pheClient = new PheClient();
         }
 
         /// <summary>
@@ -84,25 +84,14 @@ namespace Passw0rd
 
             if (databaseRecord.Version + 1 == VersionedUpdateToken.Version)
             {
-                var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(databaseRecord.Record);
-
-                var (t0, t1) = PheCrypto.UpdateT(enrollmentRecord.Ns.ToByteArray(),
-                                              enrollmentRecord.T0.ToByteArray(),
-                                              enrollmentRecord.T1.ToByteArray(),
-                                              VersionedUpdateToken.UpdateToken.ToByteArray());
-
-                var updatedEnrollmentRecord = new EnrollmentRecord
-                {
-                    Nc = enrollmentRecord.Nc,
-                    Ns = enrollmentRecord.Ns,
-                    T0 = ByteString.CopyFrom(t0),
-                    T1 = ByteString.CopyFrom(t1)
-                };
+                var updatedEnrollmentRecordData = pheClient.UpdateEnrollmentRecord(
+                    VersionedUpdateToken.UpdateToken.ToByteArray(),
+                    databaseRecord.Record.ToByteArray());
 
                 var updatedDatabaseRecord = new DatabaseRecord
                 {
                     Version = VersionedUpdateToken.Version,
-                    Record = ByteString.CopyFrom(updatedEnrollmentRecord.ToByteArray())
+                    Record = ByteString.CopyFrom(updatedEnrollmentRecordData)
                 };
                 return updatedDatabaseRecord.ToByteArray();
             }

@@ -61,15 +61,40 @@ namespace Passw0rd.Tests
             0x0c, 0x34, 0x81, 0x8d, 0xaa, 0x25, 0x33, 0xe6,
             0xf8, 0x77, 0xe1, 0x59, 0x65, 0x89, 0x16, 0xa2
         };
-        public PheClientTest()
+
+        //[Fact]
+        public void Should_EnrollNewRecord_When_PasswordSpecified()
         {
-          //  this.
+            var rngMock = Substitute.ForPartsOf<PheRandomGenerator>();
+            rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
+            rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
+
+            var crypto = new PheCrypto();
+            crypto.Rng = rngMock;
+
+           var enrollmentRecordRight =  EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(enrollmentRecord));
+            var T1Right = enrollmentRecordRight.T1.ToByteArray();
+            var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
+
+            var servicePublicKey = crypto.DecodePublicKey(serverPublic);
+            var pheClient = new PheClient(appSecretKey, servicePublicKey);
+            pheClient.Crypto = crypto;
+
+            var (enrollmentRec, key) = pheClient.EnrollAccount(password, enrollmentResponse);
+            var enrollmentRecordGot =  EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(enrollmentRec));
+            var T1Got = enrollmentRecordGot.T1.ToByteArray();
+
+
+            Assert.Equal(Bytes.ToString(enrollmentRecord, StringEncoding.BASE64), Bytes.ToString(enrollmentRec, StringEncoding.BASE64));
+            Assert.Equal(Bytes.ToString(recordKey, StringEncoding.BASE64), Bytes.ToString(key, StringEncoding.BASE64));
+           
         }
 
 
-        public void Should_EnrollNewRecord_When_PasswordSpecified()
+
+        [Fact]
+        public void TestValidPasswordRequest()
         {
-            //var a = new BigInteger(clientPrivate);
             var rngMock = Substitute.ForPartsOf<PheRandomGenerator>();
             rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
             rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
@@ -80,89 +105,77 @@ namespace Passw0rd.Tests
             var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
 
             var servicePublicKey = crypto.DecodePublicKey(serverPublic);
-          //  var servicePublicKey2 = crypto.ExtractPublicKey(appSecretKey);
-       //     Assert.Equal(servicePublicKey, servicePublicKey2);
             var pheClient = new PheClient(appSecretKey, servicePublicKey);
             pheClient.Crypto = crypto;
+            var req = pheClient.CreateVerifyPasswordRequest(password, enrollmentRecord);
 
-            var (enrollmentRec, key) = pheClient.EnrollAccount(password, enrollmentResponse);
-            Assert.Equal(Bytes.ToString(enrollmentRecord, StringEncoding.BASE64), Bytes.ToString(enrollmentRec, StringEncoding.BASE64));
-            Assert.Equal(Bytes.ToString(recordKey, StringEncoding.BASE64), Bytes.ToString(key, StringEncoding.BASE64));
-           
-            //var mock = new Mock<PheCrypto>();
-            //mock.CallBase = true;
-            //var arr = mockedRandomBytes.Take(32).ToArray();
+            Assert.Equal(verifyPasswordReq, req);
         }
-            //mock.Setup(x => x.GenerateNonce()).Returns(arr);
-
-            //var cr = new PheCrypto();
-            //var nince = cr.GenerateNonce();
-            //var a = new PheCrypto();
-
-            // a.GenerateNonce(Arg.Any<int>()).Returns(mockedRandomBytes.Take(32).ToArray());
-            //var b = a.GenerateNonce(2);
-            //    mock.Setup(m => m.GenerateNonce()).Returns(mockedRandomBytes.Take(32).ToArray());
-
-            //  Mock<PheCrypto> mock = new Mock<PheCrypto>();
-
-            //var context = ProtocolContext.Create(
-            //    appToken: "PT.PGZLkpTmnUPo7i6eJsS5BADVgJ0QOF2Y",
-            //    servicePublicKey: "PK.1.BJtDGaG33Uw049NZi7ZXL2qtHc5uXlCvePzm5Nev2OIGfGZ1gQTAHb/yE+flZKA2BfhCTHXcDHCCCZPCcx6o4nQ=",
-            //    clientSecretKey: "SK.1.6/42DMWwg/hl2/qKLr4TTAUmI34LPGLNFZlxjU6dxc4=",
-            //    apiUrl: "https://dev.passw0rd.io/"
-            //);
 
 
+        [Fact]
+        public void TestInvalidPasswordRequest()
+        {
+            var rngMock = Substitute.ForPartsOf<PheRandomGenerator>();
+            rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
+            rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
+
+            var crypto = new PheCrypto();
+            crypto.Rng = rngMock;
+
+            var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
+
+            var servicePublicKey = crypto.DecodePublicKey(serverPublic);
+            var pheClient = new PheClient(appSecretKey, servicePublicKey);
+            pheClient.Crypto = crypto;
+            var req = pheClient.CreateVerifyPasswordRequest(badPassword, enrollmentRecord);
+
+            Assert.Equal(verifyBadPasswordReq, req);
+        }
 
 
+        [Fact]
+        public void TestRotateClientKey()
+        {
+            var rngMock = Substitute.ForPartsOf<PheRandomGenerator>();
+            rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
+            rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
 
-            //var rngMock = Substitute.ForPartsOf<MySecureRandomGenerator>();
-            //rngMock.GenerateNonce(Arg.Any<int>()).Returns(arr);
-            //context.Crypto.Rng = rngMock;
-            //var protocol = new Protocol(context);
-            //var (record, key) = await protocol.EnrollAccountAsync(Bytes.ToString(password, StringEncoding.UTF8));
+            var crypto = new PheCrypto();
+            crypto.Rng = rngMock;
+
+            var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
+
+            var servicePublicKey = crypto.DecodePublicKey(serverPublic);
+            var pheClient = new PheClient(appSecretKey, servicePublicKey);
+            pheClient.Crypto = crypto;
+            var (rotatedAppSecretKey, rotatedServicePublicKey) = pheClient.RotateKeys(token);
+
+            Assert.Equal(rotatedClientSk, rotatedAppSecretKey.Encode());
+            Assert.Equal(rotatedServerPub, rotatedServicePublicKey.Encode());
+
+        }
 
 
+        [Fact]
+        public void TestRotateEnrollmentRecord()
+        {
+            var rngMock = Substitute.ForPartsOf<PheRandomGenerator>();
+            rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
+            rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
 
-            //  var cryptoPerson = Substitute.ForPartsOf<PheCrypto>();
-            // var arr = mockedRandomBytes.Take(32).ToArray();
-            //  cryptoPerson.GenerateNonce(Arg.Any<int>()).Returns(arr);
-            // var a1 = cryptoPerson.GenerateNonce();
-            // context.Crypto.GenerateNonce(Arg.Any<int>()).Returns(mockedRandomBytes.Take(32)); //32 ??
-            //     var a = context.Crypto.GenerateNonce();
-            //accessTokenProvider.GetTokenAsync(Arg.Any<TokenContext>()).Returns(
-            //    jwtGenerator.GenerateToken(faker.Random.AlphaNumeric(20))
-            //    );
+            var crypto = new PheCrypto();
+            crypto.Rng = rngMock;
 
-            // context.Crypto.GenerateNonce(Arg.Any<int>()).Returns(arr);
-            //   var a1 = context.Crypto.GenerateNonce();
-            //    Assert.Equal(record, enrollmentRecord);
-            // protocol.EnrollAccountAsync(Arg.Any<ProtocolContext>())
-            //    var record = await protocol.EnrollAccountAsync("passw0rd");
+            var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
 
-            //await Task.Delay(2000);
+            var servicePublicKey = crypto.DecodePublicKey(serverPublic);
+            var pheClient = new PheClient();
+            pheClient.Crypto = crypto;
+            var updatedEnrollmentRecord = pheClient.UpdateEnrollmentRecord(token, enrollmentRecord);
+           
+            Assert.Equal(updatedRecord, updatedEnrollmentRecord);
 
-            //var verifyResult = await protocol.VerifyAsync(record, "passw0rd");
-
-            //var context1 = ProtocolContext.Create(
-            //    appToken: "e60e6d91b0e3480b816f306337e96aaa",
-            //    accessToken: "-rTsFFkAOGf6am4bEF_aAdoHt2kOGy78",
-            //    serverPublicKey: "PK.1.BJ2+TUK/WVTfuYjgKj0KOVH4nKUqdBihqhH/EN1fyggwATu4gzGMC0P35jBDZnSTEFdm2zmC4qndyI5MKBvFjX8=",
-            //    clientSecretKey: "SK.1.W7FVp+LhG/ton7P+wKu0ndIPECY5+mTzX7iWaW9+sXA=",
-            //    updateToken: new[] {
-            //        "UT.2.MEQEIGw7O3Hm/9rSUBrShEFKiQQk8yi39TnGS7dpUP9/8aQiBCBhp5NxCylYeCpJq/hjK2SuTiA9Pl8zD8BZUDau6B72Ag=="
-            //    }
-            //);
-
-            //var protocol1 = new Protocol(context1);
-
-            //var record1 = protocol1.Update(record);
-
-            //await Task.Delay(2000);
-
-            //var verifyResult1 = await protocol1.VerifyAsync(record1, "passw0rd");
-
-            //Assert.True(verifyResult.IsSuccess);
-     //   }
+        }
     }
 }

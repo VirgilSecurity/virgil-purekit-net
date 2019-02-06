@@ -34,8 +34,10 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
+using System;
 using Google.Protobuf;
 using Passw0rd.Phe;
+using Passw0rd.Utils;
 
 namespace Passw0rd
 {
@@ -64,10 +66,19 @@ namespace Passw0rd
         /// <param name="publicKey">Service public key.</param>
         public PheClient(SecretKey secretKey, PublicKey publicKey)
         {
+            Validation.NotNull(secretKey);
+            Validation.NotNull(publicKey);
+
             this.Crypto = new PheCrypto();
             this.AppSecretKey = secretKey;
             this.ServicePublicKey = publicKey;
-            }
+        }
+
+
+        internal PheClient()
+        {
+            this.Crypto = new PheCrypto();
+        }
 
         /// <summary>
         /// Rotates the keys.
@@ -75,6 +86,8 @@ namespace Passw0rd
         /// <returns>The rotated AppSecretKey and rotated ServicePublicKey.</returns>
         /// <param name="updateTokenData">Update token data.</param>
         public (SecretKey, PublicKey) RotateKeys(byte[] updateTokenData){
+            Validation.NotNullOrEmptyByteArray(updateTokenData);
+
             var secretKey = Crypto.RotateSecretKey(AppSecretKey, updateTokenData);
             var publicKey = Crypto.RotatePublicKey(ServicePublicKey, updateTokenData);
             return (secretKey, publicKey);
@@ -89,6 +102,9 @@ namespace Passw0rd
         /// <param name="pheRespData">Phe resp data.</param>
         public (byte[], byte[]) EnrollAccount(byte[] pwdBytes, byte[] pheRespData)
         { 
+            Validation.NotNullOrEmptyByteArray(pwdBytes);
+            Validation.NotNullOrEmptyByteArray(pheRespData);
+
             var pheResp = Phe.EnrollmentResponse.Parser.ParseFrom(ByteString.CopyFrom(pheRespData));
 
             var isValid = Crypto.ValidateProofOfSuccess(
@@ -129,6 +145,9 @@ namespace Passw0rd
         /// <param name="pwdBytes">Password bytes.</param>
         /// <param name="enrollmentRecordData">Enrollment record data.</param>
         public byte[] CreateVerifyPasswordRequest(byte[] pwdBytes, byte[] enrollmentRecordData){
+            Validation.NotNullOrEmptyByteArray(pwdBytes);
+            Validation.NotNullOrEmptyByteArray(enrollmentRecordData);
+
             var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(
                 ByteString.CopyFrom(enrollmentRecordData)
             );
@@ -151,6 +170,31 @@ namespace Passw0rd
         }
 
         /// <summary>
+        /// Update the specified EnrollmentRecord record.
+        /// </summary>
+        /// <returns>The updated Encrypted EnrollmentRecord.</returns>
+        public byte[] UpdateEnrollmentRecord(byte[] token, byte[] enrollmentRecordData){
+            Validation.NotNullOrEmptyByteArray(token);
+            Validation.NotNullOrEmptyByteArray(enrollmentRecordData);
+
+            var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(ByteString.CopyFrom(enrollmentRecordData));
+
+            var (t0, t1) = Crypto.UpdateT(enrollmentRecord.Ns.ToByteArray(),
+                                          enrollmentRecord.T0.ToByteArray(),
+                                          enrollmentRecord.T1.ToByteArray(),
+                                          token);
+
+            var updatedEnrollmentRecord = new EnrollmentRecord
+            {
+                Nc = enrollmentRecord.Nc,
+                Ns = enrollmentRecord.Ns,
+                T0 = ByteString.CopyFrom(t0),
+                T1 = ByteString.CopyFrom(t1)
+            };
+            return updatedEnrollmentRecord.ToByteArray();
+        }
+
+        /// <summary>
         /// Checks the response and decrypt.
         /// </summary>
         /// <returns>Secret key, that can be used to encrypt user's data. </returns>
@@ -158,6 +202,10 @@ namespace Passw0rd
         /// <param name="enrollmentRecordData">Enrollment record data.</param>
         /// <param name="responseData">Response data.</param>
         public byte[] CheckResponseAndDecrypt(byte[] pwdBytes, byte[] enrollmentRecordData, byte[] responseData){
+            Validation.NotNullOrEmptyByteArray(pwdBytes);
+            Validation.NotNullOrEmptyByteArray(enrollmentRecordData);
+            Validation.NotNullOrEmptyByteArray(responseData);
+
             var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(
                 ByteString.CopyFrom(enrollmentRecordData)
             );
