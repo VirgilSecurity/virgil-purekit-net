@@ -37,10 +37,11 @@
 namespace Passw0rd.Client.Connection
 {
     using System;
+    using System.Diagnostics;
     using System.Net;
     using System.Net.Http;
     using System.Net.Http.Headers;
-    using System.Text;
+    using System.Reflection;
     using System.Threading.Tasks;
     using Google.Protobuf;
     using Passw0Rd;
@@ -50,7 +51,7 @@ namespace Passw0rd.Client.Connection
         private readonly IHttpBodySerializer serializer;
 
         private HttpClient client;
-
+        private string virgilInfo;
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpClientBase"/> class.
         /// </summary>
@@ -61,6 +62,17 @@ namespace Passw0rd.Client.Connection
             this.client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/x-protobuf")
             );
+
+            this.virgilInfo = VirgilStatInfo();
+        }
+
+
+        private static string VirgilStatInfo()
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+            string version = fileVersionInfo.ProductVersion;
+            return $"Passw0rd c# ${Environment.OSVersion} ${version}";
         }
 
         /// <summary>
@@ -108,6 +120,7 @@ namespace Passw0rd.Client.Connection
             {
                 request.Headers.TryAddWithoutValidation("AppToken", $"{this.AppToken}");
             }
+            request.Headers.TryAddWithoutValidation("Virgil-Agent", virgilInfo);
 
             return request;
         }
