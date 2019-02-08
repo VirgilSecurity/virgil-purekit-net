@@ -61,7 +61,8 @@ namespace Passw0rd.Phe
             this.b   = b; 
             this.a   = p.Neg(BigInteger.Three);
             this.mba = p.Neg(p.Div(this.b, a));
-            this.p34 = p.Div(p.Sub(p, BigInteger.Three), BigInteger.ValueOf(4));
+           // this.p34 = p.Div(p.Sub(p, BigInteger.Three), BigInteger.ValueOf(4));
+            this.p34 = p.Div(a, BigInteger.ValueOf(4));
             this.p14 = p.Div(p.Add(p, BigInteger.One), BigInteger.ValueOf(4));
             this.sha512 = new SHA512Helper();
         }
@@ -105,6 +106,8 @@ namespace Passw0rd.Phe
             var ax3 = p.Mul(a, x3);
             var x33 = p.Cube(x3);
             var x33ax3 = p.Add(x33, ax3);
+
+            // h3 = x3^3 + a*x3 + b
             var h3 = p.Add(x33ax3, b);
 
             // tmp = h2 ^ ((p - 3) // 4)
@@ -114,9 +117,8 @@ namespace Passw0rd.Phe
 
             // if tmp^2 * h2 == 1:
             return tmp2h2.Equals(BigInteger.One)
-                ? (x2, p.Mul(tmp, h2))
+                         ? (x2, p.Mul(tmp, h2)) // return (x2, tmp * h2 )
                 : (x3, p.Pow(h3, p14));
         }
-    
     }
 }

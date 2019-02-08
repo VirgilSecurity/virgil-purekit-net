@@ -62,18 +62,18 @@ namespace Passw0rd.Tests
             0xf8, 0x77, 0xe1, 0x59, 0x65, 0x89, 0x16, 0xa2
         };
 
-        //[Fact]
+        [Fact]
         public void Should_EnrollNewRecord_When_PasswordSpecified()
         {
             var rngMock = Substitute.ForPartsOf<PheRandomGenerator>();
-            rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
-            rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
+            var offset = 0;
+            rngMock.GenerateNonce(16).Returns(x => {offset += 16;  return ((Span<byte>)mockedRandomBytes).Slice(offset - 16, 16).ToArray(); });
+            rngMock.GenerateNonce(32).Returns(x => { offset += 32; return ((Span<byte>)mockedRandomBytes).Slice(offset - 32, 32).ToArray(); });
 
             var crypto = new PheCrypto();
             crypto.Rng = rngMock;
 
-           var enrollmentRecordRight =  EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(enrollmentRecord));
-            var T1Right = enrollmentRecordRight.T1.ToByteArray();
+            var enrollmentRecordRight =  EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(enrollmentRecord));
             var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
 
             var servicePublicKey = crypto.DecodePublicKey(serverPublic);
@@ -82,8 +82,6 @@ namespace Passw0rd.Tests
 
             var (enrollmentRec, key) = pheClient.EnrollAccount(password, enrollmentResponse);
             var enrollmentRecordGot =  EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(enrollmentRec));
-            var T1Got = enrollmentRecordGot.T1.ToByteArray();
-
 
             Assert.Equal(Bytes.ToString(enrollmentRecord, StringEncoding.BASE64), Bytes.ToString(enrollmentRec, StringEncoding.BASE64));
             Assert.Equal(Bytes.ToString(recordKey, StringEncoding.BASE64), Bytes.ToString(key, StringEncoding.BASE64));

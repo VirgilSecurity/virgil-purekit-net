@@ -54,13 +54,14 @@ namespace Passw0rd.Phe
     /// </summary>
     public class PheCrypto
     {
-        private X9ECParameters curveParams;
         internal FpCurve Curve { get; private set; }
         internal ECPoint CurveG { get; private set; }
         internal PheRandomGenerator Rng{ get; set; }
        
         private SHA512Helper sha512;
         private Swu swu;
+        private X9ECParameters curveParams;
+
         private const int pheClientKeyLen = 32;
         private const int pheNonceLen = 32;
         private const int zLen = 32;
@@ -72,6 +73,7 @@ namespace Passw0rd.Phe
             this.Rng = new PheRandomGenerator(); 
             this.sha512 = new SHA512Helper();
             this.swu = new Swu(Curve.Q, Curve.B.ToBigInteger());
+
         }
 
         /// <summary>
@@ -142,8 +144,7 @@ namespace Passw0rd.Phe
 
             var c0Point  = this.Curve.DecodePoint(c0);
             var c1Point  = this.Curve.DecodePoint(c1);
-
-            var mPoint   = this.HashToPoint(GenerateNonce(swu.PointHashLen));
+            var mPoint = this.HashToPoint(GenerateNonce(swu.PointHashLen));
             var hc0Point = this.HashToPoint(Domains.Dhc0, nC, pwd);
             var hc1Point = this.HashToPoint(Domains.Dhc1, nC, pwd);
 
@@ -153,8 +154,8 @@ namespace Passw0rd.Phe
             hkdf.GenerateBytes(key, 0, key.Length);
 
             var t0Point  = c0Point.Add(hc0Point.Multiply(skC.Value));
-            var t1Point  = c1Point.Add(hc1Point.Multiply(skC.Value).Add(mPoint.Multiply(skC.Value)));
-
+            var t1Point  = (c1Point.Add(hc1Point.Multiply(skC.Value))).Add(mPoint.Multiply(skC.Value));
+          
             return (t0Point.GetEncoded(), t1Point.GetEncoded(), key);
         }
 
