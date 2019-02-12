@@ -33,7 +33,7 @@
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
-namespace Passw0rd
+namespace Passw0rd.Client
 {
     using System;
 
@@ -55,7 +55,7 @@ namespace Passw0rd
                     service = "virgilsecurity.com";
                     break;
                 default:
-                    throw new Exception("Wrong App Token");
+                    throw new ServiceClientException(0, "Wrong App Token");
             }
             return $"https://api.{service}/";
         }
