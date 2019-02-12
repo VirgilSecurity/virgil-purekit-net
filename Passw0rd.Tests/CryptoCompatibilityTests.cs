@@ -14,7 +14,7 @@ namespace Passw0rd.Tests
         [Fact]
         public void TupleHashCompute_Should_GenerateExpectedHash()
         {
-            var expectedHash = "3696FB515910C43033D7BE0DD1ABFA4F3F8D8354EEC017D41F9"+
+            var expectedHash = "3696FB515910C43033D7BE0DD1ABFA4F3F8D8354EEC017D41F9" +
                 "3A344C9AAB02C006771824DC09C5040BEC8CE9C5FD3833D1301B62750726160098E9A1ED440E4";
 
             var arr1 = new byte[] { 0x00, 0x01, 0x02 };
@@ -31,7 +31,7 @@ namespace Passw0rd.Tests
         [Fact]
         public void HkdfGenerateBytes_Should_GenerateExpectedValue()
         {
-            var expectedValue = 
+            var expectedValue =
                 "0F097707AAB66A4CD5FCC79CEB96FB4B99DE2E73DF09295E" +
                 "CFF6F6CC7C1DCF169D51B62999BC206487800E8DD451518FA6C50F5C053B8B780208BE7164D3A7F2";
             var arr1 = new byte[] { 0x00, 0x01, 0x02 };

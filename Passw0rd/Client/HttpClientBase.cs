@@ -55,10 +55,14 @@ namespace Passw0rd.Client.Connection
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpClientBase"/> class.
         /// </summary>
-        protected HttpClientBase(IHttpBodySerializer serializer)
+        protected HttpClientBase(IHttpBodySerializer serializer,
+                                 string token,
+                                 string serviceUrl)
         {
             this.serializer = serializer;
             this.client = new HttpClient();
+            this.AppToken = token;
+            this.BaseUri = new Uri(serviceUrl);
             this.client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/x-protobuf")
             );
@@ -78,13 +82,12 @@ namespace Passw0rd.Client.Connection
         /// <summary>
         /// Gets or sets the application token.
         /// </summary>
-        public string AppToken { get; set; }
+        public string AppToken { get; private set; }
 
         /// <summary>
         /// Gets or sets the base URI.
         /// </summary>
         public Uri BaseUri { get; set; }
-
 
         protected async Task<TResponseModel> SendAsync<TRequestModel, TResponseModel>(
             HttpMethod method, string endpoint, TRequestModel body)

@@ -4,7 +4,7 @@ namespace Passw0rd.Tests
     using Org.BouncyCastle.Crypto.Digests;
     using Org.BouncyCastle.Math.EC;
     using Org.BouncyCastle.Security;
- 
+
     using Passw0rd.Phe;
 
     using Xunit;
@@ -57,7 +57,8 @@ namespace Passw0rd.Tests
 
 
         [Fact]
-        public void SwuHashToPoint_Should_ReturnExpectedPoint(){
+        public void SwuHashToPoint_Should_ReturnExpectedPoint()
+        {
             var data = new byte[]{
                 0x02, 0x6c, 0x68, 0xba, 0x79, 0x9b, 0x95, 0x8d,
                 0xa1, 0xdd, 0xec, 0x47, 0xcf, 0x77, 0xb6, 0x1a,
@@ -72,8 +73,8 @@ namespace Passw0rd.Tests
             var a = phe.Curve;
             var expectedX = "41644486759784367771047752285976210905566569374059610763941558650382638987514";
             var expectedY = "47123545766650584118634862924645280635136629360149764686957339607865971771956";
-           
-           // var curveParams = NistNamedCurves.GetByName("P-256");
+
+            // var curveParams = NistNamedCurves.GetByName("P-256");
             var swu = new Swu(phe.Curve.Q, phe.Curve.B.ToBigInteger());
             var (x, y) = swu.DataToPoint(data);
             Assert.Equal(expectedX, x.ToString());

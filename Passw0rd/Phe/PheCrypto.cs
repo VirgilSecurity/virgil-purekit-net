@@ -56,8 +56,8 @@ namespace Passw0rd.Phe
     {
         internal FpCurve Curve { get; private set; }
         internal ECPoint CurveG { get; private set; }
-        internal PheRandomGenerator Rng{ get; set; }
-       
+        internal IPheRandomGenerator Rng { get; set; }
+
         private SHA512Helper sha512;
         private Swu swu;
         private X9ECParameters curveParams;
@@ -70,7 +70,7 @@ namespace Passw0rd.Phe
             this.curveParams = NistNamedCurves.GetByName("P-256");
             this.Curve = (FpCurve)curveParams.Curve;
             this.CurveG = this.curveParams.G.Multiply(BigInteger.ValueOf(1));
-            this.Rng = new PheRandomGenerator(); 
+            this.Rng = new PheRandomGenerator();
             this.sha512 = new SHA512Helper();
             this.swu = new Swu(Curve.Q, Curve.B.ToBigInteger());
 
@@ -142,8 +142,8 @@ namespace Passw0rd.Phe
             Validation.NotNullOrEmptyByteArray(c0);
             Validation.NotNullOrEmptyByteArray(c1);
 
-            var c0Point  = this.Curve.DecodePoint(c0);
-            var c1Point  = this.Curve.DecodePoint(c1);
+            var c0Point = this.Curve.DecodePoint(c0);
+            var c1Point = this.Curve.DecodePoint(c1);
             var mPoint = this.HashToPoint(GenerateNonce(swu.PointHashLen));
             var hc0Point = this.HashToPoint(Domains.Dhc0, nC, pwd);
             var hc1Point = this.HashToPoint(Domains.Dhc1, nC, pwd);
@@ -153,9 +153,9 @@ namespace Passw0rd.Phe
             var key = new byte[pheClientKeyLen];
             hkdf.GenerateBytes(key, 0, key.Length);
 
-            var t0Point  = c0Point.Add(hc0Point.Multiply(skC.Value));
-            var t1Point  = (c1Point.Add(hc1Point.Multiply(skC.Value))).Add(mPoint.Multiply(skC.Value));
-          
+            var t0Point = c0Point.Add(hc0Point.Multiply(skC.Value));
+            var t1Point = (c1Point.Add(hc1Point.Multiply(skC.Value))).Add(mPoint.Multiply(skC.Value));
+
             return (t0Point.GetEncoded(), t1Point.GetEncoded(), key);
         }
 
@@ -187,10 +187,10 @@ namespace Passw0rd.Phe
             Validation.NotNullOrEmptyByteArray(t1);
             Validation.NotNullOrEmptyByteArray(c1);
 
-            var t1Point  = this.Curve.DecodePoint(t1);
-            var c1Point  = this.Curve.DecodePoint(c1);
+            var t1Point = this.Curve.DecodePoint(t1);
+            var c1Point = this.Curve.DecodePoint(c1);
             var hc1Point = this.HashToPoint(Domains.Dhc1, nC, pwd);
-            var minusY   = this.curveParams.N.Neg(skC.Value);
+            var minusY = this.curveParams.N.Neg(skC.Value);
 
             var mPoint = t1Point.Add(c1Point.Negate()).Add(hc1Point.Multiply(minusY)).Multiply(skC.Value.ModInverse(this.curveParams.N));
 
@@ -214,7 +214,7 @@ namespace Passw0rd.Phe
         {
             Validation.NotNull(data);
             Validation.NotNullOrEmptyByteArray(key);
-           
+
             var encryptionService = new EncryptionService(key);
             return encryptionService.Encrypt(data);
         }
@@ -304,21 +304,21 @@ namespace Passw0rd.Phe
 
             var pkSPoint = this.curveParams.G.Multiply(skS.Value);
 
-            var blindX    = this.RandomZ();
-            var hs0Point  = this.HashToPoint(Domains.Dhs0, nS);
-            var hs1Point  = this.HashToPoint(Domains.Dhs1, nS);
-            var term1     = hs0Point.Multiply(blindX).GetEncoded();
-            var term2     = hs1Point.Multiply(blindX).GetEncoded();
-            var term3     = this.curveParams.G.Multiply(blindX).GetEncoded();
-            var pubKey    = pkSPoint.GetEncoded();
+            var blindX = this.RandomZ();
+            var hs0Point = this.HashToPoint(Domains.Dhs0, nS);
+            var hs1Point = this.HashToPoint(Domains.Dhs1, nS);
+            var term1 = hs0Point.Multiply(blindX).GetEncoded();
+            var term2 = hs1Point.Multiply(blindX).GetEncoded();
+            var term3 = this.curveParams.G.Multiply(blindX).GetEncoded();
+            var pubKey = pkSPoint.GetEncoded();
             var challenge = this.HashZ(Domains.ProofOK, pubKey, CurveG.GetEncoded(), c0, c1, term1, term2, term3);
 
-            var result    = blindX.Add(skS.Value.Multiply(challenge)).ToByteArray();
+            var result = blindX.Add(skS.Value.Multiply(challenge)).ToByteArray();
 
-            return new ProofOfSuccess 
+            return new ProofOfSuccess
             {
-                Term1 = ByteString.CopyFrom(term1), 
-                Term2 = ByteString.CopyFrom(term2), 
+                Term1 = ByteString.CopyFrom(term1),
+                Term2 = ByteString.CopyFrom(term2),
                 Term3 = ByteString.CopyFrom(term3),
                 BlindX = ByteString.CopyFrom(result)
             };
@@ -343,25 +343,25 @@ namespace Passw0rd.Phe
             var trm3Point = this.Curve.DecodePoint(term3);
             var blindXInt = new BigInteger(1, proof.BlindX.ToByteArray());
 
-            var c0Point   = this.Curve.DecodePoint(c0);
-            var c1Point   = this.Curve.DecodePoint(c1);
+            var c0Point = this.Curve.DecodePoint(c0);
+            var c1Point = this.Curve.DecodePoint(c1);
 
-            var hs0Point  = this.HashToPoint(Domains.Dhs0, nS);
-            var hs1Point  = this.HashToPoint(Domains.Dhs1, nS);
+            var hs0Point = this.HashToPoint(Domains.Dhs0, nS);
+            var hs1Point = this.HashToPoint(Domains.Dhs1, nS);
 
-            var challenge = this.HashZ(Domains.ProofOK, 
-                                       pkS.Encode(), 
-                                       CurveG.GetEncoded(), 
-                                       c0, 
-                                       c1, 
+            var challenge = this.HashZ(Domains.ProofOK,
+                                       pkS.Encode(),
+                                       CurveG.GetEncoded(),
+                                       c0,
+                                       c1,
                                        term1,
-                                       term2, 
+                                       term2,
                                        term3);
 
-            var t1Point   = trm1Point.Add(c0Point.Multiply(challenge));
-            var t2Point   = hs0Point.Multiply(blindXInt);
+            var t1Point = trm1Point.Add(c0Point.Multiply(challenge));
+            var t2Point = hs0Point.Multiply(blindXInt);
 
-            if (!t1Point.Equals(t2Point)) 
+            if (!t1Point.Equals(t2Point))
             {
                 return false;
             }
@@ -388,7 +388,7 @@ namespace Passw0rd.Phe
         /// <summary>
         /// Validates the proof of fail.
         /// </summary>
-        internal bool ValidateProofOfFail(ProofOfFail proof, PublicKey pkS,  byte[] nS, byte[] c0, byte[] c1)
+        internal bool ValidateProofOfFail(ProofOfFail proof, PublicKey pkS, byte[] nS, byte[] c0, byte[] c1)
         {
             Validation.NotNull(proof);
             Validation.NotNull(pkS);
@@ -401,9 +401,9 @@ namespace Passw0rd.Phe
             var term3 = proof.Term3.ToByteArray();
             var term4 = proof.Term4.ToByteArray();
 
-            var challenge = this.HashZ(Domains.ProofErr, 
+            var challenge = this.HashZ(Domains.ProofErr,
                                        pkS.Encode(),
-                                       CurveG.GetEncoded(), 
+                                       CurveG.GetEncoded(),
                                        c0, c1,
                                        term1, term2, term3, term4);
 
@@ -423,7 +423,7 @@ namespace Passw0rd.Phe
             var t1Point = term1Point.Add(term2Point).Add(c1Point.Multiply(challenge));
             var t2Point = c0Point.Multiply(blindAInt).Add(hs0Point.Multiply(blindBInt));
 
-            if (!t1Point.Equals(t2Point)) 
+            if (!t1Point.Equals(t2Point))
             {
                 return false;
             }
@@ -528,12 +528,13 @@ namespace Passw0rd.Phe
             var (x, y) = this.swu.HashToPoint(hash256);
 
             var xField = this.Curve.FromBigInteger(x);
-            var yField = this.Curve.FromBigInteger(y); 
+            var yField = this.Curve.FromBigInteger(y);
 
             return (FpPoint)this.Curve.CreatePoint(x, y);
         }
 
-        internal int NonceLength(){
+        internal int NonceLength()
+        {
             return pheNonceLen;
         }
     }

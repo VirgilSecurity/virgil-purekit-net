@@ -4,6 +4,9 @@
     using System.Threading.Tasks;
     using Google.Protobuf;
     using Microsoft.Extensions.Configuration;
+    using NSubstitute;
+    using Passw0rd.Client;
+    using Passw0rd.Client.Connection;
     using Passw0Rd;
     using Xunit;
 
@@ -19,7 +22,8 @@
         private string updateTokenV3;
         private string serviceAddress;
 
-        public ProtocolTests(){
+        public ProtocolTests()
+        {
             IConfigurationRoot configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true).Build();
             appToken = configuration["AppToken"];
             servicePublicKey = configuration["ServicePublicKey"];
@@ -33,13 +37,13 @@
         [Fact] //HTC-1
         public async Task EncrollAccount_Should_GenerateNewRecord()
         {
-           // var a = configuration["AppToken"];
+            // var a = configuration["AppToken"];
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
-               appSecretKey: clientSecretKey2,
-                apiUrl: serviceAddress);
-            
+               appSecretKey: clientSecretKey2);
+
+            MockClient(context);
             var protocol = new Protocol(context);
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
             var rec = DatabaseRecord.Parser.ParseFrom(recBytes);
@@ -54,6 +58,24 @@
             Assert.Equal(key, accountKey);
         }
 
+        private void MockClient(ProtocolContext context)
+        {
+            var serializer = new HttpBodySerializer();
+            var serviceUrl = ServiceUrl.ProvideByToken(appToken).Replace("api", "dev");
+            var client = new PheHttpClient(serializer, appToken, serviceUrl);
+
+            //     context.Client.Returns<IPheHttpClient>(client);
+            var pheHttpClient = Substitute.For<IPheHttpClient>();
+            //pheHttpClient.VerifyAsync<Arg.Any>()
+            //  pheHttpClient.GetEnrollment(Arg.Any<EnrollmentRequest>()).Returns(x => client.GetEnrollment((EnrollmentRequest)x.Args()[0]));
+            //Task.FromResult<Task<EnrollmentResponse>>((x) => { client.GetEnrollment(x); }));
+            // context
+            //   var client = ((HttpClientBase)context.Client);
+            //  var uri = new Uri(client.BaseUri.AbsoluteUri.Replace("api", "dev"));
+            // client.BaseUri.Returns<Uri>(uri);
+            context.Client = client;
+        }
+
         [Fact] //HTC-2
         public async Task EncrollAccountWithUpdateToken_Should_GenerateNewRecordWithTokenVersion()
         {
@@ -62,12 +84,10 @@
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
                appSecretKey: clientSecretKey2,
-                apiUrl: serviceAddress,
-                updateToken: updateTokenV3);
-            
-           // var pwd = Bytes.ToString(myPassword, StringEncoding.UTF8);
+               updateToken: updateTokenV3);
+            MockClient(context);
             var protocol = new Protocol(context);
-           
+
             System.Threading.Thread.Sleep(5000);
 
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
@@ -88,18 +108,21 @@
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
-               appSecretKey: clientSecretKey2,
-                apiUrl: serviceAddress);
-            // var pwd = Bytes.ToString(myPassword, StringEncoding.UTF8);
+               appSecretKey: clientSecretKey2);
+            
+            MockClient(context);
+
             var protocol = new Protocol(context);
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
-            var ex = await Record.ExceptionAsync( async() => { 
-                 await protocol.VerifyPasswordAsync("wrong password", recBytes); });
+            var ex = await Record.ExceptionAsync(async () =>
+            {
+                await protocol.VerifyPasswordAsync("wrong password", recBytes);
+            });
 
-            Assert.IsType<WrongPasswordException>(ex); 
+            Assert.IsType<WrongPasswordException>(ex);
         }
 
-        
+
         [Fact] //HTC-4
         public async Task ProtocolWithWrongServiceKey_Should_RaiseProofOfSuccessNotValidException()
         {
@@ -107,29 +130,33 @@
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
-               appSecretKey: clientSecretKey2,
-                apiUrl: serviceAddress);
-             var contextWithWrongServerKey = ProtocolContext.Create(
-               appToken: appToken,
-                servicePublicKey: "PK.2.BK6oQNcAEyMc0fmc7coHbaQHqwoYPTiIM6A4393wEE9vRbCeUjKZSHzluHI80bGhJ61/eg1SUZNtgmMie4U80gI=",
-               appSecretKey: clientSecretKey2,
-                apiUrl: serviceAddress);
+               appSecretKey: clientSecretKey2);
+            var contextWithWrongServerKey = ProtocolContext.Create(
+              appToken: appToken,
+              servicePublicKey: "PK.2.BK6oQNcAEyMc0fmc7coHbaQHqwoYPTiIM6A4393wEE9vRbCeUjKZSHzluHI80bGhJ61/eg1SUZNtgmMie4U80gI=",
+              appSecretKey: clientSecretKey2);
 
             System.Threading.Thread.Sleep(5000);
 
+            MockClient(context);
+            MockClient(contextWithWrongServerKey);
             var protocol = new Protocol(context);
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
 
             var protocolWithWrongServerKey = new Protocol(contextWithWrongServerKey);
-            var ex = await Record.ExceptionAsync( async() => { 
-                await protocolWithWrongServerKey.EnrollAccountAsync(myPassword); });
+            var ex = await Record.ExceptionAsync(async () =>
+            {
+                await protocolWithWrongServerKey.EnrollAccountAsync(myPassword);
+            });
 
-            Assert.IsType<ProofOfSuccessNotValidException>(ex); 
+            Assert.IsType<ProofOfSuccessNotValidException>(ex);
 
-            var ex2 = await Record.ExceptionAsync( async() => { 
-                await protocolWithWrongServerKey.VerifyPasswordAsync(myPassword, recBytes); });
+            var ex2 = await Record.ExceptionAsync(async () =>
+            {
+                await protocolWithWrongServerKey.VerifyPasswordAsync(myPassword, recBytes);
+            });
 
-            Assert.IsType<ProofOfSuccessNotValidException>(ex2); 
+            Assert.IsType<ProofOfSuccessNotValidException>(ex2);
         }
 
 
@@ -140,15 +167,16 @@
             var context = ProtocolContext.Create(
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
-               appSecretKey: clientSecretKey2,
-                apiUrl: serviceAddress);
-            
+               appSecretKey: clientSecretKey2);
+
             var contextWithUpdateToken = ProtocolContext.Create(
               appToken: appToken,
               servicePublicKey: servicePublicKey2,
               appSecretKey: clientSecretKey2,
-              apiUrl: serviceAddress,
               updateToken: updateTokenV3);
+
+            MockClient(context);
+            MockClient(contextWithUpdateToken);
 
             var protocol = new Protocol(context);
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
@@ -158,7 +186,7 @@
             var recordUpdater = new RecordUpdater(updateTokenV3);
             var updatedRecBytes = recordUpdater.Update(recBytes);
 
-            Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(updatedRecBytes).Version); 
+            Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(updatedRecBytes).Version);
             var protocolWithUpdateToken = new Protocol(contextWithUpdateToken);
 
             var recBytesKey = await protocol.VerifyPasswordAsync(myPassword, recBytes);
@@ -176,20 +204,22 @@
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
                appSecretKey: clientSecretKey2,
-               updateToken: updateTokenV3,
-                apiUrl: serviceAddress);
+               updateToken: updateTokenV3);
 
+            MockClient(context);
 
             var protocol = new Protocol(context);
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
-            Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(recBytes).Version); 
+            Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(recBytes).Version);
 
             var recordUpdater = new RecordUpdater(updateTokenV3);
 
-            var ex = Record.Exception( () => { 
-                recordUpdater.Update(recBytes); });
+            var ex = Record.Exception(() =>
+            {
+                recordUpdater.Update(recBytes);
+            });
 
-            Assert.IsType<WrongVersionException>(ex); 
+            Assert.IsType<WrongVersionException>(ex);
         }
 
         [Fact] //HTC-7
@@ -200,9 +230,9 @@
                appToken: appToken,
                servicePublicKey: servicePublicKey2,
                appSecretKey: clientSecretKey2,
-               updateToken: updateTokenV3,
-                apiUrl: serviceAddress);
-            
+               updateToken: updateTokenV3);
+
+            MockClient(context);
 
             var protocol = new Protocol(context);
             var (recBytes, key) = await protocol.EnrollAccountAsync(myPassword);
@@ -211,14 +241,18 @@
 
 
             var recordUpdater = new RecordUpdater(updateTokenV3);
-            var ex = Record.Exception( () => {
-                recordUpdater.Update(databaseRec.ToByteArray()); });
-            Assert.IsType<WrongVersionException>(ex); 
+            var ex = Record.Exception(() =>
+            {
+                recordUpdater.Update(databaseRec.ToByteArray());
+            });
+            Assert.IsType<WrongVersionException>(ex);
 
-            var ex2 = await Record.ExceptionAsync( async() => { 
-                await protocol.VerifyPasswordAsync(myPassword, databaseRec.ToByteArray()); });
+            var ex2 = await Record.ExceptionAsync(async () =>
+            {
+                await protocol.VerifyPasswordAsync(myPassword, databaseRec.ToByteArray());
+            });
 
-            Assert.IsType<WrongVersionException>(ex2); 
+            Assert.IsType<WrongVersionException>(ex2);
         }
 
 
@@ -229,15 +263,17 @@
               appToken: appToken,
               servicePublicKey: servicePublicKey2,
               appSecretKey: clientSecretKey2,
-                apiUrl: serviceAddress,
-                updateToken: updateTokenV3);
+              updateToken: updateTokenV3);
 
+            MockClient(contextWithUpdateToken);
             var protocol = new Protocol(contextWithUpdateToken);
 
-            var ex = await Record.ExceptionAsync( async() => { 
-                await protocol.EnrollAccountAsync(""); });
+            var ex = await Record.ExceptionAsync(async () =>
+            {
+                await protocol.EnrollAccountAsync("");
+            });
 
-            Assert.IsType<ArgumentException>(ex); 
+            Assert.IsType<ArgumentException>(ex);
             //raise exception
         }
     }

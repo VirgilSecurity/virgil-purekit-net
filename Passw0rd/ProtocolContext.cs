@@ -58,9 +58,9 @@ namespace Passw0rd
         /// <summary>
         /// Gets the client instance.
         /// </summary> 
-        public IPheHttpClient Client { get; private set; }
+        public IPheHttpClient Client { get; internal set; }
 
-     
+
         /// <summary>
         /// Gets the client instance.
         /// </summary> 
@@ -92,8 +92,7 @@ namespace Passw0rd
         public static ProtocolContext Create(string appToken,
             string servicePublicKey,
             string appSecretKey,
-            string updateToken = null,
-            string apiUrl = null)
+            string updateToken = null)
         {
             Validation.NotNullOrWhiteSpace(appToken, "Application token isn't provided.");
             Validation.NotNullOrWhiteSpace(servicePublicKey, "Service Public Key isn't provided.");
@@ -103,19 +102,15 @@ namespace Passw0rd
             var (pkSVer, pkS) = keyParser.ParsePublicKey(servicePublicKey);
             var (skCVer, skC) = keyParser.ParseSecretKey(appSecretKey);
 
-            if (pkSVer != skCVer) 
+            if (pkSVer != skCVer)
             {
                 throw new WrongVersionException("Incorrect versions for Server/Client keys.");
             }
 
             var serializer = new HttpBodySerializer();
-            var url = String.IsNullOrWhiteSpace(apiUrl) ? "https://api.passw0rd.io/"
-                            : apiUrl;
-            var client = new PheHttpClient(serializer)
-            {
-                AppToken = appToken,
-                BaseUri = new Uri(url)
-            };
+
+
+            var client = new PheHttpClient(serializer, appToken, ServiceUrl.ProvideByToken(appToken));
 
             var ctx = new ProtocolContext
             {
@@ -130,12 +125,13 @@ namespace Passw0rd
             if (!String.IsNullOrWhiteSpace(updateToken))
             {
                 ctx.VersionedUpdateToken = StringUpdateTokenParser.Parse(updateToken);
-                    if (ctx.VersionedUpdateToken.Version != ctx.CurrentVersion + 1){
-                        throw new WrongVersionException("Incorrect token version.");
-                    }
-                    var (newSecretKey, newPublicKey) = pheClient.RotateKeys(ctx.VersionedUpdateToken.UpdateToken.ToByteArray());
-                    ctx.PheClients.Add(ctx.VersionedUpdateToken.Version, new PheClient(newSecretKey, newPublicKey));
-                    ctx.CurrentVersion = ctx.VersionedUpdateToken.Version;
+                if (ctx.VersionedUpdateToken.Version != ctx.CurrentVersion + 1)
+                {
+                    throw new WrongVersionException("Incorrect token version.");
+                }
+                var (newSecretKey, newPublicKey) = pheClient.RotateKeys(ctx.VersionedUpdateToken.UpdateToken.ToByteArray());
+                ctx.PheClients.Add(ctx.VersionedUpdateToken.Version, new PheClient(newSecretKey, newPublicKey));
+                ctx.CurrentVersion = ctx.VersionedUpdateToken.Version;
             }
             return ctx;
         }

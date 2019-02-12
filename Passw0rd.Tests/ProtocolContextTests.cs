@@ -1,7 +1,10 @@
 ﻿namespace Passw0rd.Tests
 {
+    using System;
     using System.Linq;
     using Microsoft.Extensions.Configuration;
+    using NSubstitute;
+    using Passw0rd.Client.Connection;
     using Xunit;
 
     public class ProtocolContextTests
@@ -37,11 +40,9 @@
             var contextWithUpdateToken = ProtocolContext.Create(
               appToken: appToken,
               servicePublicKey: servicePublicKey2,
-              appSecretKey: clientSecretKey2,
-              apiUrl: serviceAddress);
-            
+              appSecretKey: clientSecretKey2);
             Assert.Equal<uint>(2, contextWithUpdateToken.CurrentVersion);
-            Assert.Equal<int>(1, contextWithUpdateToken.PheClients.Count);
+            Assert.True(1 == contextWithUpdateToken.PheClients.Count);
             Assert.Equal<uint>(2, contextWithUpdateToken.PheClients.Keys.First<uint>());
         }
 
@@ -57,7 +58,6 @@
               appToken: appToken,
               servicePublicKey: servicePublicKey,
               appSecretKey: clientSecretKey,
-              apiUrl: serviceAddress,
               updateToken: updateTokenV2);
 
             Assert.Equal<uint>(2, contextWithUpdateToken.CurrentVersion);
@@ -72,11 +72,10 @@
             var ex = Record.Exception(() =>
             {
                 ProtocolContext.Create(
-              appToken: appToken,
-              servicePublicKey: servicePublicKey,
-              appSecretKey: clientSecretKey,
-              apiUrl: serviceAddress,
-                    updateToken: updateTokenV3);
+                appToken: appToken,
+                servicePublicKey: servicePublicKey,
+                appSecretKey: clientSecretKey,
+                updateToken: updateTokenV3);
             });
 
             Assert.IsType<WrongVersionException>(ex);

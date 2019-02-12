@@ -49,7 +49,8 @@ namespace Passw0rd.Phe
         {
             using (var stream = new MemoryStream())
             {
-                if (domain != null){
+                if (domain != null)
+                {
                     stream.Write(domain, 0, domain.Length);
                 }
 

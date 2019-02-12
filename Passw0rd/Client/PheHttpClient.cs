@@ -44,7 +44,7 @@ namespace Passw0rd.Client
         /// <summary>
         /// Initializes a new instance of the <see cref="PheHttpClient"/> class.
         /// </summary>
-        public PheHttpClient(IHttpBodySerializer serializer) : base(serializer)
+        public PheHttpClient(IHttpBodySerializer serializer, string token, string serviceUrl) : base(serializer, token, serviceUrl)
         {
         }
         /// <summary>
@@ -52,12 +52,13 @@ namespace Passw0rd.Client
         /// </summary>
         /// <returns>A new instance of the <see cref="EnrollmentResponse"/> class.</returns>
         /// <param name="request">An instance of the <see cref="EnrollmentRequest"/> class.</param>
-        public async Task<EnrollmentResponse> GetEnrollment(EnrollmentRequest request){
+        public async Task<EnrollmentResponse> GetEnrollment(EnrollmentRequest request)
+        {
             var response = await this.SendAsync<EnrollmentRequest, EnrollmentResponse>(
                HttpMethod.Post, $"phe/v1/enroll", request).ConfigureAwait(false);
             return response;
         }
-     
+
         /// <summary>
         /// Send post request to Verify User Record.
         /// </summary>

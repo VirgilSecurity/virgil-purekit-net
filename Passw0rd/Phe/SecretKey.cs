@@ -49,7 +49,7 @@ namespace Passw0rd.Phe
 
         public byte[] Encode()
         {
-            return this.Value.ToByteArrayUnsigned(); 
+            return this.Value.ToByteArrayUnsigned();
         }
     }
 }

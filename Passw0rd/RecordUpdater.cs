@@ -46,7 +46,7 @@ namespace Passw0rd
         /// <summary>
         /// Gets the VersionedUpdateToken instanse.
         /// </summary>
-        public VersionedUpdateToken VersionedUpdateToken {get; private set;}
+        public VersionedUpdateToken VersionedUpdateToken { get; private set; }
 
         /// <summary>
         /// Gets the PHE Client instanse.
@@ -71,7 +71,8 @@ namespace Passw0rd
         /// </summary>
         /// <returns>The updated Encrypted Passw0rd's record.</returns>
         /// <param name="oldPwdRecord">Old Passw0rd's record.</param>
-        public byte[] Update(byte[] oldPwdRecord){
+        public byte[] Update(byte[] oldPwdRecord)
+        {
             Validation.NotNullOrEmptyByteArray(oldPwdRecord, "Record isn't provided.");
 
             var databaseRecord = DatabaseRecord.Parser.ParseFrom(oldPwdRecord);

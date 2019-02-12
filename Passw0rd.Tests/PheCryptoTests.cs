@@ -55,7 +55,7 @@
             Assert.Equal(Bytes.ToString(c1, StringEncoding.HEX), Bytes.ToString(c11, StringEncoding.HEX));
         }
 
-       
+
         [Fact]
         public void Should_ComputeTheSameC0Value_For_SpecifiedListOfParameters()
         {
@@ -76,7 +76,7 @@
 
             Assert.Equal(expectedC0, c0);
         }
-     
+
 
         [Fact]
         public void Should_RotateTheSameSecretKey_When_OldSecretKeyAndUpdateTokenAreGiven()
@@ -89,9 +89,11 @@
 
             var phe = new PheCrypto();
             var pheSkC = phe.DecodeSecretKey(skC);
-            var token1 = new UpdateToken(){
+            var token1 = new UpdateToken()
+            {
                 A = a,
-                B = b};
+                B = b
+            };
             var pheSkC1 = phe.RotateSecretKey(pheSkC, token1.ToByteArray());
 
             Assert.Equal(skC1, pheSkC1.Encode());
@@ -327,13 +329,13 @@
             var t2 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(t2X, 10), new BigInteger(t2Y, 10));
             var t3 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(t3X, 10), new BigInteger(t3Y, 10));
             var t4 = (FpPoint)phe.Curve.CreatePoint(new BigInteger(t4X, 10), new BigInteger(t4Y, 10));
-            var hashZ = phe.HashZ(Domains.ProofErr, pub, phe.CurveG.GetEncoded(), 
+            var hashZ = phe.HashZ(Domains.ProofErr, pub, phe.CurveG.GetEncoded(),
                                   c0.GetEncoded(), c1.GetEncoded(), t1.GetEncoded(),
                                   t2.GetEncoded(), t3.GetEncoded(), t4.GetEncoded());
             Assert.Equal(new BigInteger(chlng, 10), hashZ);
         }
 
-       
+
         [Fact]
         public void TestSimpleHashZ()
         {
@@ -462,7 +464,7 @@
 
             var crypto = new PheCrypto();
             var m = crypto.HashToPoint(null, mockedRandomBytes.Take(32).ToArray());
-           
+
             var expectedM = (FpPoint)crypto.Curve.CreatePoint(
                 new BigInteger("47919986077532098346505903401676113443327441655946536745084881296990002308999", 10),
                 new BigInteger("83980225500589559999287763767838231751053639306927585927546932471768986795515", 10));

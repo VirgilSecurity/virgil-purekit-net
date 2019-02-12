@@ -57,11 +57,10 @@ namespace Passw0rd.Phe
         /// </summary>
         public Swu(BigInteger p, BigInteger b)
         {
-            this.p   = p; 
-            this.b   = b; 
-            this.a   = p.Neg(BigInteger.Three);
+            this.p = p;
+            this.b = b;
+            this.a = p.Neg(BigInteger.Three);
             this.mba = p.Neg(p.Div(this.b, a));
-           // this.p34 = p.Div(p.Sub(p, BigInteger.Three), BigInteger.ValueOf(4));
             this.p34 = p.Div(a, BigInteger.ValueOf(4));
             this.p14 = p.Div(p.Add(p, BigInteger.One), BigInteger.ValueOf(4));
             this.sha512 = new SHA512Helper();
@@ -80,8 +79,9 @@ namespace Passw0rd.Phe
         /// </summary>
         public (BigInteger x, BigInteger y) HashToPoint(byte[] hash)
         {
-            if (hash.Length != PointHashLen) {
-                throw new WrongPasswordException("invalid hash length"); 
+            if (hash.Length != PointHashLen)
+            {
+                throw new WrongPasswordException("invalid hash length");
             }
             var t = new BigInteger(1, hash, 0, hash.Length);
             t = t.Mod(p);

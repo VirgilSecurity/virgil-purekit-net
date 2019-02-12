@@ -33,31 +33,31 @@
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
-
-[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Passw0rd.Tests")]
-
-namespace Passw0rd.Utils
+namespace Passw0rd
 {
-    using Org.BouncyCastle.Security;
+    using System;
 
-    public class PheRandomGenerator : IPheRandomGenerator
+    internal class ServiceUrl
     {
-        private SecureRandom rng;
+        const string PasswordTokenPrefix = "PT";
+        const string VirgilSecurityTokenPrefix = "AT";
 
-        public PheRandomGenerator()
-        {
-            this.rng = new SecureRandom();
-        }
+        public static string ProvideByToken(string token){
+            var tokenStat = token.Substring(0, 2);
+            string service;
 
-        /// <summary>
-        /// Generates a random nonce.
-        /// </summary>
-        /// <param name="length">Length of generated nonce.</param>
-        public byte[] GenerateNonce(int length)
-        {
-            var nonce = new byte[length];
-            this.rng.NextBytes(nonce);
-            return nonce;
+            switch (tokenStat)
+            {
+                case PasswordTokenPrefix:
+                    service = "passw0rd.io";
+                    break;
+                case VirgilSecurityTokenPrefix:
+                    service = "virgilsecurity.com";
+                    break;
+                default:
+                    throw new Exception("Wrong App Token");
+            }
+            return $"https://api.{service}/";
         }
     }
 }

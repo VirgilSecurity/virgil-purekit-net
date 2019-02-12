@@ -85,7 +85,8 @@ namespace Passw0rd
         /// </summary>
         /// <returns>The rotated AppSecretKey and rotated ServicePublicKey.</returns>
         /// <param name="updateTokenData">Update token data.</param>
-        public (SecretKey, PublicKey) RotateKeys(byte[] updateTokenData){
+        public (SecretKey, PublicKey) RotateKeys(byte[] updateTokenData)
+        {
             Validation.NotNullOrEmptyByteArray(updateTokenData);
 
             var secretKey = Crypto.RotateSecretKey(AppSecretKey, updateTokenData);
@@ -101,7 +102,7 @@ namespace Passw0rd
         /// <param name="pwdBytes">Password bytes.</param>
         /// <param name="pheRespData">Phe resp data.</param>
         public (byte[], byte[]) EnrollAccount(byte[] pwdBytes, byte[] pheRespData)
-        { 
+        {
             Validation.NotNullOrEmptyByteArray(pwdBytes);
             Validation.NotNullOrEmptyByteArray(pheRespData);
 
@@ -124,7 +125,7 @@ namespace Passw0rd
 
             var (t0, t1, key) = Crypto.ComputeT(AppSecretKey,
                                                 pwdBytes, nC,
-                                                pheResp.C0.ToByteArray(), 
+                                                pheResp.C0.ToByteArray(),
                                                 pheResp.C1.ToByteArray());
 
             var enrollmentRecord = new EnrollmentRecord
@@ -144,7 +145,8 @@ namespace Passw0rd
         /// <returns>The verify password request.</returns>
         /// <param name="pwdBytes">Password bytes.</param>
         /// <param name="enrollmentRecordData">Enrollment record data.</param>
-        public byte[] CreateVerifyPasswordRequest(byte[] pwdBytes, byte[] enrollmentRecordData){
+        public byte[] CreateVerifyPasswordRequest(byte[] pwdBytes, byte[] enrollmentRecordData)
+        {
             Validation.NotNullOrEmptyByteArray(pwdBytes);
             Validation.NotNullOrEmptyByteArray(enrollmentRecordData);
 
@@ -173,7 +175,8 @@ namespace Passw0rd
         /// Update the specified EnrollmentRecord record.
         /// </summary>
         /// <returns>The updated Encrypted EnrollmentRecord.</returns>
-        public byte[] UpdateEnrollmentRecord(byte[] token, byte[] enrollmentRecordData){
+        public byte[] UpdateEnrollmentRecord(byte[] token, byte[] enrollmentRecordData)
+        {
             Validation.NotNullOrEmptyByteArray(token);
             Validation.NotNullOrEmptyByteArray(enrollmentRecordData);
 
@@ -201,7 +204,8 @@ namespace Passw0rd
         /// <param name="pwdBytes">Password bytes.</param>
         /// <param name="enrollmentRecordData">Enrollment record data.</param>
         /// <param name="responseData">Response data.</param>
-        public byte[] CheckResponseAndDecrypt(byte[] pwdBytes, byte[] enrollmentRecordData, byte[] responseData){
+        public byte[] CheckResponseAndDecrypt(byte[] pwdBytes, byte[] enrollmentRecordData, byte[] responseData)
+        {
             Validation.NotNullOrEmptyByteArray(pwdBytes);
             Validation.NotNullOrEmptyByteArray(enrollmentRecordData);
             Validation.NotNullOrEmptyByteArray(responseData);
@@ -217,13 +221,13 @@ namespace Passw0rd
 
             var c0 = Crypto.ComputeC0(
               AppSecretKey, pwdBytes, enrollmentRecord.Nc.ToByteArray(), enrollmentRecord.T0.ToByteArray());
-           
+
             if (pheServerResponse.Res)
             {
 
-                ValidateProofOfSuccess(pheServerResponse.Success, 
-                                       enrollmentRecord.Ns.ToByteArray(), 
-                                       c0, 
+                ValidateProofOfSuccess(pheServerResponse.Success,
+                                       enrollmentRecord.Ns.ToByteArray(),
+                                       c0,
                                        pheServerResponse.C1.ToByteArray());
 
                 key = Crypto.DecryptM(AppSecretKey,
@@ -234,7 +238,7 @@ namespace Passw0rd
             }
             else
             {
-                ValidateProofOfFail(pheServerResponse.Fail, 
+                ValidateProofOfFail(pheServerResponse.Fail,
                                     enrollmentRecord.Ns.ToByteArray(),
                                     c0,
                                     pheServerResponse.C1.ToByteArray());
@@ -272,7 +276,7 @@ namespace Passw0rd
             var isValid = Crypto.ValidateProofOfSuccess(proofOfSuccess,
                                                         ServicePublicKey,
                                                         ns,
-                                                        c0, 
+                                                        c0,
                                                         c1);
             if (!isValid)
             {

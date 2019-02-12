@@ -68,19 +68,19 @@ namespace Passw0rd
         public Protocol(ProtocolContext context)
         {
             Validation.NotNull(context,
-                               "Context with Application token, Service Public" +
-                               " Key and Application Secret Key isn't provided.");
+                              "Context with Application token, Service Public" +
+                              " Key and Application Secret Key isn't provided.");
             this.ctx = context;
         }
 
-       /// <summary>
+        /// <summary>
         /// Creates a new encrypted password record using user's password. 
-       /// </summary>
+        /// </summary>
         /// <returns>
         /// Encrypted Passw0rd's record.(Is associated with the user. You can keep it in your database.)
         /// Secret key, that can be used to encrypt user's data. 
         /// </returns>
-       /// <param name="password">User's Password.</param>
+        /// <param name="password">User's Password.</param>
         public async Task<(byte[], byte[])> EnrollAccountAsync(string password)
         {
             Validation.NotNullOrWhiteSpace(password, "User's password isn't provided.");
@@ -96,7 +96,7 @@ namespace Passw0rd
             {
                 Version = ctx.CurrentVersion,
                 Record = ByteString.CopyFrom(enrollmentRecord)
-                                   
+
             };
             return (record.ToByteArray(), key);
         }
@@ -119,10 +119,11 @@ namespace Passw0rd
                 throw new WrongVersionException("Invalid record version");
             }
 
-            if (!ctx.PheClients.ContainsKey(databaseRecord.Version)){
+            if (!ctx.PheClients.ContainsKey(databaseRecord.Version))
+            {
                 throw new WrongVersionException("unable to find keys corresponding to this record's version");
             }
-           
+
             var pheClient = ctx.PheClients[databaseRecord.Version];
             var pheVerifyPasswordRequest = pheClient.CreateVerifyPasswordRequest(pwdBytes,
                                                                                  databaseRecord.Record.ToByteArray());

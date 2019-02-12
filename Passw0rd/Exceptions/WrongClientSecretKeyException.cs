@@ -38,7 +38,7 @@ namespace Passw0rd
 {
     using System;
 
-    public class WrongClientSecretKeyException: Passw0rdProtocolException
+    public class WrongClientSecretKeyException : Passw0rdProtocolException
     {
         public WrongClientSecretKeyException(string message) : base(message)
         {

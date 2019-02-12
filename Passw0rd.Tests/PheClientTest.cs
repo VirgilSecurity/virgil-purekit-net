@@ -65,15 +65,15 @@ namespace Passw0rd.Tests
         [Fact]
         public void Should_EnrollNewRecord_When_PasswordSpecified()
         {
-            var rngMock = Substitute.ForPartsOf<PheRandomGenerator>();
+            var rngMock = Substitute.For<IPheRandomGenerator>();
             var offset = 0;
-            rngMock.GenerateNonce(16).Returns(x => {offset += 16;  return ((Span<byte>)mockedRandomBytes).Slice(offset - 16, 16).ToArray(); });
+            rngMock.GenerateNonce(16).Returns(x => { offset += 16; return ((Span<byte>)mockedRandomBytes).Slice(offset - 16, 16).ToArray(); });
             rngMock.GenerateNonce(32).Returns(x => { offset += 32; return ((Span<byte>)mockedRandomBytes).Slice(offset - 32, 32).ToArray(); });
 
             var crypto = new PheCrypto();
             crypto.Rng = rngMock;
 
-            var enrollmentRecordRight =  EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(enrollmentRecord));
+            var enrollmentRecordRight = EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(enrollmentRecord));
             var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
 
             var servicePublicKey = crypto.DecodePublicKey(serverPublic);
@@ -81,19 +81,18 @@ namespace Passw0rd.Tests
             pheClient.Crypto = crypto;
 
             var (enrollmentRec, key) = pheClient.EnrollAccount(password, enrollmentResponse);
-            var enrollmentRecordGot =  EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(enrollmentRec));
+            var enrollmentRecordGot = EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(enrollmentRec));
 
             Assert.Equal(Bytes.ToString(enrollmentRecord, StringEncoding.BASE64), Bytes.ToString(enrollmentRec, StringEncoding.BASE64));
             Assert.Equal(Bytes.ToString(recordKey, StringEncoding.BASE64), Bytes.ToString(key, StringEncoding.BASE64));
-           
-        }
 
+        }
 
 
         [Fact]
         public void TestValidPasswordRequest()
         {
-            var rngMock = Substitute.ForPartsOf<PheRandomGenerator>();
+            var rngMock = Substitute.For<IPheRandomGenerator>();
             rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
             rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
 
@@ -114,7 +113,7 @@ namespace Passw0rd.Tests
         [Fact]
         public void TestInvalidPasswordRequest()
         {
-            var rngMock = Substitute.ForPartsOf<PheRandomGenerator>();
+            var rngMock = Substitute.For<IPheRandomGenerator>();
             rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
             rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
 
@@ -135,7 +134,7 @@ namespace Passw0rd.Tests
         [Fact]
         public void TestRotateClientKey()
         {
-            var rngMock = Substitute.ForPartsOf<PheRandomGenerator>();
+            var rngMock = Substitute.For<IPheRandomGenerator>();
             rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
             rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
 
@@ -158,7 +157,7 @@ namespace Passw0rd.Tests
         [Fact]
         public void TestRotateEnrollmentRecord()
         {
-            var rngMock = Substitute.ForPartsOf<PheRandomGenerator>();
+            var rngMock = Substitute.For<IPheRandomGenerator>();
             rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
             rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
 
@@ -171,7 +170,7 @@ namespace Passw0rd.Tests
             var pheClient = new PheClient();
             pheClient.Crypto = crypto;
             var updatedEnrollmentRecord = pheClient.UpdateEnrollmentRecord(token, enrollmentRecord);
-           
+
             Assert.Equal(updatedRecord, updatedEnrollmentRecord);
 
         }

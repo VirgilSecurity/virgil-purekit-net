@@ -9,10 +9,6 @@ namespace Passw0rd.Tests
 {
     public class PointTest
     {
-        public PointTest()
-        {
-        }
-
         [Fact]
         public void TestPoint_Add_Neg()
         {
@@ -29,7 +25,7 @@ namespace Passw0rd.Tests
             p123 = p123.Add(p1);
             p123 = p123.Add(p2);
             Assert.Equal(p3, p123);
-           
+
         }
 
         [Fact]
@@ -51,7 +47,8 @@ namespace Passw0rd.Tests
             Assert.Equal(ecpoint, decoded);
         }
 
-        private FpPoint MakePoint(){
+        private FpPoint MakePoint()
+        {
             var rng = new SecureRandom();
             var phe = new PheCrypto();
             var swu = new Swu(phe.Curve.Q, phe.Curve.B.ToBigInteger());
