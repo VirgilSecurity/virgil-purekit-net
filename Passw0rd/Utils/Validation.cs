@@ -48,10 +48,9 @@ namespace Passw0rd.Utils
             }
         }
 
-
         public static void NotNullOrWhiteSpace(string obj, string message = null)
         {
-            if (String.IsNullOrWhiteSpace(obj))
+            if (string.IsNullOrWhiteSpace(obj))
             {
                 throw new ArgumentException(message, nameof(obj));
             }
@@ -71,6 +70,7 @@ namespace Passw0rd.Utils
             {
                 throw new ArgumentException(message, nameof(byteArrays));
             }
+
             foreach (var byteArray in byteArrays)
             {
                 if (byteArray == null || byteArray.Length == 0)
@@ -80,7 +80,12 @@ namespace Passw0rd.Utils
             }
         }
 
+        public static void MoreThanZero(uint obj, string message = null)
+        {
+            if (obj <= 0)
+            {
+                throw new ArgumentException(message, nameof(obj));
+            }
+        }
     }
 }
-
-

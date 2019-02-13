@@ -41,17 +41,19 @@ namespace Passw0rd.Utils
 
     internal class StringKeyParser
     {
-        const string PublicKeyPref = "PK";
-        const string SecretKeyPref = "SK";
+        private const string PublicKeyPref = "PK";
+        private const string SecretKeyPref = "SK";
         private readonly PheCrypto crypto;
 
-        public StringKeyParser(){
-            this.crypto = new PheCrypto();  
+        public StringKeyParser()
+        {
+            this.crypto = new PheCrypto();
         }
+
         public (uint, PublicKey) ParsePublicKey(string servicePublicKey)
         {
             Validation.NotNullOrWhiteSpace(servicePublicKey);
-            var (version, keyBytes) = ParseKeyBytesByPrefix(servicePublicKey, PublicKeyPref);
+            var (version, keyBytes) = this.ParseKeyBytesByPrefix(servicePublicKey, PublicKeyPref);
 
             if (keyBytes.Length != 65)
             {
@@ -61,19 +63,20 @@ namespace Passw0rd.Utils
             PublicKey publicKey;
             try
             {
-                publicKey = crypto.DecodePublicKey(keyBytes);
+                publicKey = this.crypto.DecodePublicKey(keyBytes);
             }
             catch (Exception e)
             {
                 throw new WrongServiceKeyException(e.ToString());
             }
+
             return (version, publicKey);
         }
 
         public (uint, SecretKey) ParseSecretKey(string clientSecretKey)
         {
             Validation.NotNullOrWhiteSpace(clientSecretKey);
-            var (version, keyBytes) = ParseKeyBytesByPrefix(clientSecretKey, SecretKeyPref);
+            var (version, keyBytes) = this.ParseKeyBytesByPrefix(clientSecretKey, SecretKeyPref);
 
             if (keyBytes.Length != 32)
             {
@@ -83,12 +86,13 @@ namespace Passw0rd.Utils
             SecretKey secretKey;
             try
             {
-                secretKey = crypto.DecodeSecretKey(keyBytes);
+                secretKey = this.crypto.DecodeSecretKey(keyBytes);
             }
             catch (Exception e)
             {
                 throw new WrongClientSecretKeyException(e.ToString());
             }
+
             return (version, secretKey);
         }
 
@@ -98,7 +102,7 @@ namespace Passw0rd.Utils
 
             var keyParts = key.Split(".");
             if (keyParts.Length != 3 ||
-                !UInt32.TryParse(keyParts[1], out uint version) ||
+                !uint.TryParse(keyParts[1], out uint version) ||
                 !keyParts[0].ToUpper().Equals(keyFlag))
             {
                 throw new ArgumentException("has incorrect format", nameof(key));

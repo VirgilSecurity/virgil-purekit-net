@@ -40,6 +40,6 @@ namespace Passw0rd.Utils
     {
         BASE64,
         HEX,
-        UTF8
+        UTF8,
     }
 }

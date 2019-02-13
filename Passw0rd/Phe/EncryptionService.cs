@@ -51,8 +51,6 @@ namespace Passw0rd.Phe
         public static readonly int SymSaltLen = 32;
         public static readonly int SymNonceLen = 12;
         public static readonly int SymTagLen = 16;
-
-
         private byte[] key;
         private byte[] domain;
 
@@ -65,17 +63,18 @@ namespace Passw0rd.Phe
             Validation.NotNullOrEmptyByteArray(key);
             if (key.Length != SymKeyLen)
             {
-                throw new ArgumentException(String.Format("key must be exactly {0} bytes", SymKeyLen));
+                throw new ArgumentException(string.Format("key must be exactly {0} bytes", SymKeyLen));
             }
+
             this.key = key;
             this.domain = Domains.Encrypt;
         }
 
         /// <summary>
         /// Encrypt the specified data.
-        /// Encrypt generates 32 byte salt, uses master key 
-        /// & salt to generate per-data key & nonce with the help of HKDF
-        /// Salt is concatenated to the ciphertext
+        ///Encrypt generates 32 byte salt, uses master key
+        ///& salt to generate per-data key & nonce with the help of HKDF
+        ///Salt is concatenated to the ciphertext
         /// </summary>
         /// <returns>The encrypted data bytes.</returns>
         /// <param name="data">Data to be encrypted.</param>
@@ -86,14 +85,14 @@ namespace Passw0rd.Phe
             var salt = new byte[SymSaltLen];
             rng.NextBytes(salt);
 
-            return EncryptWithSalt(data, salt);
+            return this.EncryptWithSalt(data, salt);
         }
 
         /// <summary>
         /// Encrypt the specified data using the specified salt.
-        /// Encrypt uses provided salt, uses master key 
-        /// & salt to generate per-data key & nonce with the help of HKDF
-        /// Salt is concatenated to the ciphertext
+        ///Encrypt uses provided salt, uses master key
+        ///& salt to generate per-data key & nonce with the help of HKDF
+        ///Salt is concatenated to the ciphertext
         /// </summary>
         /// <returns>The encrypted data bytes.</returns>
         /// <param name="data">Data to be encrypted.</param>
@@ -103,7 +102,7 @@ namespace Passw0rd.Phe
             Validation.NotNullOrEmptyByteArray(salt);
 
             var hkdf = new HkdfBytesGenerator(new Sha512Digest());
-            hkdf.Init(new HkdfParameters(key, salt, domain));
+            hkdf.Init(new HkdfParameters(this.key, salt, this.domain));
 
             var keyNonce = new byte[SymKeyLen + SymNonceLen];
             hkdf.GenerateBytes(keyNonce, 0, keyNonce.Length);
@@ -112,8 +111,10 @@ namespace Passw0rd.Phe
             var keyNonceSlice1 = ((Span<byte>)keyNonce).Slice(0, SymKeyLen);
             var keyNonceSlice2 = ((Span<byte>)keyNonce).Slice(SymKeyLen);
 
-            var parameters = new AeadParameters(new KeyParameter(keyNonceSlice1.ToArray()),
-                                                SymTagLen * 8, keyNonceSlice2.ToArray());
+            var parameters = new AeadParameters(
+                new KeyParameter(keyNonceSlice1.ToArray()),
+                SymTagLen * 8,
+                keyNonceSlice2.ToArray());
             cipher.Init(true, parameters);
 
             var cipherText = new byte[cipher.GetOutputSize(data.Length)];
@@ -125,8 +126,8 @@ namespace Passw0rd.Phe
 
         /// <summary>
         /// Decrypt the specified cipherText.
-        /// Decrypt extracts 32 byte salt, derives key & nonce and 
-        /// decrypts ciphertext with the help of HKDF 
+        ///Decrypt extracts 32 byte salt, derives key & nonce and
+        ///decrypts ciphertext with the help of HKDF
         /// </summary>
         /// <returns>The decrypted data bytes.</returns>
         /// <param name="cipherText">Encrypted data to be decrypted.</param>
@@ -142,7 +143,7 @@ namespace Passw0rd.Phe
             var salt = ((Span<byte>)cipherText).Slice(0, SymSaltLen).ToArray();
 
             var hkdf = new HkdfBytesGenerator(new Sha512Digest());
-            hkdf.Init(new HkdfParameters(key, salt, domain));
+            hkdf.Init(new HkdfParameters(this.key, salt, this.domain));
 
             var keyNonce = new byte[SymKeyLen + SymNonceLen];
             hkdf.GenerateBytes(keyNonce, 0, keyNonce.Length);
@@ -162,6 +163,5 @@ namespace Passw0rd.Phe
 
             return plainText;
         }
-
     }
 }

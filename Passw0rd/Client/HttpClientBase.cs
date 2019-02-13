@@ -52,31 +52,23 @@ namespace Passw0rd.Client.Connection
 
         private HttpClient client;
         private string virgilInfo;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpClientBase"/> class.
         /// </summary>
-        protected HttpClientBase(IHttpBodySerializer serializer,
-                                 string token,
-                                 string serviceUrl)
+        protected HttpClientBase(
+            IHttpBodySerializer serializer,
+            string token,
+            string serviceUrl)
         {
             this.serializer = serializer;
             this.client = new HttpClient();
             this.AppToken = token;
             this.BaseUri = new Uri(serviceUrl);
             this.client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/x-protobuf")
-            );
+                new MediaTypeWithQualityHeaderValue("application/x-protobuf"));
 
             this.virgilInfo = VirgilStatInfo();
-        }
-
-
-        private static string VirgilStatInfo()
-        {
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
-            string version = fileVersionInfo.ProductVersion;
-            return $"Passw0rd c# ${Environment.OSVersion} ${version}";
         }
 
         /// <summary>
@@ -94,7 +86,7 @@ namespace Passw0rd.Client.Connection
             where TRequestModel : IMessage<TRequestModel>
             where TResponseModel : IMessage<TResponseModel>, new()
         {
-            var request = NewRequest(method, endpoint);
+            var request = this.NewRequest(method, endpoint);
 
             if (method != HttpMethod.Get)
             {
@@ -111,6 +103,29 @@ namespace Passw0rd.Client.Connection
             return model;
         }
 
+        protected async Task<TResponseModel> SendAsync<TResponseModel>(HttpMethod method, string endpoint)
+    where TResponseModel : IMessage<TResponseModel>, new()
+        {
+            var request = this.NewRequest(method, endpoint);
+
+            var response = await this.client.SendAsync(request).ConfigureAwait(false);
+            var content = await response.Content.ReadAsByteArrayAsync();
+
+            this.HandleError(response.StatusCode, content);
+
+            var model = this.serializer.Deserialize<TResponseModel>(content);
+
+            return model;
+        }
+
+        private static string VirgilStatInfo()
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+            string version = fileVersionInfo.ProductVersion;
+            return $"Passw0rd c# ${Environment.OSVersion} ${version}";
+        }
+
         private HttpRequestMessage NewRequest(HttpMethod method, string endpoint)
         {
             Uri endpointUri = this.BaseUri != null
@@ -123,24 +138,10 @@ namespace Passw0rd.Client.Connection
             {
                 request.Headers.TryAddWithoutValidation("AppToken", $"{this.AppToken}");
             }
-            request.Headers.TryAddWithoutValidation("Virgil-Agent", virgilInfo);
+
+            request.Headers.TryAddWithoutValidation("Virgil-Agent", this.virgilInfo);
 
             return request;
-        }
-
-        protected async Task<TResponseModel> SendAsync<TResponseModel>(HttpMethod method, string endpoint)
-            where TResponseModel : IMessage<TResponseModel>, new()
-        {
-            var request = NewRequest(method, endpoint);
-
-            var response = await this.client.SendAsync(request).ConfigureAwait(false);
-            var content = await response.Content.ReadAsByteArrayAsync();
-
-            this.HandleError(response.StatusCode, content);
-
-            var model = this.serializer.Deserialize<TResponseModel>(content);
-
-            return model;
         }
 
         private void HandleError(HttpStatusCode statusCode, byte[] body)
@@ -167,11 +168,11 @@ namespace Passw0rd.Client.Connection
                     break;
             }
 
-            var errorCode = (uint)0;
+            uint errorCode = 0;
 
             if (body != null && body.Length > 0)
             {
-                var error = serializer.Deserialize<HttpError>(body);
+                var error = this.serializer.Deserialize<HttpError>(body);
 
                 errorCode = error?.Code ?? 0;
                 if (error != null && error.Message != null)

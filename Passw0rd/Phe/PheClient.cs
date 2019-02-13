@@ -34,15 +34,35 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
-using System;
-using Google.Protobuf;
-using Passw0rd.Phe;
-using Passw0rd.Utils;
-
 namespace Passw0rd
 {
+    using System;
+    using Google.Protobuf;
+    using Passw0rd.Phe;
+    using Passw0rd.Utils;
+
     public class PheClient
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:Passw0rd.PheClient"/> class.
+        /// </summary>
+        /// <param name="secretKey">Application Secret Key.</param>
+        /// <param name="publicKey">Service public key.</param>
+        public PheClient(SecretKey secretKey, PublicKey publicKey)
+        {
+            Validation.NotNull(secretKey);
+            Validation.NotNull(publicKey);
+
+            this.Crypto = new PheCrypto();
+            this.AppSecretKey = secretKey;
+            this.ServicePublicKey = publicKey;
+        }
+
+        internal PheClient()
+        {
+            this.Crypto = new PheCrypto();
+        }
+
         /// <summary>
         /// Gets the PHE Crypto instanse.
         /// </summary>
@@ -60,27 +80,6 @@ namespace Passw0rd
         public PublicKey ServicePublicKey { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:Passw0rd.PheClient"/> class.
-        /// </summary>
-        /// <param name="secretKey">Application Secret Key.</param>
-        /// <param name="publicKey">Service public key.</param>
-        public PheClient(SecretKey secretKey, PublicKey publicKey)
-        {
-            Validation.NotNull(secretKey);
-            Validation.NotNull(publicKey);
-
-            this.Crypto = new PheCrypto();
-            this.AppSecretKey = secretKey;
-            this.ServicePublicKey = publicKey;
-        }
-
-
-        internal PheClient()
-        {
-            this.Crypto = new PheCrypto();
-        }
-
-        /// <summary>
         /// Rotates the keys.
         /// </summary>
         /// <returns>The rotated AppSecretKey and rotated ServicePublicKey.</returns>
@@ -89,8 +88,8 @@ namespace Passw0rd
         {
             Validation.NotNullOrEmptyByteArray(updateTokenData);
 
-            var secretKey = Crypto.RotateSecretKey(AppSecretKey, updateTokenData);
-            var publicKey = Crypto.RotatePublicKey(ServicePublicKey, updateTokenData);
+            var secretKey = this.Crypto.RotateSecretKey(this.AppSecretKey, updateTokenData);
+            var publicKey = this.Crypto.RotatePublicKey(this.ServicePublicKey, updateTokenData);
             return (secretKey, publicKey);
         }
 
@@ -108,32 +107,33 @@ namespace Passw0rd
 
             var pheResp = Phe.EnrollmentResponse.Parser.ParseFrom(ByteString.CopyFrom(pheRespData));
 
-            var isValid = Crypto.ValidateProofOfSuccess(
+            var isValid = this.Crypto.ValidateProofOfSuccess(
                 pheResp.Proof,
-                ServicePublicKey,
+                this.ServicePublicKey,
                 pheResp.Ns.ToByteArray(),
                 pheResp.C0.ToByteArray(),
-                pheResp.C1.ToByteArray()
-            );
+                pheResp.C1.ToByteArray());
             if (!isValid)
             {
                 throw new ProofOfSuccessNotValidException();
             }
 
             var nS = pheResp.Ns;
-            var nC = Crypto.GenerateNonce();
+            var nC = this.Crypto.GenerateNonce();
 
-            var (t0, t1, key) = Crypto.ComputeT(AppSecretKey,
-                                                pwdBytes, nC,
-                                                pheResp.C0.ToByteArray(),
-                                                pheResp.C1.ToByteArray());
+            var (t0, t1, key) = this.Crypto.ComputeT(
+                this.AppSecretKey,
+                pwdBytes,
+                nC,
+                pheResp.C0.ToByteArray(),
+                pheResp.C1.ToByteArray());
 
             var enrollmentRecord = new EnrollmentRecord
             {
                 Nc = ByteString.CopyFrom(nC),
                 Ns = nS,
                 T0 = ByteString.CopyFrom(t0),
-                T1 = ByteString.CopyFrom(t1)
+                T1 = ByteString.CopyFrom(t1),
             };
 
             return (enrollmentRecord.ToByteArray(), key);
@@ -151,21 +151,24 @@ namespace Passw0rd
             Validation.NotNullOrEmptyByteArray(enrollmentRecordData);
 
             var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(
-                ByteString.CopyFrom(enrollmentRecordData)
-            );
+                ByteString.CopyFrom(enrollmentRecordData));
 
-            if (enrollmentRecord.Nc.Length != Crypto.NonceLength() ||
-                enrollmentRecord.Ns.Length != Crypto.NonceLength())
+            if (enrollmentRecord.Nc.Length != this.Crypto.NonceLength() ||
+                enrollmentRecord.Ns.Length != this.Crypto.NonceLength())
             {
                 throw new Passw0rdProtocolException("Invalid record.");
             }
-            var c0 = Crypto.ComputeC0(
-               AppSecretKey, pwdBytes, enrollmentRecord.Nc.ToByteArray(), enrollmentRecord.T0.ToByteArray());
+
+            var c0 = this.Crypto.ComputeC0(
+                this.AppSecretKey,
+                pwdBytes,
+                enrollmentRecord.Nc.ToByteArray(),
+                enrollmentRecord.T0.ToByteArray());
 
             var pheVerifyPasswordRequest = new Phe.VerifyPasswordRequest()
             {
                 Ns = enrollmentRecord.Ns,
-                C0 = ByteString.CopyFrom(c0)
+                C0 = ByteString.CopyFrom(c0),
             };
 
             return pheVerifyPasswordRequest.ToByteArray();
@@ -182,17 +185,18 @@ namespace Passw0rd
 
             var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(ByteString.CopyFrom(enrollmentRecordData));
 
-            var (t0, t1) = Crypto.UpdateT(enrollmentRecord.Ns.ToByteArray(),
-                                          enrollmentRecord.T0.ToByteArray(),
-                                          enrollmentRecord.T1.ToByteArray(),
-                                          token);
+            var (t0, t1) = this.Crypto.UpdateT(
+                enrollmentRecord.Ns.ToByteArray(),
+                enrollmentRecord.T0.ToByteArray(),
+                enrollmentRecord.T1.ToByteArray(),
+                token);
 
             var updatedEnrollmentRecord = new EnrollmentRecord
             {
                 Nc = enrollmentRecord.Nc,
                 Ns = enrollmentRecord.Ns,
                 T0 = ByteString.CopyFrom(t0),
-                T1 = ByteString.CopyFrom(t1)
+                T1 = ByteString.CopyFrom(t1),
             };
             return updatedEnrollmentRecord.ToByteArray();
         }
@@ -211,38 +215,42 @@ namespace Passw0rd
             Validation.NotNullOrEmptyByteArray(responseData);
 
             var enrollmentRecord = EnrollmentRecord.Parser.ParseFrom(
-                ByteString.CopyFrom(enrollmentRecordData)
-            );
+                ByteString.CopyFrom(enrollmentRecordData));
 
             var pheServerResponse = Phe.VerifyPasswordResponse.Parser.ParseFrom(
-                ByteString.CopyFrom(responseData)
-            );
+                ByteString.CopyFrom(responseData));
             byte[] key = null;
 
-            var c0 = Crypto.ComputeC0(
-              AppSecretKey, pwdBytes, enrollmentRecord.Nc.ToByteArray(), enrollmentRecord.T0.ToByteArray());
+            var c0 = this.Crypto.ComputeC0(
+                this.AppSecretKey,
+                pwdBytes,
+                enrollmentRecord.Nc.ToByteArray(),
+                enrollmentRecord.T0.ToByteArray());
 
             if (pheServerResponse.Res)
             {
+                this.ValidateProofOfSuccess(
+                    pheServerResponse.Success,
+                    enrollmentRecord.Ns.ToByteArray(),
+                    c0,
+                    pheServerResponse.C1.ToByteArray());
 
-                ValidateProofOfSuccess(pheServerResponse.Success,
-                                       enrollmentRecord.Ns.ToByteArray(),
-                                       c0,
-                                       pheServerResponse.C1.ToByteArray());
-
-                key = Crypto.DecryptM(AppSecretKey,
-                                      pwdBytes,
-                                      enrollmentRecord.Nc.ToByteArray(),
-                                      enrollmentRecord.T1.ToByteArray(),
-                                      pheServerResponse.C1.ToByteArray());
+                key = this.Crypto.DecryptM(
+                    this.AppSecretKey,
+                    pwdBytes,
+                    enrollmentRecord.Nc.ToByteArray(),
+                    enrollmentRecord.T1.ToByteArray(),
+                    pheServerResponse.C1.ToByteArray());
             }
             else
             {
-                ValidateProofOfFail(pheServerResponse.Fail,
-                                    enrollmentRecord.Ns.ToByteArray(),
-                                    c0,
-                                    pheServerResponse.C1.ToByteArray());
+                this.ValidateProofOfFail(
+                    pheServerResponse.Fail,
+                    enrollmentRecord.Ns.ToByteArray(),
+                    c0,
+                    pheServerResponse.C1.ToByteArray());
             }
+
             return key;
         }
 
@@ -253,16 +261,18 @@ namespace Passw0rd
                 throw new ProofNotProvidedException();
             }
 
-            var isValid = Crypto.ValidateProofOfFail(proofOfFail,
-                                                     ServicePublicKey,
-                                                     ns,
-                                                     c0,
-                                                     c1);
+            var isValid = this.Crypto.ValidateProofOfFail(
+                proofOfFail,
+                this.ServicePublicKey,
+                ns,
+                c0,
+                c1);
 
             if (!isValid)
             {
                 throw new ProofOfFailNotValidException();
             }
+
             throw new WrongPasswordException("You provide wrong password.");
         }
 
@@ -273,11 +283,12 @@ namespace Passw0rd
                 throw new ProofNotProvidedException();
             }
 
-            var isValid = Crypto.ValidateProofOfSuccess(proofOfSuccess,
-                                                        ServicePublicKey,
-                                                        ns,
-                                                        c0,
-                                                        c1);
+            var isValid = this.Crypto.ValidateProofOfSuccess(
+                proofOfSuccess,
+                this.ServicePublicKey,
+                ns,
+                c0,
+                c1);
             if (!isValid)
             {
                 throw new ProofOfSuccessNotValidException();

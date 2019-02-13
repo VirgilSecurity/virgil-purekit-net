@@ -44,6 +44,7 @@ namespace Passw0rd.Phe
     /// </summary>
     public class Swu
     {
+        public const int PointHashLen = 32;
         private readonly BigInteger a;
         private readonly BigInteger b;
         private readonly BigInteger p;
@@ -51,7 +52,7 @@ namespace Passw0rd.Phe
         private readonly BigInteger p14;
         private readonly BigInteger mba;
         private readonly SHA512Helper sha512;
-        public readonly int PointHashLen = 32;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Swu"/> class.
         /// </summary>
@@ -60,18 +61,22 @@ namespace Passw0rd.Phe
             this.p = p;
             this.b = b;
             this.a = p.Neg(BigInteger.Three);
-            this.mba = p.Neg(p.Div(this.b, a));
-            this.p34 = p.Div(a, BigInteger.ValueOf(4));
+            this.mba = p.Neg(p.Div(this.b, this.a));
+            this.p34 = p.Div(this.a, BigInteger.ValueOf(4));
             this.p14 = p.Div(p.Add(p, BigInteger.One), BigInteger.ValueOf(4));
             this.sha512 = new SHA512Helper();
         }
 
-        //DataToPoint hashes data using SHA-256 and maps it to a point on curve
+        /// <summary>
+        ///  hashes data using SHA-256 and maps it to a point on curve.
+        /// </summary>
+        /// <returns>The to point.</returns>
+        /// <param name="data">Data.</param>
         public (BigInteger x, BigInteger y) DataToPoint(byte[] data)
         {
-            var hash = sha512.ComputeHash(null, data);
+            var hash = this.sha512.ComputeHash(null, data);
             var hash256 = ((Span<byte>)hash).Slice(0, PointHashLen).ToArray();
-            return HashToPoint(hash256);
+            return this.HashToPoint(hash256);
         }
 
         /// <summary>
@@ -79,46 +84,47 @@ namespace Passw0rd.Phe
         /// </summary>
         public (BigInteger x, BigInteger y) HashToPoint(byte[] hash)
         {
-            if (hash.Length != PointHashLen)
+            if (hash.Length != Swu.PointHashLen)
             {
                 throw new WrongPasswordException("invalid hash length");
             }
-            var t = new BigInteger(1, hash, 0, hash.Length);
-            t = t.Mod(p);
 
-            var tt = p.Square(t);
-            var alpha = p.Neg(tt);
-            var asq = p.Square(alpha);
-            var asqa = p.Add(asq, alpha);
-            var asqa1 = p.Add(BigInteger.One, p.Inv(asqa));
+            var t = new BigInteger(1, hash, 0, hash.Length);
+            t = t.Mod(this.p);
+
+            var tt = this.p.Square(t);
+            var alpha = this.p.Neg(tt);
+            var asq = this.p.Square(alpha);
+            var asqa = this.p.Add(asq, alpha);
+            var asqa1 = this.p.Add(BigInteger.One, this.p.Inv(asqa));
 
             // x2 = -(b / a) * (1 + 1/(alpha^2+alpha))
-            var x2 = p.Mul(mba, asqa1);
+            var x2 = this.p.Mul(this.mba, asqa1);
 
             // x3 = alpha * x2
-            var x3 = p.Mul(alpha, x2);
-            var ax2 = p.Mul(a, x2);
-            var x23 = p.Cube(x2);
-            var x23ax2 = p.Add(x23, ax2);
+            var x3 = this.p.Mul(alpha, x2);
+            var ax2 = this.p.Mul(this.a, x2);
+            var x23 = this.p.Cube(x2);
+            var x23ax2 = this.p.Add(x23, ax2);
 
             // h2 = x2^3 + a*x2 + b
-            var h2 = p.Add(x23ax2, b);
-            var ax3 = p.Mul(a, x3);
-            var x33 = p.Cube(x3);
-            var x33ax3 = p.Add(x33, ax3);
+            var h2 = this.p.Add(x23ax2, this.b);
+            var ax3 = this.p.Mul(this.a, x3);
+            var x33 = this.p.Cube(x3);
+            var x33ax3 = this.p.Add(x33, ax3);
 
             // h3 = x3^3 + a*x3 + b
-            var h3 = p.Add(x33ax3, b);
+            var h3 = this.p.Add(x33ax3, this.b);
 
             // tmp = h2 ^ ((p - 3) // 4)
-            var tmp = p.Pow(h2, p34);
-            var tmp2 = p.Square(tmp);
-            var tmp2h2 = p.Mul(tmp2, h2);
+            var tmp = this.p.Pow(h2, this.p34);
+            var tmp2 = this.p.Square(tmp);
+            var tmp2h2 = this.p.Mul(tmp2, h2);
 
             // if tmp^2 * h2 == 1:
             return tmp2h2.Equals(BigInteger.One)
-                         ? (x2, p.Mul(tmp, h2)) // return (x2, tmp * h2 )
-                : (x3, p.Pow(h3, p14));
+                         ? (x2, this.p.Mul(tmp, h2)) // return (x2, tmp * h2 )
+                             : (x3, this.p.Pow(h3, this.p14));
         }
     }
 }

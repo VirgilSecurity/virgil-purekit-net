@@ -33,25 +33,26 @@
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
+#pragma warning disable SA1652, SA1008
 
 namespace Passw0rd
 {
     using System.Threading.Tasks;
-    using Passw0rd.Utils;
     using Passw0Rd;
+    using Passw0rd.Utils;
     using Google.Protobuf;
 
     /// <summary>
-    /// The <see cref="Protocol"/> provides an implementation of PHE (Password 
+    /// The <see cref="Protocol"/> provides an implementation of PHE (Password
     /// Hardened Encryption) scheme.
     /// </summary>
     /// <remarks>
-    /// With the help of an external crypto server, a service provider can recover 
-    /// the user data encrypted by PHE only when an end user supplied a correct password. 
+    /// With the help of an external crypto server, a service provider can recover
+    /// the user data encrypted by PHE only when an end user supplied a correct password.
     /// PHE inherits the security features of password-hardening, adding protection
-    /// for the user data. In particular, the crypto server does not learn any 
-    /// information about any user data. More importantly, both the crypto server 
-    /// and the service provider can rotate their secret keys, a proactive security 
+    /// for the user data. In particular, the crypto server does not learn any
+    /// information about any user data. More importantly, both the crypto server
+    /// and the service provider can rotate their secret keys, a proactive security
     /// mechanism mandated by the Payment Card Industry Data Security Standard (PCI DSS).
     /// </remarks>
     public class Protocol
@@ -67,36 +68,37 @@ namespace Passw0rd
         /// you will find <see href="https://github.com/passw0rd/cli">here</see>.</param>
         public Protocol(ProtocolContext context)
         {
-            Validation.NotNull(context,
-                              "Context with Application token, Service Public" +
-                              " Key and Application Secret Key isn't provided.");
+            Validation.NotNull(
+                context,
+                "Context with Application token, Service Public" +
+                " Key and Application Secret Key isn't provided.");
             this.ctx = context;
         }
 
         /// <summary>
-        /// Creates a new encrypted password record using user's password. 
+        /// Creates a new encrypted password record using user's password.
         /// </summary>
         /// <returns>
         /// Encrypted Passw0rd's record.(Is associated with the user. You can keep it in your database.)
-        /// Secret key, that can be used to encrypt user's data. 
+        /// Secret key, that can be used to encrypt user's data.
         /// </returns>
         /// <param name="password">User's Password.</param>
         public async Task<(byte[], byte[])> EnrollAccountAsync(string password)
         {
             Validation.NotNullOrWhiteSpace(password, "User's password isn't provided.");
 
-            var enrollmentResp = await ctx.Client.GetEnrollment(
-                new EnrollmentRequest() { Version = ctx.CurrentVersion })
+            var enrollmentResp = await this.ctx.Client.GetEnrollment(
+                new EnrollmentRequest() { Version = this.ctx.CurrentVersion })
                 .ConfigureAwait(false);
             var pwdBytes = Bytes.FromString(password);
-            var pheClient = ctx.PheClients[ctx.CurrentVersion];
-            var (enrollmentRecord, key) = pheClient.EnrollAccount(pwdBytes,
-                                                                  enrollmentResp.Response.ToByteArray());
+            var pheClient = this.ctx.PheClients[this.ctx.CurrentVersion];
+            var (enrollmentRecord, key) = pheClient.EnrollAccount(
+                pwdBytes,
+                enrollmentResp.Response.ToByteArray());
             var record = new DatabaseRecord
             {
-                Version = ctx.CurrentVersion,
-                Record = ByteString.CopyFrom(enrollmentRecord)
-
+                Version = this.ctx.CurrentVersion,
+                Record = ByteString.CopyFrom(enrollmentRecord),
             };
             return (record.ToByteArray(), key);
         }
@@ -119,26 +121,29 @@ namespace Passw0rd
                 throw new WrongVersionException("Invalid record version");
             }
 
-            if (!ctx.PheClients.ContainsKey(databaseRecord.Version))
+            if (!this.ctx.PheClients.ContainsKey(databaseRecord.Version))
             {
                 throw new WrongVersionException("unable to find keys corresponding to this record's version");
             }
 
-            var pheClient = ctx.PheClients[databaseRecord.Version];
-            var pheVerifyPasswordRequest = pheClient.CreateVerifyPasswordRequest(pwdBytes,
-                                                                                 databaseRecord.Record.ToByteArray());
+            var pheClient = this.ctx.PheClients[databaseRecord.Version];
+            var pheVerifyPasswordRequest = pheClient.CreateVerifyPasswordRequest(
+                pwdBytes,
+                databaseRecord.Record.ToByteArray());
 
             var versionedPasswordRequest = new Passw0Rd.VerifyPasswordRequest()
             {
                 Version = databaseRecord.Version,
-                Request = ByteString.CopyFrom(pheVerifyPasswordRequest)
+                Request = ByteString.CopyFrom(pheVerifyPasswordRequest),
             };
 
-            var serverResponse = await ctx.Client.VerifyAsync(versionedPasswordRequest).ConfigureAwait(false);
+            var serverResponse = await this.ctx.Client.VerifyAsync(
+                versionedPasswordRequest).ConfigureAwait(false);
 
-            return pheClient.CheckResponseAndDecrypt(pwdBytes,
-                                                     databaseRecord.Record.ToByteArray(),
-                                                     serverResponse.Response.ToByteArray());
+            return pheClient.CheckResponseAndDecrypt(
+                pwdBytes,
+                databaseRecord.Record.ToByteArray(),
+                serverResponse.Response.ToByteArray());
         }
     }
 }

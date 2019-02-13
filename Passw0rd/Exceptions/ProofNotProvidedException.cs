@@ -40,7 +40,8 @@ namespace Passw0rd
 
     public class ProofNotProvidedException : Passw0rdProtocolException
     {
-        public ProofNotProvidedException() : base("Proof of the operation isn't provided")
+        public ProofNotProvidedException()
+            : base("Proof of the operation isn't provided")
         {
         }
     }

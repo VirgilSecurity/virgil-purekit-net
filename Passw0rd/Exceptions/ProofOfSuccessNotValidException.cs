@@ -40,7 +40,8 @@ namespace Passw0rd
 
     public class ProofOfSuccessNotValidException : Passw0rdProtocolException
     {
-        public ProofOfSuccessNotValidException() : base("Proof of success is not valid")
+        public ProofOfSuccessNotValidException()
+            : base("Proof of success is not valid")
         {
         }
     }

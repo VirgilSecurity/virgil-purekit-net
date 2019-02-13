@@ -34,13 +34,15 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
-using Google.Protobuf;
-
 namespace Passw0rd.Client.Connection
 {
+    using Google.Protobuf;
+
     public interface IHttpBodySerializer
     {
         byte[] Serialize(IMessage body);
-        TModel Deserialize<TModel>(byte[] body) where TModel : IMessage<TModel>, new();
+
+        TModel Deserialize<TModel>(byte[] body)
+            where TModel : IMessage<TModel>, new();
     }
 }

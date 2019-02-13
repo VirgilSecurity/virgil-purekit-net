@@ -37,8 +37,8 @@
 namespace Passw0rd.Utils
 {
     using System;
-    using System.Text;
     using System.Linq;
+    using System.Text;
 
     public class Bytes
     {
@@ -61,7 +61,7 @@ namespace Passw0rd.Utils
         }
 
         /// <summary>
-        /// Decodes the current <paramref name="inputBytes"/> to a string 
+        /// Decodes the current <paramref name="inputBytes"/> to a string
         /// according to the specified character encoding in <paramref name="encoding" />.
         /// </summary>
         /// <param name="inputBytes"></param>
@@ -79,7 +79,7 @@ namespace Passw0rd.Utils
                     return Convert.ToBase64String(inputBytes);
                 case StringEncoding.HEX:
                     var hex = BitConverter.ToString(inputBytes);
-                    return hex.Replace("-", "").ToLower();
+                    return hex.Replace("-", string.Empty).ToLower();
                 case StringEncoding.UTF8:
                     return Encoding.UTF8.GetString(inputBytes, 0, inputBytes.Length);
                 default:
@@ -88,8 +88,8 @@ namespace Passw0rd.Utils
         }
 
         /// <summary>
-        /// Creates a new <see cref="Buffer"/> containing the given string. 
-        /// If provided, the encoding parameter identifies the character 
+        /// Creates a new <see cref="Buffer"/> containing the given string.
+        /// If provided, the encoding parameter identifies the character
         /// encoding of string.
         /// </summary>
         /// <param name="str">String to encode.</param>
@@ -98,7 +98,7 @@ namespace Passw0rd.Utils
         public static byte[] FromString(string str, StringEncoding encoding = StringEncoding.UTF8)
         {
             Validation.NotNull(str);
-           
+
             switch (encoding)
             {
                 case StringEncoding.BASE64:
@@ -113,7 +113,7 @@ namespace Passw0rd.Utils
         }
 
         /// <summary>
-        /// Get bytes from specified string, which encodes binary 
+        /// Get bytes from specified string, which encodes binary
         /// data as hexadecimal digits.
         /// </summary>
         private static byte[] FromHEXString(string str)

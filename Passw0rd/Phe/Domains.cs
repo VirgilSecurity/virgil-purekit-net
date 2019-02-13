@@ -43,7 +43,6 @@ namespace Passw0rd.Phe
     /// </summary>
     internal static class Domains
     {
-        private static byte[] commonPrefix = new byte[] { 0x56, 0x52, 0x47, 0x4c, 0x50, 0x48, 0x45 }; //VRGLPHE
         public static readonly byte[] Dhc0 = Bytes.Combine(commonPrefix, new byte[] { 0x31 });
         public static readonly byte[] Dhc1 = Bytes.Combine(commonPrefix, new byte[] { 0x32 });
         public static readonly byte[] Dhs0 = Bytes.Combine(commonPrefix, new byte[] { 0x33 });
@@ -53,5 +52,6 @@ namespace Passw0rd.Phe
         public static readonly byte[] Encrypt = Bytes.Combine(commonPrefix, new byte[] { 0x37 });
         public static readonly byte[] KdfInfoZ = Bytes.Combine(commonPrefix, new byte[] { 0x38 });
         public static readonly byte[] KdfInfoClientKey = Bytes.Combine(commonPrefix, new byte[] { 0x39 });
+        private static byte[] commonPrefix = new byte[] { 0x56, 0x52, 0x47, 0x4c, 0x50, 0x48, 0x45 }; // VRGLPHE
     }
 }

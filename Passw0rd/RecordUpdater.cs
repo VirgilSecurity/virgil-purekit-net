@@ -1,4 +1,6 @@
-﻿/*
+﻿#pragma warning disable SA1633 // FileMustHaveHeader
+#pragma warning restore SA1633 // FileMustHaveHeader
+/*
  * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
@@ -33,21 +35,17 @@
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
+#pragma warning disable 1652, 1008
 
 namespace Passw0rd
 {
     using System;
     using Google.Protobuf;
-    using Passw0rd.Utils;
     using Passw0Rd;
+    using Passw0rd.Utils;
 
     public class RecordUpdater
     {
-        /// <summary>
-        /// Gets the VersionedUpdateToken instanse.
-        /// </summary>
-        public VersionedUpdateToken VersionedUpdateToken { get; private set; }
-
         /// <summary>
         /// Gets the PHE Client instanse.
         /// </summary>
@@ -57,7 +55,7 @@ namespace Passw0rd
         /// Initializes a new instance of the <see cref="T:Passw0rd.RecordUpdater"/> class.
         /// </summary>
         /// <param name="token">Update token to be used for updating user's record.
-        /// How to generate Update Token you will find 
+        /// How to generate Update Token you will find
         /// <see href="https://github.com/passw0rd/cli#get-an-update-token">here</see>.</param>
         public RecordUpdater(string token)
         {
@@ -65,6 +63,11 @@ namespace Passw0rd
             this.VersionedUpdateToken = StringUpdateTokenParser.Parse(token);
             this.pheClient = new PheClient();
         }
+
+        /// <summary>
+        /// Gets the VersionedUpdateToken instanse.
+        /// </summary>
+        public VersionedUpdateToken VersionedUpdateToken { get; private set; }
 
         /// <summary>
         /// Update the specified Encrypted Passw0rd's record.
@@ -77,30 +80,31 @@ namespace Passw0rd
 
             var databaseRecord = DatabaseRecord.Parser.ParseFrom(oldPwdRecord);
 
-            if (databaseRecord.Version == VersionedUpdateToken.Version)
+            if (databaseRecord.Version == this.VersionedUpdateToken.Version)
             {
                 throw new WrongVersionException(
-                    String.Format("Record can't be updated with the same version"));
+                    string.Format("Record can't be updated with the same version"));
             }
 
-            if (databaseRecord.Version + 1 == VersionedUpdateToken.Version)
+            if (databaseRecord.Version + 1 == this.VersionedUpdateToken.Version)
             {
-                var updatedEnrollmentRecordData = pheClient.UpdateEnrollmentRecord(
-                    VersionedUpdateToken.UpdateToken.ToByteArray(),
+                var updatedEnrollmentRecordData = this.pheClient.UpdateEnrollmentRecord(
+                    this.VersionedUpdateToken.UpdateToken.ToByteArray(),
                     databaseRecord.Record.ToByteArray());
 
                 var updatedDatabaseRecord = new DatabaseRecord
                 {
-                    Version = VersionedUpdateToken.Version,
-                    Record = ByteString.CopyFrom(updatedEnrollmentRecordData)
+                    Version = this.VersionedUpdateToken.Version,
+                    Record = ByteString.CopyFrom(updatedEnrollmentRecordData),
                 };
                 return updatedDatabaseRecord.ToByteArray();
             }
 
             throw new WrongVersionException(
-                String.Format("Record and update token versions mismatch: {0} and {1}",
-                              databaseRecord.Version, VersionedUpdateToken.Version)
-            );
+                string.Format(
+                    "Record and update token versions mismatch: {0} and {1}",
+                    databaseRecord.Version,
+                    this.VersionedUpdateToken.Version));
         }
     }
 }
