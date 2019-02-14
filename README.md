@@ -117,18 +117,18 @@ using Passw0rd.Utils;
 var password = "passw0rd";
 
 // create a new encrypted password record using user password or its hash
-var (record, key) = await protocol.EnrollAccountAsync(password);
+var enrollResult = await protocol.EnrollAccountAsync(password);
 // note that record is a byte array.
 
 // save encrypted passw0rd record into your users DB
 // you can save encrypted passw0rd record to database as byte array or as base64 string
 
 // encode encrypted password record base64 string
-var recordBase64 = Bytes.ToString(record, StringEncoding.BASE64); 
+var recordBase64 = Bytes.ToString(enrollResult.Record, StringEncoding.BASE64); 
 
 //use encryptionKey for protecting user data
 var phe = new PheCrypto();
-var encrypted = phe.Encrypt(data, key);
+var encrypted = phe.Encrypt(data, enrollResult.Key);
 ```
 
 When you've created a passw0rd's `record` for all users in your DB, you can delete the unnecessary column where user passwords were previously stored.
@@ -146,12 +146,12 @@ using Passw0rd.Phe;
 var passwordCandidate = "passw0rd";
 
 // check candidate password with encrypted password record from your DB
-var key = await protocol.VerifyPasswordAsync(passwordCandidate, record);
-//a WrongPasswordException will be raised if passwordCandidate is wrong.
+var verificationResult = await protocol.VerifyPasswordAsync(passwordCandidate, record);
+// (VerificationResult.IsSuccess == false) if passwordCandidate is wrong.
 
-//use encryptionKey for decrypting user data
+//use verificationResult.Key for decrypting user data
 var phe = new PheCrypto();
-var decrypted = phe.Decrypt(encrypted, key);
+var decrypted = phe.Decrypt(encrypted, verificationResult.Key);
 ```
 
 ## Encrypt user data in your database
@@ -173,6 +173,7 @@ using Passw0rd;
 using Passw0rd.Phe;
 using Passw0rd.Utils;
 
+var phe = new PheCrypto();
 var data = Bytes.FromString("Personal data", StringEncoding.UTF8);
 
 //encryptionKey is obtained from protocol.EnrollAccountAsync()
