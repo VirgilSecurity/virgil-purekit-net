@@ -38,7 +38,6 @@ namespace Passw0rd
 {
     using System.Threading.Tasks;
     using Google.Protobuf;
-    using Passw0Rd;
     using Passw0rd.Utils;
 
     /// <summary>
@@ -70,6 +69,7 @@ namespace Passw0rd
             Validation.NotNull(
                 context,
                 "Context with Application token, Service Public Key and Application Secret Key isn't provided.");
+            
             this.ctx = context;
         }
 
@@ -88,16 +88,19 @@ namespace Passw0rd
             var enrollmentResp = await this.ctx.Client.GetEnrollment(
                 new EnrollmentRequest() { Version = this.ctx.CurrentVersion })
                 .ConfigureAwait(false);
+            
             var pwdBytes = Bytes.FromString(password);
             var pheClient = this.ctx.PheClients[this.ctx.CurrentVersion];
             var (enrollmentRecord, key) = pheClient.EnrollAccount(
                 pwdBytes,
                 enrollmentResp.Response.ToByteArray());
+            
             var record = new DatabaseRecord
             {
                 Version = this.ctx.CurrentVersion,
                 Record = ByteString.CopyFrom(enrollmentRecord),
             };
+
             return (record.ToByteArray(), key);
         }
 
@@ -129,7 +132,7 @@ namespace Passw0rd
                 pwdBytes,
                 databaseRecord.Record.ToByteArray());
 
-            var versionedPasswordRequest = new Passw0Rd.VerifyPasswordRequest()
+            var versionedPasswordRequest = new Passw0rd.VerifyPasswordRequest()
             {
                 Version = databaseRecord.Version,
                 Request = ByteString.CopyFrom(pheVerifyPasswordRequest),

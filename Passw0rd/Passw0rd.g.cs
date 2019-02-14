@@ -9,11 +9,11 @@ using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using pbr = global::Google.Protobuf.Reflection;
 using scg = global::System.Collections.Generic;
-namespace Passw0Rd
+namespace Passw0rd
 {
 
     /// <summary>Holder for reflection information generated from Passw0rd.proto</summary>
-    public static partial class Passw0RdReflection
+    public static partial class Passw0rdReflection
     {
 
         #region Descriptor
@@ -24,7 +24,7 @@ namespace Passw0Rd
         }
         private static pbr::FileDescriptor descriptor;
 
-        static Passw0RdReflection()
+        static Passw0rdReflection()
         {
             byte[] descriptorData = global::System.Convert.FromBase64String(
                 string.Concat(
@@ -40,13 +40,13 @@ namespace Passw0Rd
             descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
                 new pbr::FileDescriptor[] { },
                 new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0Rd.DatabaseRecord), global::Passw0Rd.DatabaseRecord.Parser, new[]{ "Version", "Record" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0Rd.EnrollmentRequest), global::Passw0Rd.EnrollmentRequest.Parser, new[]{ "Version" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0Rd.EnrollmentResponse), global::Passw0Rd.EnrollmentResponse.Parser, new[]{ "Version", "Response" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0Rd.VerifyPasswordRequest), global::Passw0Rd.VerifyPasswordRequest.Parser, new[]{ "Version", "Request" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0Rd.VerifyPasswordResponse), global::Passw0Rd.VerifyPasswordResponse.Parser, new[]{ "Response" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0Rd.VersionedUpdateToken), global::Passw0Rd.VersionedUpdateToken.Parser, new[]{ "Version", "UpdateToken" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0Rd.HttpError), global::Passw0Rd.HttpError.Parser, new[]{ "Code", "Message" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0rd.DatabaseRecord), global::Passw0rd.DatabaseRecord.Parser, new[]{ "Version", "Record" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0rd.EnrollmentRequest), global::Passw0rd.EnrollmentRequest.Parser, new[]{ "Version" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0rd.EnrollmentResponse), global::Passw0rd.EnrollmentResponse.Parser, new[]{ "Version", "Response" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0rd.VerifyPasswordRequest), global::Passw0rd.VerifyPasswordRequest.Parser, new[]{ "Version", "Request" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0rd.VerifyPasswordResponse), global::Passw0rd.VerifyPasswordResponse.Parser, new[]{ "Response" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0rd.VersionedUpdateToken), global::Passw0rd.VersionedUpdateToken.Parser, new[]{ "Version", "UpdateToken" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Passw0rd.HttpError), global::Passw0rd.HttpError.Parser, new[]{ "Code", "Message" }, null, null, null)
                 }));
         }
         #endregion
@@ -63,7 +63,7 @@ namespace Passw0Rd
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::Passw0Rd.Passw0RdReflection.Descriptor.MessageTypes[0]; }
+            get { return global::Passw0rd.Passw0rdReflection.Descriptor.MessageTypes[0]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -254,7 +254,7 @@ namespace Passw0Rd
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::Passw0Rd.Passw0RdReflection.Descriptor.MessageTypes[1]; }
+            get { return global::Passw0rd.Passw0rdReflection.Descriptor.MessageTypes[1]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -411,7 +411,7 @@ namespace Passw0Rd
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::Passw0Rd.Passw0RdReflection.Descriptor.MessageTypes[2]; }
+            get { return global::Passw0rd.Passw0rdReflection.Descriptor.MessageTypes[2]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -602,7 +602,7 @@ namespace Passw0Rd
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::Passw0Rd.Passw0RdReflection.Descriptor.MessageTypes[3]; }
+            get { return global::Passw0rd.Passw0rdReflection.Descriptor.MessageTypes[3]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -793,7 +793,7 @@ namespace Passw0Rd
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::Passw0Rd.Passw0RdReflection.Descriptor.MessageTypes[4]; }
+            get { return global::Passw0rd.Passw0rdReflection.Descriptor.MessageTypes[4]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -950,7 +950,7 @@ namespace Passw0Rd
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::Passw0Rd.Passw0RdReflection.Descriptor.MessageTypes[5]; }
+            get { return global::Passw0rd.Passw0rdReflection.Descriptor.MessageTypes[5]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1141,7 +1141,7 @@ namespace Passw0Rd
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::Passw0Rd.Passw0RdReflection.Descriptor.MessageTypes[6]; }
+            get { return global::Passw0rd.Passw0rdReflection.Descriptor.MessageTypes[6]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

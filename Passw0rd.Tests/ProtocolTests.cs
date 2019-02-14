@@ -4,7 +4,7 @@
     using System.Threading.Tasks;
     using Google.Protobuf;
     using Microsoft.Extensions.Configuration;
-    using Passw0Rd;
+    using Passw0rd;
     using Passw0rd.Client;
     using Passw0rd.Client.Connection;
     using Xunit;

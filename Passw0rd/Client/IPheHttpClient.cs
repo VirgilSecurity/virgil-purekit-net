@@ -37,7 +37,7 @@
 namespace Passw0rd.Client
 {
     using System.Threading.Tasks;
-    using Passw0Rd;
+    using Passw0rd;
 
     public interface IPheHttpClient
     {

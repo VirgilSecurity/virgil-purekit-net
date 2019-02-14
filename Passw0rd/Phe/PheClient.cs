@@ -289,6 +289,7 @@ namespace Passw0rd
                 ns,
                 c0,
                 c1);
+            
             if (!isValid)
             {
                 throw new ProofOfSuccessNotValidException();

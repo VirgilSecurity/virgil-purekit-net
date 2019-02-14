@@ -38,7 +38,7 @@ namespace Passw0rd
 {
     using System;
     using System.Collections.Generic;
-    using Passw0Rd;
+    using Passw0rd;
     using Passw0rd.Client;
     using Passw0rd.Client.Connection;
     using Passw0rd.Utils;
@@ -155,6 +155,7 @@ namespace Passw0rd
 
             var (newSecretKey, newPublicKey) = pheClient.RotateKeys(
                 this.VersionedUpdateToken.UpdateToken.ToByteArray());
+            
             this.PheClients.Add(this.VersionedUpdateToken.Version, new PheClient(newSecretKey, newPublicKey));
             this.CurrentVersion = this.VersionedUpdateToken.Version;
         }

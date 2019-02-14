@@ -44,7 +44,7 @@ namespace Passw0rd.Client.Connection
     using System.Reflection;
     using System.Threading.Tasks;
     using Google.Protobuf;
-    using Passw0Rd;
+    using Passw0rd;
 
     public class HttpClientBase
     {
@@ -175,6 +175,7 @@ namespace Passw0rd.Client.Connection
                 var error = this.serializer.Deserialize<HttpError>(body);
 
                 errorCode = error?.Code ?? 0;
+
                 if (error != null && error.Message != null)
                 {
                     errorMessage += $": {error.Message}";
