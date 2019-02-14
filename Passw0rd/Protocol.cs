@@ -76,12 +76,12 @@ namespace Passw0rd
         /// <summary>
         /// Creates a new encrypted password record using user's password.
         /// </summary>
-        /// <returns>
+        /// <returns>The instance of the <see cref="EnrollResult"/> which contains
         /// Encrypted Passw0rd's record.(Is associated with the user. You can keep it in your database.)
-        /// Secret key, that can be used to encrypt user's data.
+        /// and Secret key, that can be used to encrypt user's data.
         /// </returns>
         /// <param name="password">User's Password.</param>
-        public async Task<(byte[], byte[])> EnrollAccountAsync(string password)
+        public async Task<EnrollResult> EnrollAccountAsync(string password)
         {
             Validation.NotNullOrWhiteSpace(password, "User's password isn't provided.");
 
@@ -101,7 +101,11 @@ namespace Passw0rd
                 Record = ByteString.CopyFrom(enrollmentRecord),
             };
 
-            return (record.ToByteArray(), key);
+            return new EnrollResult
+            {
+                Record = record.ToByteArray(),
+                Key = key,
+            };
         }
 
         /// <summary>

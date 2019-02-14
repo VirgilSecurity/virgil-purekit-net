@@ -42,17 +42,17 @@
             var context = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
 
             var protocol = new Protocol(context);
-            var (recBytes, key) = await protocol.EnrollAccountAsync(this.myPassword);
-            var rec = DatabaseRecord.Parser.ParseFrom(recBytes);
+            var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
+            var rec = DatabaseRecord.Parser.ParseFrom(enrollResult.Record);
             Assert.Equal<uint>(2, rec.Version);
             Assert.NotNull(rec.Record);
-            Assert.NotNull(key);
-            Assert.Equal(32, key.Length);
+            Assert.NotNull(enrollResult.Key);
+            Assert.Equal(32, enrollResult.Key.Length);
 
             System.Threading.Thread.Sleep(4000);
 
-            var accountKey = await protocol.VerifyPasswordAsync(this.myPassword, recBytes);
-            Assert.Equal(key, accountKey);
+            var accountKey = await protocol.VerifyPasswordAsync(this.myPassword, enrollResult.Record);
+            Assert.Equal(enrollResult.Key, accountKey);
         }
 
         [Fact] // HTC-2
@@ -66,15 +66,15 @@
 
             System.Threading.Thread.Sleep(5000);
 
-            var (recBytes, key) = await protocol.EnrollAccountAsync(this.myPassword);
-            var rec = DatabaseRecord.Parser.ParseFrom(recBytes);
+            var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
+            var rec = DatabaseRecord.Parser.ParseFrom(enrollResult.Record);
             Assert.Equal<uint>(3, rec.Version);
             Assert.NotNull(rec.Record);
-            Assert.NotNull(key);
-            Assert.Equal(32, key.Length);
+            Assert.NotNull(enrollResult.Key);
+            Assert.Equal(32, enrollResult.Key.Length);
 
-            var accountKey = await protocol.VerifyPasswordAsync(this.myPassword, recBytes);
-            Assert.Equal(key, accountKey);
+            var accountKey = await protocol.VerifyPasswordAsync(this.myPassword, enrollResult.Record);
+            Assert.Equal(enrollResult.Key, accountKey);
         }
 
         [Fact] // HTC-3
@@ -84,10 +84,10 @@
             var context = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
 
             var protocol = new Protocol(context);
-            var (recBytes, key) = await protocol.EnrollAccountAsync(this.myPassword);
+            var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
             var ex = await Record.ExceptionAsync(async () =>
             {
-                await protocol.VerifyPasswordAsync("wrong password", recBytes);
+                await protocol.VerifyPasswordAsync("wrong password", enrollResult.Record);
             });
 
             Assert.IsType<WrongPasswordException>(ex);
@@ -104,7 +104,7 @@
             System.Threading.Thread.Sleep(5000);
 
             var protocol = new Protocol(context);
-            var (recBytes, key) = await protocol.EnrollAccountAsync(this.myPassword);
+            var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
 
             var protocolWithWrongServerKey = new Protocol(contextWithWrongServerKey);
             var ex = await Record.ExceptionAsync(async () =>
@@ -116,7 +116,7 @@
 
             var ex2 = await Record.ExceptionAsync(async () =>
             {
-                await protocolWithWrongServerKey.VerifyPasswordAsync(this.myPassword, recBytes);
+                await protocolWithWrongServerKey.VerifyPasswordAsync(this.myPassword, enrollResult.Record);
             });
 
             Assert.IsType<ProofOfSuccessNotValidException>(ex2);
@@ -132,20 +132,20 @@
             contextWithUpdateToken.UpdatePheClients(this.updateTokenV3);
 
             var protocol = new Protocol(context);
-            var (recBytes, key) = await protocol.EnrollAccountAsync(this.myPassword);
+            var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
 
-            Assert.Equal<uint>(2, DatabaseRecord.Parser.ParseFrom(recBytes).Version);
+            Assert.Equal<uint>(2, DatabaseRecord.Parser.ParseFrom(enrollResult.Record).Version);
 
             var recordUpdater = new RecordUpdater(this.updateTokenV3);
-            var updatedRecBytes = recordUpdater.Update(recBytes);
+            var updatedRecBytes = recordUpdater.Update(enrollResult.Record);
 
             Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(updatedRecBytes).Version);
             var protocolWithUpdateToken = new Protocol(contextWithUpdateToken);
 
-            var recBytesKey = await protocol.VerifyPasswordAsync(this.myPassword, recBytes);
+            var recBytesKey = await protocol.VerifyPasswordAsync(this.myPassword, enrollResult.Record);
             var keyFromVerify = await protocolWithUpdateToken.VerifyPasswordAsync(this.myPassword, updatedRecBytes);
-            Assert.Equal(key, recBytesKey);
-            Assert.Equal(key, keyFromVerify);
+            Assert.Equal(enrollResult.Key, recBytesKey);
+            Assert.Equal(enrollResult.Key, keyFromVerify);
         }
 
         [Fact] // HTC-6
@@ -156,14 +156,14 @@
             context.UpdatePheClients(this.updateTokenV3);
 
             var protocol = new Protocol(context);
-            var (recBytes, key) = await protocol.EnrollAccountAsync(this.myPassword);
-            Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(recBytes).Version);
+            var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
+            Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(enrollResult.Record).Version);
 
             var recordUpdater = new RecordUpdater(this.updateTokenV3);
 
             var ex = Record.Exception(() =>
             {
-                recordUpdater.Update(recBytes);
+                recordUpdater.Update(enrollResult.Record);
             });
 
             Assert.IsType<WrongVersionException>(ex);
@@ -177,8 +177,8 @@
             context.UpdatePheClients(this.updateTokenV3);
 
             var protocol = new Protocol(context);
-            var (recBytes, key) = await protocol.EnrollAccountAsync(this.myPassword);
-            var databaseRec = DatabaseRecord.Parser.ParseFrom(recBytes);
+            var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
+            var databaseRec = DatabaseRecord.Parser.ParseFrom(enrollResult.Record);
             databaseRec.Version = 1;
 
             var recordUpdater = new RecordUpdater(this.updateTokenV3);
