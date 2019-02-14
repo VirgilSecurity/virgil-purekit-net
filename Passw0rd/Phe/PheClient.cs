@@ -204,11 +204,12 @@ namespace Passw0rd
         /// <summary>
         /// Checks the response and decrypt.
         /// </summary>
-        /// <returns>Secret key, that can be used to encrypt user's data. </returns>
+        /// <returns> a new instance of the <see cref="VerificationResult"/> class
+        ///  which contaains status and containsSecret key, that can be used to encrypt user's data. </returns>
         /// <param name="pwdBytes">Password bytes.</param>
         /// <param name="enrollmentRecordData">Enrollment record data.</param>
         /// <param name="responseData">Response data.</param>
-        public byte[] CheckResponseAndDecrypt(byte[] pwdBytes, byte[] enrollmentRecordData, byte[] responseData)
+        public VerificationResult CheckResponseAndDecrypt(byte[] pwdBytes, byte[] enrollmentRecordData, byte[] responseData)
         {
             Validation.NotNullOrEmptyByteArray(pwdBytes);
             Validation.NotNullOrEmptyByteArray(enrollmentRecordData);
@@ -251,7 +252,8 @@ namespace Passw0rd
                     pheServerResponse.C1.ToByteArray());
             }
 
-            return key;
+            var result = new VerificationResult() { Key = key, IsSuccess = pheServerResponse.Res };
+            return result;
         }
 
         private void ValidateProofOfFail(ProofOfFail proofOfFail, byte[] ns, byte[] c0, byte[] c1)
@@ -272,8 +274,6 @@ namespace Passw0rd
             {
                 throw new ProofOfFailNotValidException();
             }
-
-            throw new WrongPasswordException("You provide wrong password.");
         }
 
         private void ValidateProofOfSuccess(ProofOfSuccess proofOfSuccess, byte[] ns, byte[] c0, byte[] c1)

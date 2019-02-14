@@ -111,10 +111,11 @@ namespace Passw0rd
         /// <summary>
         /// Verifies encrypted password record using user's password.
         /// </summary>
-        /// <returns>EncryptionKey wich you can use for decrypting user's data.</returns>
+        /// <returns> a new instance of the <see cref="VerificationResult"/> class
+        ///  which contaains status and containsSecret key, that can be used to encrypt user's data. </returns>
         /// <param name="password">User's password.</param>
         /// <param name="pwdRecord">Encrypted password record to be verified.</param>
-        public async Task<byte[]> VerifyPasswordAsync(string password, byte[] pwdRecord)
+        public async Task<VerificationResult> VerifyPasswordAsync(string password, byte[] pwdRecord)
         {
             Validation.NotNullOrWhiteSpace(password, "User's password isn't provided.");
             Validation.NotNullOrEmptyByteArray(pwdRecord, "User's record isn't provided.");

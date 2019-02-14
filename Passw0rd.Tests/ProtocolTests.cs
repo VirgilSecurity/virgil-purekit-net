@@ -51,8 +51,9 @@
 
             System.Threading.Thread.Sleep(4000);
 
-            var accountKey = await protocol.VerifyPasswordAsync(this.myPassword, enrollResult.Record);
-            Assert.Equal(enrollResult.Key, accountKey);
+            var result = await protocol.VerifyPasswordAsync(this.myPassword, enrollResult.Record);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(enrollResult.Key, result.Key);
         }
 
         [Fact] // HTC-2
@@ -73,24 +74,23 @@
             Assert.NotNull(enrollResult.Key);
             Assert.Equal(32, enrollResult.Key.Length);
 
-            var accountKey = await protocol.VerifyPasswordAsync(this.myPassword, enrollResult.Record);
-            Assert.Equal(enrollResult.Key, accountKey);
+            var result = await protocol.VerifyPasswordAsync(this.myPassword, enrollResult.Record);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(enrollResult.Key, result.Key);
         }
 
         [Fact] // HTC-3
-        public async Task VerifyPasswordWithWrongPassword_Should_RaiseWrongPasswordException()
+        public async Task VerifyPasswordWithWrongPassword_Should_ReturnResultWithEmptyKey()
         {
             // you can't verify database record if provide wrong password
             var context = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
 
             var protocol = new Protocol(context);
             var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
-            var ex = await Record.ExceptionAsync(async () =>
-            {
-                await protocol.VerifyPasswordAsync("wrong password", enrollResult.Record);
-            });
 
-            Assert.IsType<WrongPasswordException>(ex);
+            var result = await protocol.VerifyPasswordAsync("wrong password", enrollResult.Record);
+            Assert.False(result.IsSuccess);
+            Assert.Null(result.Key);
         }
 
         [Fact] // HTC-4
@@ -142,10 +142,10 @@
             Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(updatedRecBytes).Version);
             var protocolWithUpdateToken = new Protocol(contextWithUpdateToken);
 
-            var recBytesKey = await protocol.VerifyPasswordAsync(this.myPassword, enrollResult.Record);
-            var keyFromVerify = await protocolWithUpdateToken.VerifyPasswordAsync(this.myPassword, updatedRecBytes);
-            Assert.Equal(enrollResult.Key, recBytesKey);
-            Assert.Equal(enrollResult.Key, keyFromVerify);
+            var result = await protocol.VerifyPasswordAsync(this.myPassword, enrollResult.Record);
+            var result2 = await protocolWithUpdateToken.VerifyPasswordAsync(this.myPassword, updatedRecBytes);
+            Assert.Equal(enrollResult.Key, result.Key);
+            Assert.Equal(enrollResult.Key, result2.Key);
         }
 
         [Fact] // HTC-6
