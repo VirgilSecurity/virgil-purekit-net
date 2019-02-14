@@ -1,20 +1,20 @@
-﻿using System;
-using Org.BouncyCastle.Math;
-using Org.BouncyCastle.Math.EC;
-using Org.BouncyCastle.Security;
-using Passw0rd.Phe;
-using Xunit;
-
-namespace Passw0rd.Tests
+﻿namespace Passw0rd.Tests
 {
+    using System;
+    using Org.BouncyCastle.Math;
+    using Org.BouncyCastle.Math.EC;
+    using Org.BouncyCastle.Security;
+    using Passw0rd.Phe;
+    using Xunit;
+
     public class PointTest
     {
         [Fact]
         public void TestPoint_Add_Neg()
         {
-            var p1 = MakePoint();
-            var p2 = MakePoint();
-            var p3 = MakePoint();
+            var p1 = this.MakePoint();
+            var p2 = this.MakePoint();
+            var p3 = this.MakePoint();
 
             var p12 = p1.Add(p2);
             var p123 = p12.Add(p3);
@@ -25,7 +25,6 @@ namespace Passw0rd.Tests
             p123 = p123.Add(p1);
             p123 = p123.Add(p2);
             Assert.Equal(p3, p123);
-
         }
 
         [Fact]
@@ -34,7 +33,7 @@ namespace Passw0rd.Tests
             var rng = new SecureRandom();
             var phe = new PheCrypto();
             var swu = new Swu(phe.Curve.Q, phe.Curve.B.ToBigInteger());
-            var random = new byte[swu.PointHashLen];
+            var random = new byte[Swu.PointHashLen];
             rng.NextBytes(random);
             var (x, y) = swu.HashToPoint(random);
             var xField = phe.Curve.FromBigInteger(x);
@@ -52,7 +51,7 @@ namespace Passw0rd.Tests
             var rng = new SecureRandom();
             var phe = new PheCrypto();
             var swu = new Swu(phe.Curve.Q, phe.Curve.B.ToBigInteger());
-            var random = new byte[swu.PointHashLen];
+            var random = new byte[Swu.PointHashLen];
             rng.NextBytes(random);
             var (x, y) = swu.HashToPoint(random);
             var xField = phe.Curve.FromBigInteger(x);

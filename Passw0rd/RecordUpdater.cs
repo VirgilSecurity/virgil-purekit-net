@@ -1,5 +1,4 @@
 ﻿#pragma warning disable SA1633 // FileMustHaveHeader
-#pragma warning restore SA1633 // FileMustHaveHeader
 /*
  * Copyright (C) 2015-2019 Virgil Security Inc.
  *
@@ -35,7 +34,6 @@
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
-#pragma warning disable 1652, 1008
 
 namespace Passw0rd
 {

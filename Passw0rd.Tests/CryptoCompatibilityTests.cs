@@ -1,4 +1,3 @@
-
 namespace Passw0rd.Tests
 {
     using Org.BouncyCastle.Crypto.Digests;

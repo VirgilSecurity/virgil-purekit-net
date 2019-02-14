@@ -48,34 +48,6 @@ namespace Passw0rd.Utils.Asn1
     {
         public IEnumerable<IASN1Object> Elements { get; set; }
 
-        public byte[] Encode()
-        {
-            if (this.Elements == null || !this.Elements.Any())
-            {
-                throw new NotSupportedException("Sequence is null or contains no elements");
-            }
-
-            var asn1objs = new List<Asn1Object>();
-            foreach (var element in this.Elements)
-            {
-                if (element.GetType() == typeof(ASN1OctetString))
-                {
-                    asn1objs.Add(new DerOctetString(element.GetBytes()));
-                }
-                else if (element.GetType() == typeof(ASN1Integer))
-                {
-                    asn1objs.Add(new DerInteger(((ASN1Integer)element).Value));
-                }
-                else
-                {
-                    throw new NotSupportedException("Sequence contains unsupported element type");
-                }
-            }
-
-            var derSequence = new DerSequence(asn1objs.ToArray());
-            return derSequence.GetDerEncoded();// .GetDerEncoded();
-        }
-
         public static ASN1Sequence Decode(byte[] asn1Bytes)
         {
             var sequense = Asn1Object.FromByteArray(asn1Bytes) as DerSequence;
@@ -105,6 +77,34 @@ namespace Passw0rd.Utils.Asn1
             }
 
             return new ASN1Sequence { Elements = asn1Objects };
+        }
+
+        public byte[] Encode()
+        {
+            if (this.Elements == null || !this.Elements.Any())
+            {
+                throw new NotSupportedException("Sequence is null or contains no elements");
+            }
+
+            var asn1objs = new List<Asn1Object>();
+            foreach (var element in this.Elements)
+            {
+                if (element.GetType() == typeof(ASN1OctetString))
+                {
+                    asn1objs.Add(new DerOctetString(element.GetBytes()));
+                }
+                else if (element.GetType() == typeof(ASN1Integer))
+                {
+                    asn1objs.Add(new DerInteger(((ASN1Integer)element).Value));
+                }
+                else
+                {
+                    throw new NotSupportedException("Sequence contains unsupported element type");
+                }
+            }
+
+            var derSequence = new DerSequence(asn1objs.ToArray());
+            return derSequence.GetDerEncoded(); // .GetDerEncoded();
         }
 
         public int GetIntegerFromElementAt(int elementIndex)

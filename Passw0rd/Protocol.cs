@@ -32,15 +32,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
-#pragma warning disable SA1652, SA1008
+*/
 
 namespace Passw0rd
 {
     using System.Threading.Tasks;
+    using Google.Protobuf;
     using Passw0Rd;
     using Passw0rd.Utils;
-    using Google.Protobuf;
 
     /// <summary>
     /// The <see cref="Protocol"/> provides an implementation of PHE (Password
@@ -70,8 +69,7 @@ namespace Passw0rd
         {
             Validation.NotNull(
                 context,
-                "Context with Application token, Service Public" +
-                " Key and Application Secret Key isn't provided.");
+                "Context with Application token, Service Public Key and Application Secret Key isn't provided.");
             this.ctx = context;
         }
 

@@ -1,14 +1,12 @@
-﻿using System;
-using System.Linq;
-using NSubstitute;
-using Org.BouncyCastle.Math;
-using Org.BouncyCastle.Math.EC;
-using Passw0rd.Phe;
-using Passw0rd.Utils;
-using Xunit;
-
-namespace Passw0rd.Tests
+﻿namespace Passw0rd.Tests
 {
+    using System;
+    using System.Linq;
+    using NSubstitute;
+    using Passw0rd.Phe;
+    using Passw0rd.Utils;
+    using Xunit;
+
     public class PheClientTest
     {
         private byte[] serverPublic = Bytes.FromString("04464173c0589a4dd70760f0fd8ddccf99ec829098d194e9c925403a35245d44f2acf6784fe4d7a5eb76ba0d23227625e0f264051c8ed36fe9088f210faa160a45", StringEncoding.HEX);
@@ -29,9 +27,8 @@ namespace Passw0rd.Tests
         private byte[] rotatedClientSk = Bytes.FromString("ceb6e27585f969f5d5c5bfb8bdc8337f369f381cc5e32efdc123ab74b06a441e", StringEncoding.HEX);
         private byte[] updatedRecord = Bytes.FromString("0a20fc9e1d89fa8b15e391f62b3de357b0f56fe4dec54a008c7556c477bc9679f83d1220fc9e1d89fa8b15e391f62b3de357b0f56fe4dec54a008c7556c477bc9679f83d1a4104b1dba4fc25dbe850c14278188adad7f39eb8977db5b364d2fb851f2238bf03ab473cdae0c20de7d528ba8de5043c2eb3eed3d9d45b2e99290ef97af147692aa02241044971b0118442b7dd7fc3b0d098a3afb4c33c62768da00814224eeea77e9bf539fa0bc4279e2fcaff63aac3cbae33050c4d6626fdf04373c2bbbdc7bc609f3a1f", StringEncoding.HEX);
 
-
-
-        byte[] mockedRandomBytes = new byte[]{
+        private byte[] mockedRandomBytes = new byte[]
+        {
             0xfc, 0x9e, 0x1d, 0x89, 0xfa, 0x8b, 0x15, 0xe3,
             0x91, 0xf6, 0x2b, 0x3d, 0xe3, 0x57, 0xb0, 0xf5,
             0x6f, 0xe4, 0xde, 0xc5, 0x4a, 0x00, 0x8c, 0x75,
@@ -59,7 +56,7 @@ namespace Passw0rd.Tests
             0x10, 0x27, 0x97, 0x3b, 0xbc, 0x2e, 0x04, 0x8d,
             0x21, 0xce, 0x4c, 0xf0, 0x29, 0x03, 0x7e, 0x17,
             0x0c, 0x34, 0x81, 0x8d, 0xaa, 0x25, 0x33, 0xe6,
-            0xf8, 0x77, 0xe1, 0x59, 0x65, 0x89, 0x16, 0xa2
+            0xf8, 0x77, 0xe1, 0x59, 0x65, 0x89, 0x16, 0xa2,
         };
 
         [Fact]
@@ -67,112 +64,113 @@ namespace Passw0rd.Tests
         {
             var rngMock = Substitute.For<IPheRandomGenerator>();
             var offset = 0;
-            rngMock.GenerateNonce(16).Returns(x => { offset += 16; return ((Span<byte>)mockedRandomBytes).Slice(offset - 16, 16).ToArray(); });
-            rngMock.GenerateNonce(32).Returns(x => { offset += 32; return ((Span<byte>)mockedRandomBytes).Slice(offset - 32, 32).ToArray(); });
+            rngMock.GenerateNonce(16).Returns(x =>
+            {
+                offset += 16;
+                return ((Span<byte>)this.mockedRandomBytes).Slice(offset - 16, 16).ToArray();
+            });
+            rngMock.GenerateNonce(32).Returns(x =>
+            {
+                offset += 32;
+                return ((Span<byte>)this.mockedRandomBytes).Slice(offset - 32, 32).ToArray();
+            });
 
             var crypto = new PheCrypto();
             crypto.Rng = rngMock;
 
-            var enrollmentRecordRight = EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(enrollmentRecord));
-            var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
+            var enrollmentRecordRight = EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(this.enrollmentRecord));
+            var appSecretKey = crypto.DecodeSecretKey(this.clientPrivate);
 
-            var servicePublicKey = crypto.DecodePublicKey(serverPublic);
+            var servicePublicKey = crypto.DecodePublicKey(this.serverPublic);
             var pheClient = new PheClient(appSecretKey, servicePublicKey);
             pheClient.Crypto = crypto;
 
-            var (enrollmentRec, key) = pheClient.EnrollAccount(password, enrollmentResponse);
+            var (enrollmentRec, key) = pheClient.EnrollAccount(this.password, this.enrollmentResponse);
             var enrollmentRecordGot = EnrollmentRecord.Parser.ParseFrom(Google.Protobuf.ByteString.CopyFrom(enrollmentRec));
 
-            Assert.Equal(Bytes.ToString(enrollmentRecord, StringEncoding.BASE64), Bytes.ToString(enrollmentRec, StringEncoding.BASE64));
-            Assert.Equal(Bytes.ToString(recordKey, StringEncoding.BASE64), Bytes.ToString(key, StringEncoding.BASE64));
-
+            Assert.Equal(Bytes.ToString(this.enrollmentRecord, StringEncoding.BASE64), Bytes.ToString(enrollmentRec, StringEncoding.BASE64));
+            Assert.Equal(Bytes.ToString(this.recordKey, StringEncoding.BASE64), Bytes.ToString(key, StringEncoding.BASE64));
         }
-
 
         [Fact]
         public void TestValidPasswordRequest()
         {
             var rngMock = Substitute.For<IPheRandomGenerator>();
-            rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
-            rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
+            rngMock.GenerateNonce(16).Returns(this.mockedRandomBytes.Take(16).ToArray());
+            rngMock.GenerateNonce(32).Returns(this.mockedRandomBytes.Take(32).ToArray());
 
             var crypto = new PheCrypto();
             crypto.Rng = rngMock;
 
-            var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
+            var appSecretKey = crypto.DecodeSecretKey(this.clientPrivate);
 
-            var servicePublicKey = crypto.DecodePublicKey(serverPublic);
+            var servicePublicKey = crypto.DecodePublicKey(this.serverPublic);
             var pheClient = new PheClient(appSecretKey, servicePublicKey);
             pheClient.Crypto = crypto;
-            var req = pheClient.CreateVerifyPasswordRequest(password, enrollmentRecord);
+            var req = pheClient.CreateVerifyPasswordRequest(this.password, this.enrollmentRecord);
 
-            Assert.Equal(verifyPasswordReq, req);
+            Assert.Equal(this.verifyPasswordReq, req);
         }
-
 
         [Fact]
         public void TestInvalidPasswordRequest()
         {
             var rngMock = Substitute.For<IPheRandomGenerator>();
-            rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
-            rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
+            rngMock.GenerateNonce(16).Returns(this.mockedRandomBytes.Take(16).ToArray());
+            rngMock.GenerateNonce(32).Returns(this.mockedRandomBytes.Take(32).ToArray());
 
             var crypto = new PheCrypto();
             crypto.Rng = rngMock;
 
-            var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
+            var appSecretKey = crypto.DecodeSecretKey(this.clientPrivate);
 
-            var servicePublicKey = crypto.DecodePublicKey(serverPublic);
+            var servicePublicKey = crypto.DecodePublicKey(this.serverPublic);
             var pheClient = new PheClient(appSecretKey, servicePublicKey);
             pheClient.Crypto = crypto;
-            var req = pheClient.CreateVerifyPasswordRequest(badPassword, enrollmentRecord);
+            var req = pheClient.CreateVerifyPasswordRequest(this.badPassword, this.enrollmentRecord);
 
-            Assert.Equal(verifyBadPasswordReq, req);
+            Assert.Equal(this.verifyBadPasswordReq, req);
         }
-
 
         [Fact]
         public void TestRotateClientKey()
         {
             var rngMock = Substitute.For<IPheRandomGenerator>();
-            rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
-            rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
+            rngMock.GenerateNonce(16).Returns(this.mockedRandomBytes.Take(16).ToArray());
+            rngMock.GenerateNonce(32).Returns(this.mockedRandomBytes.Take(32).ToArray());
 
             var crypto = new PheCrypto();
             crypto.Rng = rngMock;
 
-            var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
+            var appSecretKey = crypto.DecodeSecretKey(this.clientPrivate);
 
-            var servicePublicKey = crypto.DecodePublicKey(serverPublic);
+            var servicePublicKey = crypto.DecodePublicKey(this.serverPublic);
             var pheClient = new PheClient(appSecretKey, servicePublicKey);
             pheClient.Crypto = crypto;
-            var (rotatedAppSecretKey, rotatedServicePublicKey) = pheClient.RotateKeys(token);
+            var (rotatedAppSecretKey, rotatedServicePublicKey) = pheClient.RotateKeys(this.token);
 
-            Assert.Equal(rotatedClientSk, rotatedAppSecretKey.Encode());
-            Assert.Equal(rotatedServerPub, rotatedServicePublicKey.Encode());
-
+            Assert.Equal(this.rotatedClientSk, rotatedAppSecretKey.Encode());
+            Assert.Equal(this.rotatedServerPub, rotatedServicePublicKey.Encode());
         }
-
 
         [Fact]
         public void TestRotateEnrollmentRecord()
         {
             var rngMock = Substitute.For<IPheRandomGenerator>();
-            rngMock.GenerateNonce(16).Returns(mockedRandomBytes.Take(16).ToArray());
-            rngMock.GenerateNonce(32).Returns(mockedRandomBytes.Take(32).ToArray());
+            rngMock.GenerateNonce(16).Returns(this.mockedRandomBytes.Take(16).ToArray());
+            rngMock.GenerateNonce(32).Returns(this.mockedRandomBytes.Take(32).ToArray());
 
             var crypto = new PheCrypto();
             crypto.Rng = rngMock;
 
-            var appSecretKey = crypto.DecodeSecretKey(clientPrivate);
+            var appSecretKey = crypto.DecodeSecretKey(this.clientPrivate);
 
-            var servicePublicKey = crypto.DecodePublicKey(serverPublic);
+            var servicePublicKey = crypto.DecodePublicKey(this.serverPublic);
             var pheClient = new PheClient();
             pheClient.Crypto = crypto;
-            var updatedEnrollmentRecord = pheClient.UpdateEnrollmentRecord(token, enrollmentRecord);
+            var updatedEnrollmentRecord = pheClient.UpdateEnrollmentRecord(this.token, this.enrollmentRecord);
 
-            Assert.Equal(updatedRecord, updatedEnrollmentRecord);
-
+            Assert.Equal(this.updatedRecord, updatedEnrollmentRecord);
         }
     }
 }

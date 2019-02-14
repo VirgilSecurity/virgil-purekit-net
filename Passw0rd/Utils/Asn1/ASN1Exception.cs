@@ -32,7 +32,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
 namespace Passw0rd.Utils.Asn1
 {
@@ -40,7 +40,8 @@ namespace Passw0rd.Utils.Asn1
 
     internal class ASN1Exception : Exception
     {
-        public ASN1Exception(string message) : base(message)
+        public ASN1Exception(string message)
+            : base(message)
         {
         }
     }

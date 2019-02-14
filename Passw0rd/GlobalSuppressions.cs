@@ -1,10 +1,1 @@
-﻿using System;
-namespace Passw0rd
-{
-    public class GlobalSuppressions
-    {
-        public GlobalSuppressions()
-        {
-        }
-    }
-}
+﻿[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1633:File must have header", Justification = "Use default LICENSE")]

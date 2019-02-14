@@ -30,7 +30,6 @@ namespace Passw0rd.Tests
             }
         }
 
-
         [Fact]
         public void HashToPoint_Should_GeneratePointOnCurve_When_RandomHashesArePassed2()
         {
@@ -38,11 +37,12 @@ namespace Passw0rd.Tests
             var swu = new Swu(phe.Curve.Q, phe.Curve.B.ToBigInteger());
             var sha512 = new SHA512Helper();
 
-            var data = new byte[]{
+            var data = new byte[]
+            {
                 0x80, 0x39, 0x05, 0x35, 0x49, 0x44, 0x70, 0xbe,
                 0x0b, 0x29, 0x65, 0x01, 0x58, 0x6b, 0xfc, 0xd9,
                 0xe1, 0x31, 0xc3, 0x9e, 0x2d, 0xec, 0xc7, 0x53,
-                0xd4, 0xf2, 0x5f, 0xdd, 0xd2, 0x28, 0x1e, 0xe3
+                0xd4, 0xf2, 0x5f, 0xdd, 0xd2, 0x28, 0x1e, 0xe3,
             };
 
             var hash = sha512.ComputeHash(null, data);
@@ -55,11 +55,11 @@ namespace Passw0rd.Tests
             }
         }
 
-
         [Fact]
         public void SwuHashToPoint_Should_ReturnExpectedPoint()
         {
-            var data = new byte[]{
+            var data = new byte[]
+            {
                 0x02, 0x6c, 0x68, 0xba, 0x79, 0x9b, 0x95, 0x8d,
                 0xa1, 0xdd, 0xec, 0x47, 0xcf, 0x77, 0xb6, 0x1a,
                 0x68, 0xe3, 0x27, 0xbb, 0x16, 0xdd, 0x04, 0x6f,
