@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -32,36 +32,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
-using System.Runtime.Serialization;
-
-namespace Passw0rd.Client
+namespace Passw0rd
 {
-    /// <summary>
-    /// Result of evaluating an entered password along with the zero 
-    /// knowledge proof
-    /// </summary>
-    [DataContract]
-    public class VerificationResponseModel
+    using System;
+
+    public class WrongVersionException : Passw0rdProtocolException
     {
-        [DataMember(Name = "res")]
-        public bool IsSuccess { get; set; }
-
-        [DataMember(Name = "c_1")]
-        public byte[] C1 { get; set; }
-
-        [DataMember(Name = "proof_success")]
-        public ProofOfSuccessModel ProofOfSuccess { get; set; }
-
-        [DataMember(Name = "proof_fail")]
-        public ProofOfFailModel ProofOfFail { get; set; }
-    }
-
-    [DataContract]
-    public class VerificationResponseWrapperModel
-    {
-        [DataMember(Name = "response")]
-        public VerificationResponseModel Response { get; set; }
+        public WrongVersionException(string message)
+            : base(message)
+        {
+        }
     }
 }

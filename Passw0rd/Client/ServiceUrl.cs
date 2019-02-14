@@ -34,12 +34,33 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 */
 
-namespace Passw0rd.Utils
+namespace Passw0rd.Client
 {
-    public enum StringEncoding
+    using System;
+
+    internal class ServiceUrl
     {
-        BASE64,
-        HEX,
-        UTF8,
+        private const string PasswordTokenPrefix = "PT";
+        private const string VirgilSecurityTokenPrefix = "AT";
+
+        public static string ProvideByToken(string token)
+        {
+            var tokenStat = token.Substring(0, 2);
+            string service;
+
+            switch (tokenStat)
+            {
+                case PasswordTokenPrefix:
+                    service = "passw0rd.io";
+                    break;
+                case VirgilSecurityTokenPrefix:
+                    service = "virgilsecurity.com";
+                    break;
+                default:
+                    throw new ServiceClientException(0, "Wrong App Token");
+            }
+
+            return $"https://api.{service}/";
+        }
     }
 }

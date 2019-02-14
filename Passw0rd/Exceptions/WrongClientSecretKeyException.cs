@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -32,16 +32,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
 namespace Passw0rd
 {
     using System;
 
-    [Serializable]
-    public class ProofOfSuccessNotValidException : Passw0rdProtocolException
+    public class WrongClientSecretKeyException : Passw0rdProtocolException
     {
-        public ProofOfSuccessNotValidException() : base("Proof of success is not valid")
+        public WrongClientSecretKeyException(string message)
+            : base(message)
         {
         }
     }

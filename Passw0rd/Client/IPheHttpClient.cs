@@ -34,12 +34,15 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 */
 
-namespace Passw0rd.Utils
+namespace Passw0rd.Client
 {
-    public enum StringEncoding
+    using System.Threading.Tasks;
+    using Passw0Rd;
+
+    public interface IPheHttpClient
     {
-        BASE64,
-        HEX,
-        UTF8,
+        Task<VerifyPasswordResponse> VerifyAsync(VerifyPasswordRequest request);
+
+        Task<EnrollmentResponse> GetEnrollment(EnrollmentRequest request);
     }
 }

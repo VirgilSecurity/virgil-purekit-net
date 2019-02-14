@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -32,15 +32,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
 namespace Passw0rd
 {
     using System;
 
-    public class Passw0rdProtocolException : Exception
+    public class ProofNotProvidedException : Passw0rdProtocolException
     {
-        public Passw0rdProtocolException(string message) : base(message)
+        public ProofNotProvidedException()
+            : base("Proof of the operation isn't provided")
         {
         }
     }

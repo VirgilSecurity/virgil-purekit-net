@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -32,17 +32,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
-namespace Passw0rd.Phe
+namespace Passw0rd
 {
-    public class ProofOfFail
+    using System;
+
+    public class WrongServiceKeyException : Passw0rdProtocolException
     {
-        public byte[] Term1 { get; set; }
-        public byte[] Term2 { get; set; }
-        public byte[] Term3 { get; set; }
-        public byte[] Term4 { get; set; }
-        public byte[] BlindA { get; set; }
-        public byte[] BlindB { get; set; }
+        public WrongServiceKeyException(string message)
+            : base(message)
+        {
+        }
     }
 }

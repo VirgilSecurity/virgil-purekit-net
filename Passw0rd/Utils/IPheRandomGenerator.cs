@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -32,15 +32,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
-namespace Passw0rd.Phe
+namespace Passw0rd
 {
-    public class ProofOfSuccess
+    using System;
+
+    public interface IPheRandomGenerator
     {
-        public byte[] Term1 { get; set; }
-        public byte[] Term2 { get; set; }
-        public byte[] Term3 { get; set; }
-        public byte[] BlindX { get; set; }
+        /// <summary>
+        /// Generates a random nonce.
+        /// </summary>
+        /// <param name="length">Length of generated nonce.</param>
+        byte[] GenerateNonce(int length);
     }
 }

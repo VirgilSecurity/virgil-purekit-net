@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -32,71 +32,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
-namespace Passw0rd.Phe
+namespace Passw0rd.Client
 {
-    using System;
-    using System.IO;
+    using System.Net.Http;
+    using System.Threading.Tasks;
+    using Passw0Rd;
+    using Passw0rd.Client.Connection;
 
-    using Org.BouncyCastle.Crypto.Digests;
-
-    public class TupleHash 
-    {     
+    public class PheHttpClient : HttpClientBase, IPheHttpClient
+    {
         /// <summary>
-        /// Hashes a list of byte arrays, prefixing each one with its length.
+        /// Initializes a new instance of the <see cref="PheHttpClient"/> class.
         /// </summary>
-        public byte[] Sum(byte[] domain, params byte[][] datas)
+        public PheHttpClient(IHttpBodySerializer serializer, string token, string serviceUrl)
+            : base(serializer, token, serviceUrl)
         {
-            using (var stream = new MemoryStream())
-            {
-                byte[] ulongBytes;
-
-                foreach (var data in datas)
-                {
-                    ulongBytes = this.UInt64ToBytes((ulong)data.Length);
-
-                    stream.Write(ulongBytes, 0, ulongBytes.Length);
-                    stream.Write(data, 0, data.Length);
-                }
-
-                ulongBytes = this.UInt64ToBytes((ulong)domain.Length);
-
-                stream.Write(ulongBytes, 0, ulongBytes.Length);
-                stream.Write(domain, 0, domain.Length);
-
-                var result = stream.ToArray();
-
-                byte[] hash; 
-                var sha = new Sha512tDigest(256);
-
-                try
-                {
-                    sha.BlockUpdate(result, 0, result.Length);
-                    hash = new byte[sha.GetDigestSize()];
-                    sha.DoFinal(hash, 0);
-                }
-                finally
-                {
-                    sha.Finish();
-                }
-
-                return hash;
-            }
         }
 
         /// <summary>
-        /// Converts UInt64 value into byte arraty with big endian bytes order.
+        /// Send post request to enroll User Record.
         /// </summary>
-        private byte[] UInt64ToBytes(ulong value)
+        /// <returns>A new instance of the <see cref="EnrollmentResponse"/> class.</returns>
+        /// <param name="request">An instance of the <see cref="EnrollmentRequest"/> class.</param>
+        public async Task<EnrollmentResponse> GetEnrollment(EnrollmentRequest request)
         {
-            var ulongBytes = BitConverter.GetBytes(value);
-            if (BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(ulongBytes);
-            }
+            var response = await this.SendAsync<EnrollmentRequest, EnrollmentResponse>(
+               HttpMethod.Post, $"phe/v1/enroll", request).ConfigureAwait(false);
+            return response;
+        }
 
-            return ulongBytes;
+        /// <summary>
+        /// Send post request to Verify User Record.
+        /// </summary>
+        /// <returns>A new instance of the <see cref="VerifyPasswordResponse"/> class.</returns>
+        /// <param name="request">An instance of the <see cref="VerifyPasswordRequest"/> class.</param>
+        public async Task<VerifyPasswordResponse> VerifyAsync(VerifyPasswordRequest request)
+        {
+            var response = await this.SendAsync<VerifyPasswordRequest, VerifyPasswordResponse>(
+                HttpMethod.Post, $"phe/v1/verify-password", request).ConfigureAwait(false);
+
+            return response;
         }
     }
 }

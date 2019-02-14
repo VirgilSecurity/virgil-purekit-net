@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -49,7 +49,7 @@ namespace Passw0rd.Phe
 
         public byte[] Encode()
         {
-            return this.Value.ToByteArrayUnsigned(); 
+            return this.Value.ToByteArrayUnsigned();
         }
     }
 }

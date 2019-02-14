@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -32,56 +32,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
 namespace Passw0rd
 {
     using System;
-    using Passw0rd.Utils;
-    using Passw0rd.Utils.Asn1;
 
-    /// <summary>
-    /// Update token.
-    /// </summary>
-    public class UpdateToken
+    public class ProofOfFailNotValidException : Passw0rdProtocolException
     {
-        /// <summary>
-        /// Gets the a value.
-        /// </summary>
-        public byte[] A { get; internal set; }
-
-        /// <summary>
-        /// Gets the b value.
-        /// </summary>
-        public byte[] B { get; internal set; }
-
-        /// <summary>
-        /// Gets the version.
-        /// </summary>
-        public int Version { get; internal set; }
-
-        /// <summary>
-        /// Decodes an <see cref="UpdateToken"/> form specified string.
-        /// </summary>
-        public static UpdateToken Decode(string updateToken)
+        public ProofOfFailNotValidException()
+            : base("Proof of fail isn't valid")
         {
-            var tokenParts = updateToken.Split(".");
-            if (tokenParts.Length != 3 ||
-                !Int32.TryParse(tokenParts[1], out int version) || 
-                !tokenParts[0].ToUpper().Equals("UT"))
-            {
-                throw new ArgumentException("has incorrect format", nameof(updateToken));
-            }
-
-            var asn1Bytes = Bytes.FromString(tokenParts[2], StringEncoding.BASE64);
-            var asn1Sequence = ASN1Sequence.Decode(asn1Bytes);
-
-            return new UpdateToken 
-            {
-                A = asn1Sequence.GetOctetStringFromElementAt(0), 
-                B = asn1Sequence.GetOctetStringFromElementAt(1),
-                Version = version
-            };
         }
     }
 }

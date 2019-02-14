@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -32,13 +32,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
 namespace Passw0rd
 {
-    public class VerificationResult
+    using System;
+
+    public class ProofOfSuccessNotValidException : Passw0rdProtocolException
     {
-        public bool IsSuccess { get; set; }
-        public byte[] Key { get; set; }
+        public ProofOfSuccessNotValidException()
+            : base("Proof of success is not valid")
+        {
+        }
     }
 }

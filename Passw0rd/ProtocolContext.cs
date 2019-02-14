@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -32,168 +32,131 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
 namespace Passw0rd
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-
+    using Passw0Rd;
     using Passw0rd.Client;
     using Passw0rd.Client.Connection;
-    using Passw0rd.Phe;
     using Passw0rd.Utils;
 
     public class ProtocolContext
     {
-        private IDictionary<int, SecretKey> clientSecretKeys;
-        private IDictionary<int, PublicKey> serverPublicKeys;
-
-        private ProtocolContext()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:Passw0rd.ProtocolContext"/> class.
+        /// </summary>
+        /// <param name="appToken">Application token.</param>
+        /// <param name="client">Http Client.</param>
+        /// <param name="servicePubKey">Service public key.</param>
+        /// <param name="appSecKey">Application Secret Key.</param>
+        public ProtocolContext(string appToken, IPheHttpClient client, string servicePubKey, string appSecKey)
         {
+            Validation.NotNullOrWhiteSpace(appToken, "Application token isn't provided.");
+            Validation.NotNull(client, "Service Public Key isn't provided.");
+            Validation.NotNullOrWhiteSpace(servicePubKey, "Service Public Key isn't provided.");
+            Validation.NotNullOrWhiteSpace(appSecKey, "Application Secret Key isn't provided.");
+
+            var keyParser = new StringKeyParser();
+            var (pkSVer, pkS) = keyParser.ParsePublicKey(servicePubKey);
+            var (skCVer, skC) = keyParser.ParseSecretKey(appSecKey);
+
+            if (pkSVer != skCVer)
+            {
+                throw new WrongVersionException("Incorrect versions for Server/Client keys.");
+            }
+
+            this.AppToken = appToken;
+            this.Client = client;
+            this.CurrentVersion = pkSVer;
+            this.PheClients = new Dictionary<uint, PheClient>() { { this.CurrentVersion, new PheClient(skC, pkS) } };
         }
 
         /// <summary>
         /// Gets the app identifier.
         /// </summary>
-        public string AppId { get; private set; }
+        public string AppToken { get; private set; }
 
         /// <summary>
         /// Gets the client instance.
-        /// </summary> 
-        public IPheClient Client { get; private set; }
+        /// </summary>
+        public IPheHttpClient Client { get; private set; }
 
         /// <summary>
-        /// Gets the PHE Crypto instanse.
+        /// Gets the client instance.
         /// </summary>
-        public PheCrypto Crypto { get; private set; }
+        public Dictionary<uint, PheClient> PheClients { get; private set; }
 
         /// <summary>
-        /// Gets the update tokens.
+        /// Gets the Current Version.
         /// </summary>
-        public IEnumerable<UpdateToken> UpdateTokens { get; private set; } 
+        public uint CurrentVersion { get; private set; }
 
-        public int ActualVersion 
+        /// <summary>
+        /// Gets the update token.
+        /// </summary>
+        public VersionedUpdateToken VersionedUpdateToken { get; private set; }
+
+        /// <summary>
+        /// Create the context with passw0rd's application credentials.
+        /// How to get passw0rd's application credentials
+        /// you will find <see href="https://github.com/passw0rd/cli">here</see>.
+        /// </summary>
+        /// <returns>The new instance of the <see cref="ProtocolContext"/>
+        ///  which contains application credentials.</returns>
+        /// <param name="appToken">Application token.</param>
+        /// <param name="servicePublicKey">Service public key.</param>
+        /// <param name="appSecretKey">Application Secret Key.</param>
+        /// <param name="updateToken">Update token.
+        /// How to generate Update Token you will find
+        /// <see href="https://github.com/passw0rd/cli#get-an-update-token">here</see>.</param>
+        public static ProtocolContext Create(
+            string appToken,
+            string servicePublicKey,
+            string appSecretKey,
+            string updateToken = null)
         {
-            get 
-            {
-                return this.clientSecretKeys.Max(it => it.Key);
-            }
-        }
-
-        public SecretKey GetActualClientSecretKey()
-        {
-            return this.clientSecretKeys[this.ActualVersion];
-        }
-
-        public PublicKey GetActualServerPublicKey()
-        {
-            return this.serverPublicKeys[this.ActualVersion];
-        }
-
-        public SecretKey GetClientSecretKeyForVersion(int version)
-        {
-            return this.clientSecretKeys[version];
-        }
-
-        public PublicKey GetServerPublicKeyForVersion(int version)
-        {
-            return this.serverPublicKeys[version];
-        }
-
-        public static ProtocolContext Create(string appId, string accessToken, 
-            string serverPublicKey, string clientSecretKey, string[] updateTokens = null)
-        {
-            var phe = new PheCrypto();
-            var (pkSVer, pkS) = EnsureServerPublicKey(serverPublicKey, phe);
-            var (skCVer, skC) = EnsureClientSecretKey(clientSecretKey, phe);
-
-            if (pkSVer != skCVer) 
-            {
-                throw new ArgumentException("Incorrect versions for Server/Client keys.");
-            }
+            Validation.NotNullOrWhiteSpace(appToken, "Application token isn't provided.");
+            Validation.NotNullOrWhiteSpace(servicePublicKey, "Service Public Key isn't provided.");
+            Validation.NotNullOrWhiteSpace(appSecretKey, "Application Secret Key isn't provided.");
 
             var serializer = new HttpBodySerializer();
-            var client = new PheClient(serializer)
+
+            var client = new PheHttpClient(serializer, appToken, ServiceUrl.ProvideByToken(appToken));
+
+            var ctx = new ProtocolContext(appToken, client, servicePublicKey, appSecretKey);
+
+            if (!string.IsNullOrWhiteSpace(updateToken))
             {
-                AccessToken = accessToken,
-                BaseUri = new Uri("https://api.passw0rd.io/")
-            };
-
-            var ctx = new ProtocolContext
-            {
-                AppId = appId,
-                Client = client,
-                Crypto = phe
-            };
-
-            var serverPksDictionary = new Dictionary<int, PublicKey> { [pkSVer] = pkS };
-            var clientSksDictionary = new Dictionary<int, SecretKey> { [skCVer] = skC };
-
-            if (updateTokens != null && updateTokens.Length > 0)
-            {
-                var updateTokenList = updateTokens.Select(UpdateToken.Decode)
-                    .Where(it => it.Version > skCVer)
-                    .OrderBy(it => it.Version)
-                    .ToList();
-
-                ctx.UpdateTokens = updateTokenList;
-
-                foreach (var token in updateTokenList)
-                {
-                    pkS = phe.RotatePublicKey(pkS, token.A, token.B);
-                    skC = phe.RotateSecretKey(skC, token.A, token.B);
-
-                    serverPksDictionary.Add(token.Version, pkS);
-                    clientSksDictionary.Add(token.Version, skC);
-                }
+                ctx.UpdatePheClients(updateToken);
             }
-
-            ctx.clientSecretKeys = clientSksDictionary;
-            ctx.serverPublicKeys = serverPksDictionary;
 
             return ctx;
         }
 
-        private static (int, PublicKey) EnsureServerPublicKey(string serverPublicKey, PheCrypto phe)
+        /// <summary>
+        /// Updates the phe clients by provided update token.
+        /// </summary>
+        /// <param name="updateToken">Update token.</param>
+        public void UpdatePheClients(string updateToken)
         {
-            var keyParts = serverPublicKey.Split(".");
-            if (keyParts.Length != 3 ||
-                !Int32.TryParse(keyParts[1], out int version) ||
-                !keyParts[0].ToUpper().Equals("PK"))
+            Validation.NotNullOrWhiteSpace(updateToken);
+
+            var versionedUpdateToken = StringUpdateTokenParser.Parse(updateToken);
+            if (versionedUpdateToken.Version != this.CurrentVersion + 1)
             {
-                throw new ArgumentException("has incorrect format", nameof(serverPublicKey));
+                throw new WrongVersionException("Incorrect token version.");
             }
 
-            var keyBytes = Bytes.FromString(keyParts[2], StringEncoding.BASE64);
-            if (keyBytes.Length != 65)
-            {
-                throw new ArgumentException("has incorrect length", nameof(serverPublicKey));
-            }
+            var pheClient = this.PheClients[this.CurrentVersion];
+            this.VersionedUpdateToken = versionedUpdateToken;
 
-            var publicKey = phe.DecodePublicKey(keyBytes);
-            return (version, publicKey); 
-        }
-
-        private static (int, SecretKey) EnsureClientSecretKey(string clientSecretKey, PheCrypto phe)
-        {
-            var keyParts = clientSecretKey.Split(".");
-            if (keyParts.Length != 3 ||
-                !Int32.TryParse(keyParts[1], out int version) ||
-                !keyParts[0].ToUpper().Equals("SK"))
-            {
-                throw new ArgumentException("has incorrect format", nameof(clientSecretKey));
-            }
-
-            var keyBytes = Bytes.FromString(keyParts[2], StringEncoding.BASE64);
-            if (keyBytes.Length != 32)
-            {
-                throw new ArgumentException("has incorrect length", nameof(clientSecretKey));
-            }
-
-            var secretKey = phe.DecodeSecretKey(keyBytes);
-            return (version, secretKey); 
+            var (newSecretKey, newPublicKey) = pheClient.RotateKeys(
+                this.VersionedUpdateToken.UpdateToken.ToByteArray());
+            this.PheClients.Add(this.VersionedUpdateToken.Version, new PheClient(newSecretKey, newPublicKey));
+            this.CurrentVersion = this.VersionedUpdateToken.Version;
         }
     }
 }

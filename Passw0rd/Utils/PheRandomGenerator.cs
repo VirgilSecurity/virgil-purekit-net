@@ -34,12 +34,30 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 */
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Passw0rd.Tests")]
+
 namespace Passw0rd.Utils
 {
-    public enum StringEncoding
+    using Org.BouncyCastle.Security;
+
+    public class PheRandomGenerator : IPheRandomGenerator
     {
-        BASE64,
-        HEX,
-        UTF8,
+        private SecureRandom rng;
+
+        public PheRandomGenerator()
+        {
+            this.rng = new SecureRandom();
+        }
+
+        /// <summary>
+        /// Generates a random nonce.
+        /// </summary>
+        /// <param name="length">Length of generated nonce.</param>
+        public byte[] GenerateNonce(int length)
+        {
+            var nonce = new byte[length];
+            this.rng.NextBytes(nonce);
+            return nonce;
+        }
     }
 }

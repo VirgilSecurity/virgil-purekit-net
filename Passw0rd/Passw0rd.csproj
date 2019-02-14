@@ -22,15 +22,25 @@
     <Folder Include="Utils\" />
     <Folder Include="Client\" />
     <Folder Include="Utils\Asn1\" />
+    <Folder Include="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BouncyCastle" Version="1.8.3.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="NuGet.Build.Packaging" Version="0.2.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.6.1" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.1-beta.61" />
+    <PackageReference Include="BouncyCastle" Version="1.8.4" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Class1.cs" />
     <Compile Remove="Client\ValidationModel.cs" />
     <Compile Remove="ClientSecretKey.cs" />
+    <Compile Remove="Phe\IPheCrypto.cs" />
+    <Compile Remove="UpdateTokenOld.cs" />
+    <Compile Remove="Phe\ProofOfFailOld.cs" />
+    <Compile Remove="Client\ProofOfSuccessModel.cs" />
+    <Compile Remove="Phe\PheKeys.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Phe\phe.proto" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -34,20 +34,38 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
  */
 
-namespace Passw0rd.Client
+namespace Passw0rd.Phe
 {
-    using System.Runtime.Serialization;
+    using Passw0rd.Utils;
 
-    [DataContract]
-    public class VerificationRequestModel
+    /// <summary>
+    /// Constants wich are used in implementation of the  Password-Hardened Encryption(PHE) protocol.
+    /// </summary>
+    internal static class Domains
     {
-        [IgnoreDataMember]
-        public string AppId { get; set; }
+        public static readonly byte[] Dhc0;
+        public static readonly byte[] Dhc1;
+        public static readonly byte[] Dhs0;
+        public static readonly byte[] Dhs1;
+        public static readonly byte[] ProofOK;
+        public static readonly byte[] ProofErr;
+        public static readonly byte[] Encrypt;
+        public static readonly byte[] KdfInfoZ;
+        public static readonly byte[] KdfInfoClientKey;
+        private static byte[] commonPrefix;
 
-        [DataMember(Name = "version")]
-        public int Version { get; set; }
-
-        [DataMember(Name = "verify_request")]
-        public VerificationModel Verification { get; set; }
+        static Domains()
+        {
+            commonPrefix = new byte[] { 0x56, 0x52, 0x47, 0x4c, 0x50, 0x48, 0x45 }; // VRGLPHE
+            Dhc0 = Bytes.Combine(commonPrefix, new byte[] { 0x31 });
+            Dhc1 = Bytes.Combine(commonPrefix, new byte[] { 0x32 });
+            Dhs0 = Bytes.Combine(commonPrefix, new byte[] { 0x33 });
+            Dhs1 = Bytes.Combine(commonPrefix, new byte[] { 0x34 });
+            ProofOK = Bytes.Combine(commonPrefix, new byte[] { 0x35 });
+            ProofErr = Bytes.Combine(commonPrefix, new byte[] { 0x36 });
+            Encrypt = Bytes.Combine(commonPrefix, new byte[] { 0x37 });
+            KdfInfoZ = Bytes.Combine(commonPrefix, new byte[] { 0x38 });
+            KdfInfoClientKey = Bytes.Combine(commonPrefix, new byte[] { 0x39 });
+        }
     }
 }

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -32,34 +32,60 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
-namespace Passw0rd.Client
+namespace Passw0rd.Utils
 {
-    using System.Runtime.Serialization;
+    using System;
 
-    /// <summary>
-    /// Proof of fail data for client to validate
-    /// </summary>
-    [DataContract]
-    public class ProofOfFailModel
+    internal static class Validation
     {
-        [DataMember(Name ="term_1")]
-        public byte[] Term1 { get; set; }
+        public static void NotNull(object obj, string message = null)
+        {
+            if (obj == null)
+            {
+                throw new ArgumentNullException(message, nameof(obj));
+            }
+        }
 
-        [DataMember(Name ="term_2")]
-        public byte[] Term2 { get; set; }
+        public static void NotNullOrWhiteSpace(string obj, string message = null)
+        {
+            if (string.IsNullOrWhiteSpace(obj))
+            {
+                throw new ArgumentException(message, nameof(obj));
+            }
+        }
 
-        [DataMember(Name = "term_3")]
-        public byte[] Term3 { get; set; }
+        public static void NotNullOrEmptyByteArray(byte[] obj, string message = null)
+        {
+            if (obj == null || obj.Length == 0)
+            {
+                throw new ArgumentException(message, nameof(obj));
+            }
+        }
 
-        [DataMember(Name = "term_4")]
-        public byte[] Term4 { get; set; }
+        public static void NotNullOrEmptyByteArray(byte[][] byteArrays, string message = null)
+        {
+            if (byteArrays == null || byteArrays.Length == 0)
+            {
+                throw new ArgumentException(message, nameof(byteArrays));
+            }
 
-        [DataMember(Name = "blind_a")]
-        public byte[] BlindA { get; set; }
+            foreach (var byteArray in byteArrays)
+            {
+                if (byteArray == null || byteArray.Length == 0)
+                {
+                    throw new ArgumentException(message, nameof(byteArrays));
+                }
+            }
+        }
 
-        [DataMember(Name = "blind_b")]
-        public byte[] BlindB { get; set; }
+        public static void MoreThanZero(uint obj, string message = null)
+        {
+            if (obj <= 0)
+            {
+                throw new ArgumentException(message, nameof(obj));
+            }
+        }
     }
 }

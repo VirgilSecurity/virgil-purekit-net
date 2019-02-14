@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -32,19 +32,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
-namespace Passw0rd.Client
+namespace Passw0rd
 {
-    using System.Runtime.Serialization;
+    using System;
 
-    [DataContract]
-    public class VerificationModel
+    public class WrongPasswordException : Passw0rdProtocolException
     {
-        [DataMember(Name = "ns")]
-        public byte[] Ns { get; set; }
-
-        [DataMember(Name = "c_0")]
-        public byte[] C0 { get; set; }
+        public WrongPasswordException(string message)
+            : base(message)
+        {
+        }
     }
 }

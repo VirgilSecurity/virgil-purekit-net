@@ -21,8 +21,8 @@
                 Elements = new List<IASN1Object>
                 {
                     new ASN1OctetString(arr1),
-                    new ASN1OctetString(arr2)
-                }
+                    new ASN1OctetString(arr2),
+                },
             };
 
             var encodedBytes = sequence.Encode();

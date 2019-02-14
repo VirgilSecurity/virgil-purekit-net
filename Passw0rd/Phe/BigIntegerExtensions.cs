@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2015-2018 Virgil Security Inc.
+ * Copyright (C) 2015-2019 Virgil Security Inc.
  *
  * All rights reserved.
  *
@@ -72,7 +72,7 @@ namespace Passw0rd.Phe
 
         public static BigInteger Pow(this BigInteger bigInt, BigInteger n, BigInteger e)
         {
-            return n.ModPow(e, bigInt);
+           return n.ModPow(e, bigInt);
         }
 
         public static BigInteger Sub(this BigInteger bigInt, BigInteger i, BigInteger j)
