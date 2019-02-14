@@ -32,22 +32,46 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- */
+*/
 
 namespace Passw0rd
 {
     using System;
     using System.Collections.Generic;
+    using Passw0Rd;
     using Passw0rd.Client;
     using Passw0rd.Client.Connection;
     using Passw0rd.Utils;
-    using Passw0Rd;
 
     public class ProtocolContext
     {
-        private ProtocolContext()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:Passw0rd.ProtocolContext"/> class.
+        /// </summary>
+        /// <param name="appToken">Application token.</param>
+        /// <param name="client">Http Client.</param>
+        /// <param name="servicePubKey">Service public key.</param>
+        /// <param name="appSecKey">Application Secret Key.</param>
+        public ProtocolContext(string appToken, IPheHttpClient client, string servicePubKey, string appSecKey)
         {
-            PheClients = new Dictionary<uint, PheClient>();
+            Validation.NotNullOrWhiteSpace(appToken, "Application token isn't provided.");
+            Validation.NotNull(client, "Service Public Key isn't provided.");
+            Validation.NotNullOrWhiteSpace(servicePubKey, "Service Public Key isn't provided.");
+            Validation.NotNullOrWhiteSpace(appSecKey, "Application Secret Key isn't provided.");
+
+            var keyParser = new StringKeyParser();
+            var (pkSVer, pkS) = keyParser.ParsePublicKey(servicePubKey);
+            var (skCVer, skC) = keyParser.ParseSecretKey(appSecKey);
+
+            if (pkSVer != skCVer)
+            {
+                throw new WrongVersionException("Incorrect versions for Server/Client keys.");
+            }
+
+            this.AppToken = appToken;
+            this.Client = client;
+            this.CurrentVersion = pkSVer;
+            this.PheClients = new Dictionary<uint, PheClient>() { { this.CurrentVersion, new PheClient(skC, pkS) } };
         }
 
         /// <summary>
@@ -57,13 +81,12 @@ namespace Passw0rd
 
         /// <summary>
         /// Gets the client instance.
-        /// </summary> 
-        public IPheHttpClient Client { get; internal set; }
-
+        /// </summary>
+        public IPheHttpClient Client { get; private set; }
 
         /// <summary>
         /// Gets the client instance.
-        /// </summary> 
+        /// </summary>
         public Dictionary<uint, PheClient> PheClients { get; private set; }
 
         /// <summary>
@@ -87,9 +110,10 @@ namespace Passw0rd
         /// <param name="servicePublicKey">Service public key.</param>
         /// <param name="appSecretKey">Application Secret Key.</param>
         /// <param name="updateToken">Update token.
-        /// How to generate Update Token you will find 
+        /// How to generate Update Token you will find
         /// <see href="https://github.com/passw0rd/cli#get-an-update-token">here</see>.</param>
-        public static ProtocolContext Create(string appToken,
+        public static ProtocolContext Create(
+            string appToken,
             string servicePublicKey,
             string appSecretKey,
             string updateToken = null)
@@ -98,42 +122,41 @@ namespace Passw0rd
             Validation.NotNullOrWhiteSpace(servicePublicKey, "Service Public Key isn't provided.");
             Validation.NotNullOrWhiteSpace(appSecretKey, "Application Secret Key isn't provided.");
 
-            var keyParser = new StringKeyParser();
-            var (pkSVer, pkS) = keyParser.ParsePublicKey(servicePublicKey);
-            var (skCVer, skC) = keyParser.ParseSecretKey(appSecretKey);
-
-            if (pkSVer != skCVer)
-            {
-                throw new WrongVersionException("Incorrect versions for Server/Client keys.");
-            }
-
             var serializer = new HttpBodySerializer();
-
 
             var client = new PheHttpClient(serializer, appToken, ServiceUrl.ProvideByToken(appToken));
 
-            var ctx = new ProtocolContext
-            {
-                AppToken = appToken,
-                Client = client,
-                CurrentVersion = pkSVer
-            };
+            var ctx = new ProtocolContext(appToken, client, servicePublicKey, appSecretKey);
 
-            var pheClient = new PheClient(skC, pkS);
-            ctx.PheClients.Add(pkSVer, pheClient);
-
-            if (!String.IsNullOrWhiteSpace(updateToken))
+            if (!string.IsNullOrWhiteSpace(updateToken))
             {
-                ctx.VersionedUpdateToken = StringUpdateTokenParser.Parse(updateToken);
-                if (ctx.VersionedUpdateToken.Version != ctx.CurrentVersion + 1)
-                {
-                    throw new WrongVersionException("Incorrect token version.");
-                }
-                var (newSecretKey, newPublicKey) = pheClient.RotateKeys(ctx.VersionedUpdateToken.UpdateToken.ToByteArray());
-                ctx.PheClients.Add(ctx.VersionedUpdateToken.Version, new PheClient(newSecretKey, newPublicKey));
-                ctx.CurrentVersion = ctx.VersionedUpdateToken.Version;
+                ctx.UpdatePheClients(updateToken);
             }
+
             return ctx;
+        }
+
+        /// <summary>
+        /// Updates the phe clients by provided update token.
+        /// </summary>
+        /// <param name="updateToken">Update token.</param>
+        public void UpdatePheClients(string updateToken)
+        {
+            Validation.NotNullOrWhiteSpace(updateToken);
+
+            var versionedUpdateToken = StringUpdateTokenParser.Parse(updateToken);
+            if (versionedUpdateToken.Version != this.CurrentVersion + 1)
+            {
+                throw new WrongVersionException("Incorrect token version.");
+            }
+
+            var pheClient = this.PheClients[this.CurrentVersion];
+            this.VersionedUpdateToken = versionedUpdateToken;
+
+            var (newSecretKey, newPublicKey) = pheClient.RotateKeys(
+                this.VersionedUpdateToken.UpdateToken.ToByteArray());
+            this.PheClients.Add(this.VersionedUpdateToken.Version, new PheClient(newSecretKey, newPublicKey));
+            this.CurrentVersion = this.VersionedUpdateToken.Version;
         }
     }
 }
