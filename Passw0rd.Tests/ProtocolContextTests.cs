@@ -23,15 +23,15 @@
 
         public ProtocolContextTests()
         {
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true).Build();
-            this.appToken = configuration["AppToken"];
-            this.servicePublicKey = configuration["ServicePublicKey"];
-            this.clientSecretKey = configuration["ClientSecretKey"];
-            this.clientSecretKey2 = configuration["ClientSecretKey2"];
-            this.servicePublicKey2 = configuration["ServicePublicKey2"];
-            this.updateTokenV2 = configuration["UpdateTokenV2"];
-            this.updateTokenV3 = configuration["UpdateTokenV3"];
-            this.serviceAddress = configuration["ServiceAddress"];
+            var serviceTestData = new ServiceTestData("passw0rd");
+            this.appToken = serviceTestData.AppToken;
+            this.servicePublicKey = serviceTestData.ServicePublicKey;
+            this.clientSecretKey = serviceTestData.ClientSecretKey;
+            this.clientSecretKey2 = serviceTestData.ClientSecretKey2;
+            this.servicePublicKey2 = serviceTestData.ServicePublicKey2;
+            this.updateTokenV2 = serviceTestData.UpdateTokenV2;
+            this.updateTokenV3 = serviceTestData.UpdateTokenV3;
+            this.serviceAddress = serviceTestData.ServiceAddress;
         }
 
         [Fact] // HTC-8

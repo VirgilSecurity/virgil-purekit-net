@@ -11,35 +11,109 @@
 
     public class ProtocolTests
     {
-        private string appToken;
-        private string servicePublicKey;
-        private string clientSecretKey;
-        private string clientSecretKey2;
-        private string servicePublicKey2;
         private string myPassword = "passw9rd";
-        private string updateTokenV2;
-        private string updateTokenV3;
-        private string serviceAddress;
-        private string serviceSubdomain;
+        private ServiceTestData passw0rdData;
+        private ServiceTestData virgilData;
 
         public ProtocolTests()
         {
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true).Build();
-            this.appToken = configuration["AppToken"];
-            this.servicePublicKey = configuration["ServicePublicKey"];
-            this.clientSecretKey = configuration["ClientSecretKey"];
-            this.clientSecretKey2 = configuration["ClientSecretKey2"];
-            this.servicePublicKey2 = configuration["ServicePublicKey2"];
-            this.updateTokenV2 = configuration["UpdateTokenV2"];
-            this.updateTokenV3 = configuration["UpdateTokenV3"];
-            this.serviceAddress = configuration["ServiceAddress"];
-            this.serviceSubdomain = configuration["ServiceSubdomain"];
+            this.passw0rdData = new ServiceTestData("passw0rd");
+            this.virgilData = new ServiceTestData("virgilsecurity");
         }
 
         [Fact] // HTC-1
         public async Task EncrollAccount_Should_GenerateNewRecord()
         {
-            var context = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
+            await this.EnrollAccount_Should_GenerateNewRecordForService(this.passw0rdData);
+            await this.EnrollAccount_Should_GenerateNewRecordForService(this.virgilData);
+        }
+
+        [Fact] // HTC-2
+        public async Task EncrollAccountWithUpdateToken_Should_GenerateNewRecordWithTokenVersion()
+        {
+            await this.EncrollAccountWithUpdateToken_Should_GenerateNewRecordWithTokenVersionForService(this.passw0rdData);
+            await this.EncrollAccountWithUpdateToken_Should_GenerateNewRecordWithTokenVersionForService(this.virgilData);
+        }
+
+        [Fact] // Current logic contradicts HTC-3
+        public async Task VerifyPasswordWithWrongPassword_Should_ReturnResultWithEmptyKey()
+        {
+            await this.VerifyPasswordWithWrongPassword_Should_ReturnResultWithEmptyKeyForService(this.passw0rdData);
+            await this.VerifyPasswordWithWrongPassword_Should_ReturnResultWithEmptyKeyForService(this.virgilData);
+        }
+
+        [Fact] // HTC-4
+        public async Task ProtocolWithWrongServiceKey_Should_RaiseProofOfSuccessNotValidException()
+        {
+            // you will get ProofOfSuccessNotValidException if try to enroll with wrong servicePublicKey
+            await this.ProtocolWithWrongServiceKey_Should_RaiseProofOfSuccessNotValidExceptionForService(this.passw0rdData);
+            await this.ProtocolWithWrongServiceKey_Should_RaiseProofOfSuccessNotValidExceptionForService(this.virgilData);
+        }
+
+        [Fact] // HTC-5
+        public async Task ProtocolWithUpdateToken_Should_VerifyUpdatedRecord()
+        {
+            await this.ProtocolWithUpdateToken_Should_VerifyUpdatedRecordForService(this.passw0rdData);
+            await this.ProtocolWithUpdateToken_Should_VerifyUpdatedRecordForService(this.virgilData);
+        }
+
+        [Fact] // HTC-6
+        public async Task Updater_Should_RaiseWrongVersionExceptionIfRecordHasTheSameVersionAsUpdater()
+        {
+            await this.Updater_Should_RaiseWrongVersionExceptionIfRecordHasTheSameVersionAsUpdaterForService(this.passw0rdData);
+            await this.Updater_Should_RaiseWrongVersionExceptionIfRecordHasTheSameVersionAsUpdaterForService(this.virgilData);
+        }
+
+        [Fact] // HTC-7
+        public async Task Updater_Should_RaiseWrongVersionExceptionIfRecordHasWrongVersion()
+        {
+            await this.Updater_Should_RaiseWrongVersionExceptionIfRecordHasWrongVersionForService(this.passw0rdData);
+            await this.Updater_Should_RaiseWrongVersionExceptionIfRecordHasWrongVersionForService(this.virgilData);
+        }
+
+        [Fact] // HTC-11
+        public async Task Enroll_Should_RaiseArgumentExceptionIfEmptyPassword()
+        {
+            await this.Enroll_Should_RaiseArgumentExceptionIfEmptyPasswordForService(this.passw0rdData);
+            await this.Enroll_Should_RaiseArgumentExceptionIfEmptyPasswordForService(this.virgilData);
+        }
+
+        private async Task Enroll_Should_RaiseArgumentExceptionIfEmptyPasswordForService(ServiceTestData serviceTestData)
+        {
+            var contextWithUpdateToken = this.InitContext(
+                serviceTestData.AppToken,
+                serviceTestData.ServicePublicKey2,
+                serviceTestData.ClientSecretKey2,
+                serviceTestData.ServiceSubdomain);
+            contextWithUpdateToken.UpdatePheClients(serviceTestData.UpdateTokenV3);
+            var protocol = new Protocol(contextWithUpdateToken);
+
+            var ex = await Record.ExceptionAsync(async () =>
+            {
+                await protocol.EnrollAccountAsync(string.Empty);
+            });
+
+            // raise exception
+            Assert.IsType<ArgumentException>(ex);
+        }
+
+        private ProtocolContext InitContext(string applicationToken, string servicePubKey, string clientPrivKey, string serviceSubdomain)
+        {
+            var serializer = new HttpBodySerializer();
+            var serviceUrl = ServiceUrl.ProvideByToken(applicationToken).Replace("api", serviceSubdomain);
+            var client = new PheHttpClient(serializer, applicationToken, serviceUrl);
+            var context = new ProtocolContext(applicationToken, client, servicePubKey, clientPrivKey);
+
+            return context;
+        }
+
+        private async Task EnrollAccount_Should_GenerateNewRecordForService(ServiceTestData serviceTestData)
+        {
+            var context = this.InitContext(
+                serviceTestData.AppToken,
+                serviceTestData.ServicePublicKey2,
+                serviceTestData.ClientSecretKey2,
+                serviceTestData.ServiceSubdomain);
 
             var protocol = new Protocol(context);
             var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
@@ -56,12 +130,45 @@
             Assert.Equal(enrollResult.Key, result.Key);
         }
 
-        [Fact] // HTC-2
-        public async Task EncrollAccountWithUpdateToken_Should_GenerateNewRecordWithTokenVersion()
+        private async Task Updater_Should_RaiseWrongVersionExceptionIfRecordHasWrongVersionForService(ServiceTestData serviceTestData)
+        {
+            // you will get exception if record version != (updater version - 1)
+            var context = this.InitContext(
+                serviceTestData.AppToken,
+                serviceTestData.ServicePublicKey2,
+                serviceTestData.ClientSecretKey2,
+                serviceTestData.ServiceSubdomain);
+            context.UpdatePheClients(serviceTestData.UpdateTokenV3);
+
+            var protocol = new Protocol(context);
+            var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
+            var databaseRec = DatabaseRecord.Parser.ParseFrom(enrollResult.Record);
+            databaseRec.Version = 1;
+
+            var recordUpdater = new RecordUpdater(serviceTestData.UpdateTokenV3);
+            var ex = Record.Exception(() =>
+            {
+                recordUpdater.Update(databaseRec.ToByteArray());
+            });
+            Assert.IsType<WrongVersionException>(ex);
+
+            var ex2 = await Record.ExceptionAsync(async () =>
+            {
+                await protocol.VerifyPasswordAsync(this.myPassword, databaseRec.ToByteArray());
+            });
+
+            Assert.IsType<WrongVersionException>(ex2);
+        }
+
+        private async Task EncrollAccountWithUpdateToken_Should_GenerateNewRecordWithTokenVersionForService(ServiceTestData serviceTestData)
         {
             // if token has version =  (keys' version + 1), then database record will have token version
-            var context = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
-            context.UpdatePheClients(this.updateTokenV3);
+            var context = this.InitContext(
+                serviceTestData.AppToken,
+                serviceTestData.ServicePublicKey2,
+                serviceTestData.ClientSecretKey2,
+                serviceTestData.ServiceSubdomain);
+            context.UpdatePheClients(serviceTestData.UpdateTokenV3);
 
             var protocol = new Protocol(context);
 
@@ -79,11 +186,14 @@
             Assert.Equal(enrollResult.Key, result.Key);
         }
 
-        [Fact] // HTC-3
-        public async Task VerifyPasswordWithWrongPassword_Should_ReturnResultWithEmptyKey()
+        private async Task VerifyPasswordWithWrongPassword_Should_ReturnResultWithEmptyKeyForService(ServiceTestData serviceTestData)
         {
             // you can't verify database record if provide wrong password
-            var context = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
+            var context = this.InitContext(
+                serviceTestData.AppToken,
+                serviceTestData.ServicePublicKey2,
+                serviceTestData.ClientSecretKey2,
+                serviceTestData.ServiceSubdomain);
 
             var protocol = new Protocol(context);
             var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
@@ -93,13 +203,19 @@
             Assert.Null(result.Key);
         }
 
-        [Fact] // HTC-4
-        public async Task ProtocolWithWrongServiceKey_Should_RaiseProofOfSuccessNotValidException()
+        private async Task ProtocolWithWrongServiceKey_Should_RaiseProofOfSuccessNotValidExceptionForService(ServiceTestData serviceTestData)
         {
-            // you will get ProofOfSuccessNotValidException if try to enroll with wrong servicePublicKey
-            var context = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
+            var context = this.InitContext(
+                serviceTestData.AppToken,
+                serviceTestData.ServicePublicKey2,
+                serviceTestData.ClientSecretKey2,
+                serviceTestData.ServiceSubdomain);
 
-            var contextWithWrongServerKey = this.InitContext(this.appToken, "PK.2.BK6oQNcAEyMc0fmc7coHbaQHqwoYPTiIM6A4393wEE9vRbCeUjKZSHzluHI80bGhJ61/eg1SUZNtgmMie4U80gI=", this.clientSecretKey2);
+            var contextWithWrongServerKey = this.InitContext(
+                serviceTestData.AppToken,
+                "PK.2.BK6oQNcAEyMc0fmc7coHbaQHqwoYPTiIM6A4393wEE9vRbCeUjKZSHzluHI80bGhJ61/eg1SUZNtgmMie4U80gI=",
+                serviceTestData.ClientSecretKey2,
+                serviceTestData.ServiceSubdomain);
 
             System.Threading.Thread.Sleep(5000);
 
@@ -122,21 +238,28 @@
             Assert.IsType<ProofOfSuccessNotValidException>(ex2);
         }
 
-        [Fact] // HTC-5
-        public async Task ProtocolWithUpdateToken_Should_VerifyUpdatedRecord()
+        private async Task ProtocolWithUpdateToken_Should_VerifyUpdatedRecordForService(ServiceTestData serviceTestData)
         {
             // you can verify updated record if context has updateToken with equal version
-            var context = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
+            var context = this.InitContext(
+                serviceTestData.AppToken,
+                serviceTestData.ServicePublicKey2,
+                serviceTestData.ClientSecretKey2,
+                serviceTestData.ServiceSubdomain);
 
-            var contextWithUpdateToken = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
-            contextWithUpdateToken.UpdatePheClients(this.updateTokenV3);
+            var contextWithUpdateToken = this.InitContext(
+                serviceTestData.AppToken,
+                serviceTestData.ServicePublicKey2,
+                serviceTestData.ClientSecretKey2,
+                serviceTestData.ServiceSubdomain);
+            contextWithUpdateToken.UpdatePheClients(serviceTestData.UpdateTokenV3);
 
             var protocol = new Protocol(context);
             var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
 
             Assert.Equal<uint>(2, DatabaseRecord.Parser.ParseFrom(enrollResult.Record).Version);
 
-            var recordUpdater = new RecordUpdater(this.updateTokenV3);
+            var recordUpdater = new RecordUpdater(serviceTestData.UpdateTokenV3);
             var updatedRecBytes = recordUpdater.Update(enrollResult.Record);
 
             Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(updatedRecBytes).Version);
@@ -148,18 +271,21 @@
             Assert.Equal(enrollResult.Key, result2.Key);
         }
 
-        [Fact] // HTC-6
-        public async Task Updater_Should_RaiseWrongVersionExceptionIfRecordHasTheSameVersionAsUpdater()
+        private async Task Updater_Should_RaiseWrongVersionExceptionIfRecordHasTheSameVersionAsUpdaterForService(ServiceTestData serviceTestData)
         {
             // you will get exception if record version == updater version
-            var context = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
-            context.UpdatePheClients(this.updateTokenV3);
+            var context = this.InitContext(
+                serviceTestData.AppToken,
+                serviceTestData.ServicePublicKey2,
+                serviceTestData.ClientSecretKey2,
+                serviceTestData.ServiceSubdomain);
+            context.UpdatePheClients(serviceTestData.UpdateTokenV3);
 
             var protocol = new Protocol(context);
             var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
             Assert.Equal<uint>(3, DatabaseRecord.Parser.ParseFrom(enrollResult.Record).Version);
 
-            var recordUpdater = new RecordUpdater(this.updateTokenV3);
+            var recordUpdater = new RecordUpdater(serviceTestData.UpdateTokenV3);
 
             var ex = Record.Exception(() =>
             {
@@ -167,59 +293,6 @@
             });
 
             Assert.IsType<WrongVersionException>(ex);
-        }
-
-        [Fact] // HTC-7
-        public async Task Updater_Should_RaiseWrongVersionExceptionIfRecordHasWrongVersion()
-        {
-            // you will get exception if record version != (updater version - 1)
-            var context = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
-            context.UpdatePheClients(this.updateTokenV3);
-
-            var protocol = new Protocol(context);
-            var enrollResult = await protocol.EnrollAccountAsync(this.myPassword);
-            var databaseRec = DatabaseRecord.Parser.ParseFrom(enrollResult.Record);
-            databaseRec.Version = 1;
-
-            var recordUpdater = new RecordUpdater(this.updateTokenV3);
-            var ex = Record.Exception(() =>
-            {
-                recordUpdater.Update(databaseRec.ToByteArray());
-            });
-            Assert.IsType<WrongVersionException>(ex);
-
-            var ex2 = await Record.ExceptionAsync(async () =>
-            {
-                await protocol.VerifyPasswordAsync(this.myPassword, databaseRec.ToByteArray());
-            });
-
-            Assert.IsType<WrongVersionException>(ex2);
-        }
-
-        [Fact] // HTC-11
-        public async Task Enroll_Should_RaiseArgumentExceptionIfEmptyPassword()
-        {
-            var contextWithUpdateToken = this.InitContext(this.appToken, this.servicePublicKey2, this.clientSecretKey2);
-            contextWithUpdateToken.UpdatePheClients(this.updateTokenV3);
-            var protocol = new Protocol(contextWithUpdateToken);
-
-            var ex = await Record.ExceptionAsync(async () =>
-            {
-                await protocol.EnrollAccountAsync(string.Empty);
-            });
-
-            // raise exception
-            Assert.IsType<ArgumentException>(ex);
-        }
-
-        private ProtocolContext InitContext(string applicationToken, string servicePubKey, string clientPrivKey)
-        {
-            var serializer = new HttpBodySerializer();
-            var serviceUrl = ServiceUrl.ProvideByToken(applicationToken).Replace("api", this.serviceSubdomain);
-            var client = new PheHttpClient(serializer, applicationToken, serviceUrl);
-            var context = new ProtocolContext(applicationToken, client, servicePubKey, clientPrivKey);
-
-            return context;
         }
     }
 }
