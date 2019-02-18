@@ -56,7 +56,7 @@ using Passw0rd;
 
 // here set your passw0rd credentials
 var context = ProtocolContext.Create(
-    appToken: "PT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
+    appToken: "AT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
     servicePublicKey: "PK.1.BFFiWkunWRuVMvJVybtCOZEReUui5V3NmwY21doyxoFlurSYEo1fwSW22mQ8ZPq9pUWVm1rvYhF294wstqu//a4=",
     appSecretKey: "SK.1.YEwMBsXkJ5E5Mb9VKD+pu+gRXOySZXWaRXvkFebRYOc="
 );
@@ -232,7 +232,7 @@ using Passw0rd;
 
 // here set your passw0rd credentials
 var context = ProtocolContext.Create(
-    appToken: "PT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
+    appToken: "AT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
     servicePublicKey: "PK.1.BFFiWkunWRuVMvJVybtCOZEReUui5V3NmwY21doyxoFlurSYEo1fwSW22mQ8ZPq9pUWVm1rvYhF294wstqu//a4=",
     appSecretKey: "SK.1.YEwMBsXkJ5E5Mb9VKD+pu+gRXOySZXWaRXvkFebRYOc=",
     updateToken: "UT.2.00000000+0000000000000000000008UfxXDUU2FGkMvKhIgqjxA+hsAtf17K5j11Cnf07jB6uVEvxMJT0lMGv00000="

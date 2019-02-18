@@ -7,6 +7,7 @@
     using Passw0rd;
     using Passw0rd.Client;
     using Passw0rd.Client.Connection;
+    using Passw0rd.Utils;
     using Xunit;
 
     public class ProtocolTests
