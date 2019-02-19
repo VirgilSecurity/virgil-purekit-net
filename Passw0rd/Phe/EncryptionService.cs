@@ -115,6 +115,7 @@ namespace Passw0rd.Phe
                 new KeyParameter(keyNonceSlice1.ToArray()),
                 SymTagLen * 8,
                 keyNonceSlice2.ToArray());
+            
             cipher.Init(true, parameters);
 
             var cipherText = new byte[cipher.GetOutputSize(data.Length)];

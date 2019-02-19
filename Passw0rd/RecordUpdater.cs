@@ -37,9 +37,7 @@
 
 namespace Passw0rd
 {
-    using System;
     using Google.Protobuf;
-    using Passw0Rd;
     using Passw0rd.Utils;
 
     public class RecordUpdater

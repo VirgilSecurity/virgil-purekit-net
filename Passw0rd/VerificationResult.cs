@@ -32,17 +32,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
-*/
+ */
 
-namespace Passw0rd.Client
+namespace Passw0rd
 {
-    using System.Threading.Tasks;
-    using Passw0rd;
-
-    public interface IPheHttpClient
+    public class VerificationResult
     {
-        Task<VerifyPasswordResponse> VerifyAsync(VerifyPasswordRequest request);
+        public bool IsSuccess { get; set; }
 
-        Task<EnrollmentResponse> GetEnrollment(EnrollmentRequest request);
+        public byte[] Key { get; set; }
     }
 }

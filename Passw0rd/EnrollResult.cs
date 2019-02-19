@@ -34,15 +34,21 @@
  * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 */
 
-namespace Passw0rd.Client
+namespace Passw0rd
 {
-    using System.Threading.Tasks;
-    using Passw0rd;
+    using System;
 
-    public interface IPheHttpClient
+    public class EnrollResult
     {
-        Task<VerifyPasswordResponse> VerifyAsync(VerifyPasswordRequest request);
+        /// <summary>
+        /// Encrypted Passw0rd's record.(Is associated with the user. You can keep it in your database.)
+        /// </summary>
+        public byte[] Record { get; set; }
 
-        Task<EnrollmentResponse> GetEnrollment(EnrollmentRequest request);
+        /// <summary>
+        /// Secret key, that can be used to encrypt user's data.
+        /// </summary>
+        /// <value>The key.</value>
+        public byte[] Key { get; set; }
     }
 }

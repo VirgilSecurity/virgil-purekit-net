@@ -38,7 +38,6 @@ namespace Passw0rd
 {
     using System.Threading.Tasks;
     using Google.Protobuf;
-    using Passw0Rd;
     using Passw0rd.Utils;
 
     /// <summary>
@@ -70,44 +69,53 @@ namespace Passw0rd
             Validation.NotNull(
                 context,
                 "Context with Application token, Service Public Key and Application Secret Key isn't provided.");
+            
             this.ctx = context;
         }
 
         /// <summary>
         /// Creates a new encrypted password record using user's password.
         /// </summary>
-        /// <returns>
+        /// <returns>The instance of the <see cref="EnrollResult"/> which contains
         /// Encrypted Passw0rd's record.(Is associated with the user. You can keep it in your database.)
-        /// Secret key, that can be used to encrypt user's data.
+        /// and Secret key, that can be used to encrypt user's data.
         /// </returns>
         /// <param name="password">User's Password.</param>
-        public async Task<(byte[], byte[])> EnrollAccountAsync(string password)
+        public async Task<EnrollResult> EnrollAccountAsync(string password)
         {
             Validation.NotNullOrWhiteSpace(password, "User's password isn't provided.");
 
             var enrollmentResp = await this.ctx.Client.GetEnrollment(
                 new EnrollmentRequest() { Version = this.ctx.CurrentVersion })
                 .ConfigureAwait(false);
+            
             var pwdBytes = Bytes.FromString(password);
             var pheClient = this.ctx.PheClients[this.ctx.CurrentVersion];
             var (enrollmentRecord, key) = pheClient.EnrollAccount(
                 pwdBytes,
                 enrollmentResp.Response.ToByteArray());
+            
             var record = new DatabaseRecord
             {
                 Version = this.ctx.CurrentVersion,
                 Record = ByteString.CopyFrom(enrollmentRecord),
             };
-            return (record.ToByteArray(), key);
+
+            return new EnrollResult
+            {
+                Record = record.ToByteArray(),
+                Key = key,
+            };
         }
 
         /// <summary>
         /// Verifies encrypted password record using user's password.
         /// </summary>
-        /// <returns>EncryptionKey wich you can use for decrypting user's data.</returns>
+        /// <returns> a new instance of the <see cref="VerificationResult"/> class
+        ///  which contaains status and containsSecret key, that can be used to encrypt user's data. </returns>
         /// <param name="password">User's password.</param>
         /// <param name="pwdRecord">Encrypted password record to be verified.</param>
-        public async Task<byte[]> VerifyPasswordAsync(string password, byte[] pwdRecord)
+        public async Task<VerificationResult> VerifyPasswordAsync(string password, byte[] pwdRecord)
         {
             Validation.NotNullOrWhiteSpace(password, "User's password isn't provided.");
             Validation.NotNullOrEmptyByteArray(pwdRecord, "User's record isn't provided.");
@@ -129,7 +137,7 @@ namespace Passw0rd
                 pwdBytes,
                 databaseRecord.Record.ToByteArray());
 
-            var versionedPasswordRequest = new Passw0Rd.VerifyPasswordRequest()
+            var versionedPasswordRequest = new Passw0rd.VerifyPasswordRequest()
             {
                 Version = databaseRecord.Version,
                 Request = ByteString.CopyFrom(pheVerifyPasswordRequest),

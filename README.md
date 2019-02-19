@@ -56,7 +56,7 @@ using Passw0rd;
 
 // here set your passw0rd credentials
 var context = ProtocolContext.Create(
-    appToken: "PT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
+    appToken: "AT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
     servicePublicKey: "PK.1.BFFiWkunWRuVMvJVybtCOZEReUui5V3NmwY21doyxoFlurSYEo1fwSW22mQ8ZPq9pUWVm1rvYhF294wstqu//a4=",
     appSecretKey: "SK.1.YEwMBsXkJ5E5Mb9VKD+pu+gRXOySZXWaRXvkFebRYOc="
 );
@@ -117,18 +117,18 @@ using Passw0rd.Utils;
 var password = "passw0rd";
 
 // create a new encrypted password record using user password or its hash
-var (record, key) = await protocol.EnrollAccountAsync(password);
+var enrollResult = await protocol.EnrollAccountAsync(password);
 // note that record is a byte array.
 
 // save encrypted passw0rd record into your users DB
 // you can save encrypted passw0rd record to database as byte array or as base64 string
 
 // encode encrypted password record base64 string
-var recordBase64 = Bytes.ToString(record, StringEncoding.BASE64); 
+var recordBase64 = Bytes.ToString(enrollResult.Record, StringEncoding.BASE64); 
 
 //use encryptionKey for protecting user data
 var phe = new PheCrypto();
-var encrypted = phe.Encrypt(data, key);
+var encrypted = phe.Encrypt(data, enrollResult.Key);
 ```
 
 When you've created a passw0rd's `record` for all users in your DB, you can delete the unnecessary column where user passwords were previously stored.
@@ -136,7 +136,7 @@ When you've created a passw0rd's `record` for all users in your DB, you can dele
 
 ### Verify User Record
 
-Use this flow when a user already has his or her own passw0rd's `record` in your database. This function allows you to verify user's password with the `record` from your DB every time when the user signs in. You have to pass his or her `record` from your DB into the `VerifyPasswordAsync` function:
+Use this flow when a user already has his or her own passw0rd's `enrollResult.Record` in your database. This function allows you to verify user's password with the `enrollResult.Record` from your DB every time when the user signs in. You have to pass his or her `enrollResult.Record` from your DB into the `VerifyPasswordAsync` function:
 
 ```cs
 using Passw0rd;
@@ -146,12 +146,12 @@ using Passw0rd.Phe;
 var passwordCandidate = "passw0rd";
 
 // check candidate password with encrypted password record from your DB
-var key = await protocol.VerifyPasswordAsync(passwordCandidate, record);
-//a WrongPasswordException will be raised if passwordCandidate is wrong.
+var verifyResult = await protocol.VerifyPasswordAsync(passwordCandidate, record);
+// (verifyResult.IsSuccess == false) if passwordCandidate is wrong.
 
-//use encryptionKey for decrypting user data
+//use verifyResult.Key for decrypting user data
 var phe = new PheCrypto();
-var decrypted = phe.Decrypt(encrypted, key);
+var decrypted = phe.Decrypt(encrypted, verifyResult.Key);
 ```
 
 ## Encrypt user data in your database
@@ -161,11 +161,11 @@ Not only user's password is a sensitive data. In this flow we will help you to p
 PII is a data that could potentially identify a specific individual, and PII can be sensitive.
 Sensitive PII is information which, when disclosed, could result in harm to the individual whose privacy has been breached. Sensitive PII should therefore be encrypted in transit and when data is at rest. Such information includes biometric information, medical information, personally identifiable financial information (PIFI) and unique identifiers such as passport or Social Security numbers.
 
-Passw0rd service allows you to protect user's PII (personal data) with a user's `encryptionKey` that is obtained from `EnrollAccount` or `VerifyPasswordAsync` functions. The `encryptionKey` will be the same for both functions.
+Passw0rd service allows you to protect user's PII (personal data) with a user's `verifyResult.Key` that is obtained from `EnrollAccount` or `VerifyPasswordAsync` functions. The `verifyResult.Key` will be the same for both functions.
 
-In addition, this key is unique to a particular user and won't be changed even after rotating (updating) the user's `record`. The `encryptionKey` will be updated after user changes own password.
+In addition, this key is unique to a particular user and won't be changed even after rotating (updating) the user's `enrollResult.Record`. The `verifyResult.Key` will be updated after user changes own password.
 
-Here is an example of data encryption/decryption with an `encryptionKey`:
+Here is an example of data encryption/decryption with an `verifyResult.Key`:
 
 
 ```cs
@@ -173,13 +173,14 @@ using Passw0rd;
 using Passw0rd.Phe;
 using Passw0rd.Utils;
 
+var phe = new PheCrypto();
 var data = Bytes.FromString("Personal data", StringEncoding.UTF8);
 
 //encryptionKey is obtained from protocol.EnrollAccountAsync()
 // or protocol.VerifyPasswordAsync() calls
-var ciphertext = phe.Encrypt(data, encryptionKey);
+var ciphertext = phe.Encrypt(data, verifyResult.Key);
             
-var decrypted = phe.Decrypt(ciphertext, encryptionKey);
+var decrypted = phe.Decrypt(ciphertext, verifyResult.Key);
 
 //use decrypted data
 
@@ -187,7 +188,7 @@ var decrypted = phe.Decrypt(ciphertext, encryptionKey);
 
 Encryption is performed using AES256-GCM with key & nonce derived from the user's encryptionKey using HKDF and random 256-bit salt.
 
-Virgil Security has Zero knowledge about a user's `encryptionKey`, because the key is calculated every time when you execute `EnrollAccount` or `VerifyPassword` functions at your server side.
+Virgil Security has Zero knowledge about a user's `Key`, because the key is calculated every time when you execute `EnrollAccountAsync` or `VerifyPasswordAsync` functions at your server side.
 
 
 ## Rotate app keys and user record
@@ -231,7 +232,7 @@ using Passw0rd;
 
 // here set your passw0rd credentials
 var context = ProtocolContext.Create(
-    appToken: "PT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
+    appToken: "AT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
     servicePublicKey: "PK.1.BFFiWkunWRuVMvJVybtCOZEReUui5V3NmwY21doyxoFlurSYEo1fwSW22mQ8ZPq9pUWVm1rvYhF294wstqu//a4=",
     appSecretKey: "SK.1.YEwMBsXkJ5E5Mb9VKD+pu+gRXOySZXWaRXvkFebRYOc=",
     updateToken: "UT.2.00000000+0000000000000000000008UfxXDUU2FGkMvKhIgqjxA+hsAtf17K5j11Cnf07jB6uVEvxMJT0lMGv00000="
@@ -263,7 +264,7 @@ saveNewRecord(newRecord);
 
 So, run the `Update()` function and save user's `newRecord` into your database.
 
-Since the SDK is able to work simultaneously with two versions of user's records (`newRecordBytes` and `oldRecordBytes`), this will not affect the backend or users. This means, if a user logs into your system when you do the migration, the passw0rd SDK will verify his password without any problems because Passw0rd Service can work with both user's records (`newRecordBytes` and `oldRecordBytes`).
+Since the SDK is able to work simultaneously with two versions of user's records (`newRecord` and `oldRecord`), this will not affect the backend or users. This means, if a user logs into your system when you do the migration, the passw0rd SDK will verify his password without any problems because Passw0rd Service can work with both user's records (`newRecord` and `oldRecord`).
 
 **Step 4.** Get a new `APP_SECRET_KEY` and `SERVICE_PUBLIC_KEY` of a specific application
 

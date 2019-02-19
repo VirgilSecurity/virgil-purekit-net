@@ -38,7 +38,7 @@ namespace Passw0rd.Utils
 {
     using System;
     using Google.Protobuf;
-    using Passw0Rd;
+    using Passw0rd;
 
     internal static class StringUpdateTokenParser
     {

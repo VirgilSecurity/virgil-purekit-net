@@ -38,7 +38,7 @@ namespace Passw0rd.Client
 {
     using System.Net.Http;
     using System.Threading.Tasks;
-    using Passw0Rd;
+    using Passw0rd;
     using Passw0rd.Client.Connection;
 
     public class PheHttpClient : HttpClientBase, IPheHttpClient

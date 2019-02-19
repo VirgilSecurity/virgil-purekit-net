@@ -2,9 +2,6 @@ version: 1.0.{build}
 image: Visual Studio 2017
 configuration: Release
 platform: Any CPU
-environment:
-  key: 
-    secure: Z23YYnzGqOn60Den69t4Q3IuCPdSTjUuGDoBjgquidI= 
 before_build:
 - cmd: >-
     nuget restore Passw0rd.sln
