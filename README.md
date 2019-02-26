@@ -24,13 +24,13 @@ PHE is a new, more secure mechanism that protects user passwords and lessens the
 
 ## Register Your Account
 Before starting practicing with the SDK and usage examples make sure that:
-- you have a registered at [Virgil Dashboard](https://dashboard.virgilsecurity.com/)
+- you have registered at [Virgil Dashboard](https://dashboard.virgilsecurity.com/)
 - you created an application for the Passw0rd use case
 - and you got your passw0rd application's credentials such as: `App Secret Key`, `Service Public Key`, `App Token`
 
 
 ## Install and Configure SDK
-The Passw0rd .NET SDK is provided as a package named `Passw0rd`. The package is distributed via [NuGet package](https://docs.microsoft.com/en-us/nuget/quickstart/use-a-package) management system.
+The Passw0rd .NET SDK is provided as a package named `Virgil.Passw0rd`. The package is distributed via [NuGet package](https://docs.microsoft.com/en-us/nuget/quickstart/use-a-package) management system.
 
 The package is available for .NET Core 2.1
 
