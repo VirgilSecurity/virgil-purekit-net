@@ -1,4 +1,4 @@
-# Passw0rd .NET/C# SDK
+# Virgil.Passw0rd .NET/C# SDK
 
 [![Nuget package](https://img.shields.io/nuget/v/passw0rd.svg)](https://www.nuget.org/packages/Passw0rd/) 
 [![Build status](https://ci.appveyor.com/api/projects/status/kqs4lqw426gbpccm/branch/release?svg=true)](https://ci.appveyor.com/project/unlim-it/sdk-net/branch/release)
@@ -46,7 +46,7 @@ The package is available for .NET Core 2.1
 Installing the package using Package Manager Console:
 
 ```bash
-PM> Install-Package Passw0rd -Version 0.2.0
+PM> Install-Package Virgil.Passw0rd -Version 1.0.0
 ```
 
 ### Configure SDK
@@ -67,7 +67,7 @@ var protocol = new Protocol(context);
 
 
 ## Prepare Your Database
-Passw0rd SDK allows you to easily perform all the necessary operations to create, verify and rotate user's `record`.
+Virgil.Passw0rd SDK allows you to easily perform all the necessary operations to create, verify and rotate user's `record`.
 
 **Passw0rd record** - a user's password that is protected with our Passw0rd technology. Passw0rd `record` contains a version, client & server random salts and two values obtained during execution of the PHE protocol.
 
@@ -106,8 +106,8 @@ Use this flow to create a new passw0rd's `record` in your DB for a user.
 
 So, in order to create a `record` for a new database or available one, go through the following operations:
 - Take a user's **password** (or its hash or whatever you use) and pass it into the `EnrollAccount` function in a SDK on your Server side.
-- Passw0rd SDK will send a request to Passw0rd Service to get enrollment.
-- Then, Passw0rd SDK will create a user's `record`. You need to store this unique user's `record` in your database in associated column.
+- Virgil.Passw0rd SDK will send a request to Passw0rd Service to get enrollment.
+- Then, Virgil.Passw0rd SDK will create a user's `record`. You need to store this unique user's `record` in your database in associated column.
 
 ```cs
 using Passw0rd;
@@ -223,8 +223,8 @@ passw0rd application rotate <app_token>
 ```
 as a result, you get your `UPDATE_TOKEN`.
 
-**Step 2.** Initialize passw0rd SDK with the `UPDATE_TOKEN`.
-Move to passw0rd SDK configuration file and specify your `UPDATE_TOKEN`:
+**Step 2.** Initialize Virgil.Passw0rd SDK with the `UPDATE_TOKEN`.
+Move to Virgil.Passw0rd SDK configuration file and specify your `UPDATE_TOKEN`:
 
 
 ```cs
@@ -264,7 +264,7 @@ saveNewRecord(newRecord);
 
 So, run the `Update()` function and save user's `newRecord` into your database.
 
-Since the SDK is able to work simultaneously with two versions of user's records (`newRecord` and `oldRecord`), this will not affect the backend or users. This means, if a user logs into your system when you do the migration, the passw0rd SDK will verify his password without any problems because Passw0rd Service can work with both user's records (`newRecord` and `oldRecord`).
+Since the SDK is able to work simultaneously with two versions of user's records (`newRecord` and `oldRecord`), this will not affect the backend or users. This means, if a user logs into your system when you do the migration, the Virgil.Passw0rd SDK will verify his password without any problems because Passw0rd Service can work with both user's records (`newRecord` and `oldRecord`).
 
 **Step 4.** Get a new `APP_SECRET_KEY` and `SERVICE_PUBLIC_KEY` of a specific application
 
@@ -278,7 +278,7 @@ Use passw0rd CLI `update-keys` command and your `UPDATE_TOKEN` to update the `AP
 passw0rd application update-keys <service_public_key> <app_secret_key> <update_token>
 ```
 
-**Step 5.** Move to passw0rd SDK configuration and replace your previous `APP_SECRET_KEY`,  `SERVICE_PUBLIC_KEY` with a new one (`APP_TOKEN` will be the same). Delete previous `APP_SECRET_KEY`, `SERVICE_PUBLIC_KEY` and `UPDATE_TOKEN`.
+**Step 5.** Move to Virgil.Passw0rd SDK configuration and replace your previous `APP_SECRET_KEY`,  `SERVICE_PUBLIC_KEY` with a new one (`APP_TOKEN` will be the same). Delete previous `APP_SECRET_KEY`, `SERVICE_PUBLIC_KEY` and `UPDATE_TOKEN`.
 
 
 ```cs
