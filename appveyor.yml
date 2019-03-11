@@ -8,13 +8,13 @@ configuration: Release
 platform: Any CPU
 before_build:
 - cmd: >-
-    nuget restore Passw0rd.sln
+    nuget restore PureKit.sln
 
     nuget install secure-file -ExcludeVersion
 
-    IF [%APPVEYOR_PULL_REQUEST_NUMBER%]==[] (secure-file\tools\secure-file -decrypt C:\projects\sdk-net\Passw0rd.Tests\appsettings.json.enc -secret %key%) ELSE (type nul > C:\projects\sdk-net\Passw0rd.Tests\appsettings.json)
+    IF [%APPVEYOR_PULL_REQUEST_NUMBER%]==[] (secure-file\tools\secure-file -decrypt C:\projects\sdk-net\PureKit.Tests\appsettings.json.enc -secret %key%) ELSE (type nul > C:\projects\sdk-net\PureKit.Tests\appsettings.json)
 build:
-  project: Passw0rd.sln
+  project: PureKit.sln
   verbosity: detailed
 test_script:
 - cmd: IF [%APPVEYOR_PULL_REQUEST_NUMBER%]==[] dotnet test
