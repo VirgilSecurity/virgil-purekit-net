@@ -1,4 +1,4 @@
-# Virgil.PureKit .NET/C# SDK
+# Virgil PureKit .NET/C# SDK
 
 [![Nuget package](https://img.shields.io/nuget/v/virgil.purekit.svg)](https://www.nuget.org/packages/Virgil.PureKit/) 
 [![Build status](https://ci.appveyor.com/api/projects/status/kqs4lqw426gbpccm/branch/release?svg=true)](https://ci.appveyor.com/project/unlim-it/sdk-net/branch/release)
@@ -55,7 +55,7 @@ Here is an example of how to specify your credentials Protocol class instance:
 ```cs
 using Virgil.PureKit;
 
-// here set your PureKit credentials
+// here set your PURE App credentials
 var context = ProtocolContext.Create(
     appToken: "AT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
     servicePublicKey: "PK.1.BFFiWkunWRuVMvJVybtCOZEReUui5V3NmwY21doyxoFlurSYEo1fwSW22mQ8ZPq9pUWVm1rvYhF294wstqu//a4=",
@@ -216,7 +216,7 @@ Move to Virgil.PureKit SDK configuration file and specify your `UPDATE_TOKEN`:
 ```cs
 using Virgil.PureKit;
 
-// here set your PureKit credentials
+// here set your PURE App credentials
 var context = ProtocolContext.Create(
     appToken: "AT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
     servicePublicKey: "PK.1.BFFiWkunWRuVMvJVybtCOZEReUui5V3NmwY21doyxoFlurSYEo1fwSW22mQ8ZPq9pUWVm1rvYhF294wstqu//a4=",
@@ -273,7 +273,7 @@ virgil pure update-keys <service_public_key> <app_secret_key> <update_token>
 ```cs
 using Virgil.PureKit;
 
-// here set up your PURE App credentials
+// here set your PURE App credentials
 var context = ProtocolContext.Create(
     appToken: "APP_TOKEN_HERE",
     servicePublicKey: "NEW_SERVICE_PUBLIC_KEY_HERE",
