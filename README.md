@@ -273,7 +273,7 @@ virgil pure update-keys <service_public_key> <app_secret_key> <update_token>
 ```cs
 using Virgil.PureKit;
 
-// here set your passw0rd credentials
+// here set up your PURE App credentials
 var context = ProtocolContext.Create(
     appToken: "APP_TOKEN_HERE",
     servicePublicKey: "NEW_SERVICE_PUBLIC_KEY_HERE",
