@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>1.0.0</PackageVersion>
+    <PackageVersion>2.0.0</PackageVersion>
     <Authors>Virgil Security, Inc</Authors>
     <Owners>VirgilSecurity</Owners>
     <PackageId>Virgil.PureKit</PackageId>
