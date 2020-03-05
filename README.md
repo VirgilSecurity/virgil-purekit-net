@@ -1,15 +1,12 @@
-# Virgil PureKit .NET/C# SDK
 
+# Virgil PureKit C#/.NET
 [![Nuget package](https://img.shields.io/nuget/v/virgil.purekit.svg)](https://www.nuget.org/packages/Virgil.PureKit/) 
-[![Build status](https://ci.appveyor.com/api/projects/status/kqs4lqw426gbpccm/branch/release?svg=true)](https://ci.appveyor.com/project/unlim-it/sdk-net/branch/release)
 [![GitHub license](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](https://github.com/VirgilSecurity/virgil/blob/master/LICENSE)
 
-
-[Introduction](#introduction) | [Features](#features) | [Register Your Account](#register-your-account) | [Install and configure SDK](#install-and-configure-sdk) | [Prepare Your Database](#prepare-your-database) | [Usage Examples](#usage-examples) | [Docs](#docs) | [Support](#support)
-
+<a href="https://developer.virgilsecurity.com"><img width="230px" src="https://cdn.virgilsecurity.com/assets/images/github/logos/purekit/PureKit.png" align="left" hspace="1" vspace="3"></a>
 
 ## Introduction
-<img src="https://cdn.virgilsecurity.com/assets/images/github/logos/pure_grey_logo.png" align="left" hspace="0" vspace="0"></a>[Virgil Security](https://virgilsecurity.com) introduces an implementation of the [Password-Hardened Encryption (PHE) protocol](https://virgilsecurity.com/wp-content/uploads/2018/11/PHE-Whitepaper-2018.pdf) – a powerful and revolutionary cryptographic technology that provides stronger and more modern security, that secures users' data and lessens the security risks associated with weak passwords.
+[Virgil Security](https://virgilsecurity.com) introduces an implementation of the [Password-Hardened Encryption (PHE) protocol](https://virgilsecurity.com/wp-content/uploads/2018/11/PHE-Whitepaper-2018.pdf) – a powerful and revolutionary cryptographic technology that provides stronger and more modern security, that secures users' data and lessens the security risks associated with weak passwords.
 
 Virgil PureKit allows developers interacts with Virgil PHE Service to protect users' passwords and sensitive personal identifiable information (PII data) in a database from offline/online attacks and makes stolen passwords/data useless if your database has been compromised. Neither Virgil nor attackers know anything about users' passwords/data.
 
@@ -24,38 +21,49 @@ This technology can be used within any database or login system that uses a pass
 - Instant invalidation of stolen database
 - User data encryption with a personal key
 
+## Content
+- [Introduction](#introduction)
+- [Features](#features)
+- [Install and configure PureKit](#install-and-configure-purekit)
+- [Usage Examples](#usage-examples)
+  - [Generate user's Pure Record](#generate-users-pure-record)
+  - [Verify user's password](#verify-users-password)
+  - [Change user's password](#change-users-password)
+  - [Data encryption & decryption](#data-encryption--decryption)
+  - [Re-encrypt data when password is changed](#re-encrypt-data-when-password-is-changed)
+  - [Rotate Keys and Records](#rotate-keys-and-records)
+  - [Uninstall PureKit](#uninstall-purekit)
+- [Docs](#docs)
+- [License](#license)
+- [Support](#support)
 
-## Register Your Account
-Before starting practicing with the SDK and usage examples make sure that:
-- you have a registered Virgil Account at [Virgil Dashboard](https://dashboard.virgilsecurity.com/)
-- you created PURE Application
-- and you got your PureKit application's credentials such as: `APP_TOKEN`, `APP_SECRET_KEY`, `SERVICE_PUBLIC_KEY`
+## Install and configure PureKit
 
+This guide is the first step to adding password-hardened encryption to your database. Here you can learn how to set up PureKit at your backend to protect your users's passwords and data.
 
-## Install and Configure PureKit
-The Virgil.PureKit .NET/C# SDK is provided as a package named `Virgil.PureKit`. The package is distributed via [NuGet package](https://docs.microsoft.com/en-us/nuget/quickstart/use-a-package) management system.
+For more details about password-hardened encryption (PHE), take a look at our overview [here](https://developer.virgilsecurity.com/docs/purekit/fundamentals/password-hardened-encryption/).
 
-The package is available for .NET Core 2.1
+### Install PureKit package
 
-**Supported platforms**:
-- MacOS
-- Linux
-- Windows
+Use your package manager to download PureKit into your backend.
 
-### Install PureKit Package
+The PureKit .NET SDK is provided as a package named PureKit and distributed via NuGet package management system The package is available for .NET Framework 4.5 and newer.
 
-Installing the package using Package Manager Console:
+Install the PureKit .NET SDK package using Package Manager Console:
 
-```bash
-PM> Install-Package Virgil.PureKit -Version 2.0.0
+```PHP
+PM > Install-Package Virgil.PureKit -Version 2.0.0
 ```
 
+
+
 ### Configure PureKit
-Here is an example of how to specify your credentials Protocol class instance:
-```cs
+Navigate to [Virgil Dashboard](https://dashboard.virgilsecurity.com), create a new Pure application and configure PureKit framework with your application credentials:
+
+```C#
 using Virgil.PureKit;
 
-// here set your PURE App credentials
+// here set your PureKit credentials
 var context = ProtocolContext.Create(
     appToken: "AT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
     servicePublicKey: "PK.1.BFFiWkunWRuVMvJVybtCOZEReUui5V3NmwY21doyxoFlurSYEo1fwSW22mQ8ZPq9pUWVm1rvYhF294wstqu//a4=",
@@ -65,52 +73,41 @@ var context = ProtocolContext.Create(
 var protocol = new Protocol(context);
 ```
 
-## Prepare Your Database
-Virgil.PureKit SDK allows you to easily perform all the necessary operations to create, verify and rotate (update) user's `PureRecord`.
 
-**Pure Record** - a user's password that is protected with our PureKit technology. Pure `record` contains a version, client & server random salts and two values obtained during execution of the PHE protocol.
+#### Prepare your database
 
-In order to create and work with user's Pure `record` you have to set up your database with an additional column.
+A **Pure record** is a user password that is protected with our PureKit technology. A Pure Record contains the version, client & server random salts, and two values obtained during the execution of the PHE protocol.
+
+In order to create and work with a user's `record`, you need to add an additional column to your database table.
 
 The column must have the following parameters:
-<table class="params">
-<thead>
-        <tr>
-            <th>Parameters</th>
-            <th>Type</th>
-            <th>Size (bytes)</th>
-            <th>Description</th>
-        </tr>
-</thead>
 
-<tbody>
-<tr>
-    <td>record</td>
-    <td>bytearray</td>
-    <td>210</td>
-    <td> A unique record, namely a user's protected Pure Record.</td>
-</tr>
+|Parameters|Type|Size (bytes)|Description|
+|--- |--- |--- |--- |
+|record|bytearray|210|A unique Pure record, namely a user's protected password.|
 
-</tbody>
-</table>
+#### Generate a recovery key pair (optional)
 
+To be able to move away from Pure without having to put your users through registering again, or just to be able to recover data that your users may lose, you need to make a backup of your database, generate a recovery key pair and encrypt your backup with the recovery public key. The public key will be used to encrypt the database at the enrollment step.
+
+To generate a recovery keypair, [install Virgil Crypto Library](https://github.com/VirgilSecurity/virgil-crypto) and use the code snippet below. Store the public key in your database and save the private key securely on another external device.
+
+> **Warning!** You won’t be able to restore your recovery private key, so it is crucial not to lose it.
 
 ## Usage Examples
 
-### Enroll User Record
+### Generate user's Pure Record
 
-Use this flow to create a `PureRecord` in your DB for a user.
+To create a Pure `record` for a database:
+- Take the user's **password** (or hash) and pass it into the `EnrollAccount` function.
+- Store this user's unique `record` in your database.
 
-> Remember, if you already have a database with user passwords, you don't have to wait until a user logs in into your
- system to implement PHE technology. You can go through your database and enroll (create) a user's
- Pure `Record` at any time.
+The enrollment snippet below also provides an example on how to protect user personal data with `encryptionKey` and encrypt user password hashes with `recoveryPublicKey`.
 
-So, in order to create a Pure `Record` for a new database or available one, go through the following operations:
-- Take a user's **password** (or its hash or whatever you use) and pass it into the `EnrollAccountAsync` function in a PureKit on your Server side.
-- PureKit will send a request to PureKit service to get enrollment.
-- Then, PureKit will create a user's Pure `Record`. You need to store this unique user's Pure `Record` in your database in associated column.
+> Warning! If you need to update your user's Pure Records, for instance, if your database is COMPROMISED, take the immediate steps according to [this guide](#rotate-keys-and-records).
 
-```cs
+
+```C#
 using Virgil.PureKit;
 using Virgil.PureKit.Phe;
 using Virgil.PureKit.Utils;
@@ -125,22 +122,20 @@ var enrollResult = await protocol.EnrollAccountAsync(password);
 // you can save encrypted Pure record enrollResult.Record to database as byte array or as base64 string
 
 // encode encrypted password record base64 string
-var recordBase64 = Bytes.ToString(enrollResult.Record, StringEncoding.BASE64); 
+var recordBase64 = Bytes.ToString(enrollResult.Record, StringEncoding.BASE64);
 
 //use encryption key enrollResult.Key for protecting user data
 var phe = new PheCrypto();
 var encrypted = phe.Encrypt(data, enrollResult.Key);
 ```
 
-When you've created a Pure `record` for all users in your DB, you can delete the unnecessary column where user passwords were previously stored.
+> **Note!** If you have a database with user passwords, you don't have to wait until they log in. You can go through your database and enroll (create) a user's Pure Record at any time.
 
+### Verify user's password
 
-### Verify User Record
+After a user has their Pure Record, you can authenticate the user by verifying their password using the `VerifyPassword` function:
 
-Use this flow when a user already has his or her own Pure `record` in your database. This function allows you to
-verify user's password with the Pure `record` from your DB every time when the user signs in. You have to pass his or her Pure `record` from your DB into the `VerifyPasswordAsync` function:
-
-```cs
+```C#
 using Virgil.PureKit;
 using Virgil.PureKit.Phe;
 
@@ -156,23 +151,28 @@ var phe = new PheCrypto();
 var decrypted = phe.Decrypt(encrypted, verifyResult.Key);
 ```
 
-## Encrypt user data in your database
+### Change user's password
 
-Not only user's password is a sensitive data. In this flow we will help you to protect any Personally identifiable information (PII) in your database.
+Use this flow when a user wants to change their password.
 
-PII is a data that could potentially identify a specific individual, and PII can be sensitive.
-Sensitive PII is information which, when disclosed, could result in harm to the individual whose privacy has been breached. Sensitive PII should therefore be encrypted in transit and when data is at rest. Such information includes biometric information, medical information, personally identifiable financial information (PIFI) and unique identifiers such as passport or Social Security numbers.
+> **Warning!** If you use PureKit not only for hardening passwords, but also for encrypting user's data, you'll have to re-encrypt user's data with the new key so that the user doesn't lose access to it. Navigate to [this guide](#re-encrypt-data-when-password-is-changed) and follow the instructions there.
 
-PureKit service allows you to protect user's PII (personal data) with a user's `encryptionKey` that is obtained from
-`EnrollAccount` or `VerifyPassword` functions. The `encryptionKey` will be the same for both functions.
+If you're using PureKit only for encrypting passwords, then you have to simply create a new Pure Record using the new password for the user, and replace the old Pure Record with the new one.
 
-In addition, this key is unique to a particular user and won't be changed even after rotating (updating) the user's
-`PureRecord`. The `encryptionKey` will be updated after user changes own password.
+
+### Data encryption & decryption
+
+The PHE service allows you to protect user's PII (personal data) with a user's `encryptionKey` that is obtained from the `enrollAccount` or `verifyPassword` functions. The `encryptionKey` will be the same for both functions.
+
+In addition, this key is unique to a particular user and won't be changed even after rotating (updating) a user's Pure Record. The `encryptionKey` will be updated after a user changes their own password.
+
+> Virgil Security has zero knowledge about a user's `encryptionKey`, because the key is calculated every time you execute the `enrollAccount` or `verifyPassword` functions on your server side.
+
+> Encryption is performed using AES256-GCM with key & nonce derived from the user's encryptionKey using HKDF and the random 256-bit salt.
 
 Here is an example of data encryption/decryption with an `encryptionKey`:
 
-
-```cs
+```C#
 using Virgil.PureKit;
 using Virgil.PureKit.Phe;
 using Virgil.PureKit.Utils;
@@ -183,40 +183,58 @@ var data = Bytes.FromString("Personal data", StringEncoding.UTF8);
 //verifyResult.Key is obtained from protocol.EnrollAccountAsync()
 // or protocol.VerifyPasswordAsync() calls
 var ciphertext = phe.Encrypt(data, verifyResult.Key);
-            
+
 var decrypted = phe.Decrypt(ciphertext, verifyResult.Key);
 
 //use decrypted data
-
 ```
 
-Encryption is performed using AES256-GCM with key & nonce derived from the user's encryptionKey using HKDF and random 256-bit salt.
+### Re-encrypt data when password is changed
 
-Virgil Security has Zero knowledge about a user's `encryptionKey`, because the key is calculated every time when you execute `EnrollAccountAsync` or `VerifyPasswordAsync` functions at your server side.
+Use this flow when a user wants to change their password and maintain access to their data.
 
-## Rotate app keys and user PureRecord
-There can never be enough security, so you should rotate your sensitive data regularly (about once a week). Use this
-flow to get an `UPDATE_TOKEN` for updating user's `PureRecord` in your database and to get a new `APP_SECRET_KEY`
-and `SERVICE_PUBLIC_KEY` of a specific application.
+When Pure Record for the user is created for the very first time, generate a new key (let's call it `User Key`) and store it in your database.
 
-Also, use this flow in case your database has been COMPROMISED!
+**1. Prepare database**. Create a new column in your database for storing `User Keys`.
 
-> This action doesn't require to create an additional table or to modify scheme of existing table. When a user needs to change his or her own password, use the EnrollAccount function to replace user's oldRecord in your DB with a newRecord.
+|Parameters|Type|Size (bytes)|Description|
+|--- |--- |--- |--- |
+|Ecnrypted User Key|bytearray|210|A unique key for user's data encryption.|
 
-There is how it works:
+**2. Obtain Pure Record key**. When the Pure Record is created for the very first time, you need to obtain the `encryptionKey` from the `enrollAccount` function (see the [Generate User's Pure Record](#generate-users-pure-record) section).
 
-**Step 1.** Get your `UPDATE_TOKEN`
+**3. Generate User key**. To generate a `User Key`, [install Virgil Crypto Library](https://github.com/VirgilSecurity/virgil-crypto) and use the code snippet below. Store the public key in your database and save the private key securely on another external device.
 
-Navigate to [Virgil Dashboard](https://dashboard.virgilsecurity.com/login), open your pure application panel and press "Show update token" button to get the `UPDATE_TOKEN`.
+**4. Encrypt and store User key**. Encrypt the `User Key` with the `encryptionKey` and save the `Encrypted User Key` at your database.
 
-**Step 2.** Initialize PureKit with the `UPDATE_TOKEN`
-Move to Virgil.PureKit SDK configuration file and specify your `UPDATE_TOKEN`:
+**5. Encrypt data with User key**. Whenever the user needs to encrypt their data, decrypt the `Encrypted User Key` with the `encryptionKey` and use the decrypted `User Key` instead of the `encryptionKey` for encrypting user's data.
 
+**6. Change user's password**. To change the password, user enters their old password to authenticate at backend, and the new password. Use their new password to create a new Pure Record for the user.
 
-```cs
+During the password change, decrypt the `Encrypted User Key` with the old `encryptionKey` and encrypt the `User Key` with the new `encryptionKey` you get from `enrollAccount` using the new password. This will allow the user to access their data without re-encrypting all of it.
+
+After that, you can delete the old Pure Record from your database and save the new one instead.
+
+### Rotate Keys and Records
+
+This guide shows how to rotate PureKit-related keys and update Pure Records. There can never be enough security, so you should rotate your sensitive data regularly (about once a week).
+
+**Also, use this flow in case your database has been COMPROMISED!**
+
+Use this workflow to get an `update_token` for updating user's Pure Record in your database and to get a new `app_secret_key` and `service_public_key` for your application.
+
+> **Note!** When a user just needs to change their password, use the `EnrollAccount` function (see the *Password Encryption* step) to replace the user's old `record` value in your DB with a new `record`.
+
+Learn more about Pure Records and keys rotation as a part of Post-Compromise Security in [this guide](https://developer.virgilsecurity.com/docs/purekit/fundamentals/post-compromise-security/).
+
+**1. Get your update token**. Navigate to your Application panel at [Virgil Dashboard](https://dashboard.virgilsecurity.com/) and, after pressing "BEGIN ROTATION PROCESS" press “SHOW UPDATE TOKEN” button to get the `update_token`.
+
+**2. Initialize PureKit with the update token**. Move to PureKit configuration file and specify your `update_token`:
+
+```C#
 using Virgil.PureKit;
 
-// here set your PURE App credentials
+// here set your PureKit credentials
 var context = ProtocolContext.Create(
     appToken: "AT.OSoPhirdopvijQlFPKdlSydN9BUrn5oEuDwf3Hqps",
     servicePublicKey: "PK.1.BFFiWkunWRuVMvJVybtCOZEReUui5V3NmwY21doyxoFlurSYEo1fwSW22mQ8ZPq9pUWVm1rvYhF294wstqu//a4=",
@@ -227,14 +245,13 @@ var context = ProtocolContext.Create(
 var protocol = new Protocol(context);
 ```
 
-**Step 3.** Start migration. Use the `new RecordUpdater("UPDATE_TOKEN")` SDK function to create an instance of class that will update your old records to new ones (you don't need to ask your users to create a new password). The `Update()` function requires user's old Pure `record` from your DB:
+**3. Start migration**. Run the `update` method of the `RecordUpdater` class to create a new user `record` and save user's new `record` into your database.
 
-
-```cs
+```C#
 using Virgil.PureKit;
 using Virgil.PureKit.Utils;
 
-var updater = new RecordUpdater("UPDATE_TOKEN");
+var updater = new RecordUpdater("Update Token");
 
 //for each record get old record from the database as a byte array
 //if you keep old record as a base64 string, get byte array from it:
@@ -242,56 +259,65 @@ var oldRecord = Bytes.FromString(oldRecordBase64, StringEncoding.BASE64)
 
 //update old record
 var newRecord = updater.Update(oldRecord);
-//a WrongVersionException will be raised if "UPDATE_TOKEN" has wrong version.
+//a WrongVersionException will be raised if "Update Token" has wrong version.
 
 //save new record to the database
 saveNewRecord(newRecord);
 ```
 
-So, run the `Update()` function and save user's new Pure `record` into your database.
+> **Note!** You don't need to ask your users for a new password.
 
-Since the PureKit is able to work simultaneously with two versions of user's PureRecords (new Pure `record` and old Pure `record`),
- this will not affect the backend or users. This means, if a user logs into your system when you do the migration,
- the Virgil PureKit will verify his password without any problems because PureKit can work with both user's Pure Records (new and old).
+> **Note!** The SDK is able to work with two versions of a user's `record` (old and new). This means, if a user logs into your system when you do the migration, the PureKit SDK will verify their password without any problems.
 
+**4. Download Virgil CLI**. After you updated your database records, it's required to update (rotate) your application credentials. For security reasons, you need to use the [Virgil CLI utility](https://github.com/VirgilSecurity/virgil-cli).
 
-**Step 4.** Get a new `APP_SECRET_KEY` and `SERVICE_PUBLIC_KEY` of a specific application
+**5. Rotate App Secret key**. Use Virgil CLI `update-keys` command and your `update_token` to update the `app_secret_key` and `service_public_key`:
 
-Use Virgil CLI `update-keys` command and your `UPDATE_TOKEN` to update the `APP_SECRET_KEY` and `SERVICE_PUBLIC_KEY`:
-
-```bash
-// FreeBSD / Linux / Mac OS
-./virgil pure update-keys <service_public_key> <app_secret_key> <update_token>
-
-// Windows OS
+```go
 virgil pure update-keys <service_public_key> <app_secret_key> <update_token>
 ```
 
-**Step 5.** Move to Virgil.PureKit SDK configuration file and replace your previous `APP_SECRET_KEY`,  `SERVICE_PUBLIC_KEY` with a new one (`APP_TOKEN` will be the same). Delete previous `APP_SECRET_KEY`, `SERVICE_PUBLIC_KEY` and `UPDATE_TOKEN`.
+**6. Configure PureKit SDK with new credentials**. Move to PureKit SDK configuration and replace your previous `app_secret_key`, `service_public_key` with a new one (same for the `app_token`). Delete `update_token` and previous `app_secret_key`, `service_public_key`.
 
-
-```cs
+```C#
 using Virgil.PureKit;
 
-// here set your PURE App credentials
+// here set up your PURE App credentials
 var context = ProtocolContext.Create(
-    appToken: "APP_TOKEN_HERE",
-    servicePublicKey: "NEW_SERVICE_PUBLIC_KEY_HERE",
-    appSecretKey: "NEW_APP_SECRET_KEY_HERE",
+    appToken: "New App Token",
+    servicePublicKey: "New Service Public Key",
+    appSecretKey: "New App Secret Key",
 );
 
 var protocol = new Protocol(context);
 ```
 
+### Uninstall PureKit
+
+Use this workflow to move away from Pure without having to put your users through registering again. This can be carried out by decrypting the encrypted database backup (users password hashes included) and replacing the encrypted data with it.
+
+**1. Prepare your recovery key**. In order to recover the original password hashes, you need to prepare your recovery private key.
+
+> If you don't have a recovery key, then you have to ask your users to go through the registration process again to restore their passwords.
+
+**2. Decrypt encrypted password hashes**. Now use your recovery private key to get original password hashes.
+
+Save the decrypted users password hashes into your database.
+After the recovery process is done, you can delete all the Pure data and the recovery keypair.
+
+
 ## Docs
-* [Virgil Dashboard](https://dashboard.virgilsecurity.com)
+
+* [Virgil Dashboard](https://dashboard.virgilsecurity.com/)
 * [The PHE WhitePaper](https://virgilsecurity.com/wp-content/uploads/2018/11/PHE-Whitepaper-2018.pdf) - foundation principles of the protocol
+* [PureKit documentation](https://developer.virgilsecurity.com/docs/use-cases/v1/passwords-and-data-protection) - explore our use-case to protect user passwords and data in your database from data breaches
 
 ## License
 
-This library is released under the [3-clause BSD License](LICENSE.md).
+This library is released under the [3-clause BSD License](https://github.com/VirgilSecurity/virgil-purekit-go/blob/v2/LICENSE).
 
 ## Support
+
 Our developer support team is here to help you. Find out more information on our [Help Center](https://help.virgilsecurity.com/).
 
 You can find us on [Twitter](https://twitter.com/VirgilSecurity) or send us email support@VirgilSecurity.com.
